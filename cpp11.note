@@ -1,0 +1,512 @@
+cpp11>
+
+	features merged into c++11:
+		 All of TR1 except Special Functions
+		     	(technical report 1)
+		 Boost:
+			the thread library,
+			exception_ptr,
+			error_code,
+			error_condition,
+			iterator improvements(begin, end, next, prev),
+		C-style Unicode conversion functions
+
+	c++11 features:
+	      auto | decltype
+		for variables:
+		    specifies that the type of the variable that is beging
+		    declared will be automatically deduced from its initializer.
+
+		for functions:
+		    specifies that the return type will be deduced from its return
+		    statements.
+
+		for non-type template parameters:
+		    specifies that the type will be deduced from the argument.
+
+		syntax:
+			type-constraint(optional) auto
+			type-constraint(optional) decltype(auto)
+			
+			type-constraint:
+				conceptname,
+				optionally qualified,
+				optionally followed by a template argument list enclosed in <>
+		
+		Usage:
+
+			decltype(expr) h, k;		 //  type of h and k is same as type or expr.
+			decltype(auto) func1(arg-list);  //  type of func1 is same as the expr it would be returned.
+
+
+
+
+			decltype(auto) c = h;		 //  type of c is same as h.
+			decltype(auto) c1 = (h);	 //  type of c1 is same as h but it is a reference.
+
+			auto i = expr;
+			const auto i = expr;
+			auto i = 1, j = 2;
+			auto i = 1, j = 0.0;  //  ERROR
+			const auto &i = expr; //  i is T type reference,
+			      	      	      //  T = the exactly type of expr.
+					      //  const,readonly.
+			auto func1(arg-list)  //  T = the exactly type of expr would be returned.
+			{    		      
+				...
+				return expr;
+			}
+			auto func1(auto a)    //  T is type of func1, T = the exactly type of expr.
+			{    		      //  T is type of a, T = int if somewhere invoke func1(13);
+				...	      //  T is type of a, T = double if somewhere invoke func1(1.3);
+				return expr;	
+			}
+
+			decltype(auto) must be the sole constituent of the declared type.
+			a function call must use decltype(auto) in case the function it calls returns by reference.
+
+			auto &func1(arg-list);//  T is type of func1, T = reference to the exactly type of expr
+			     		      //  which would be returned.
+			
+			auto && maybe deduced either as an lv reference or rv reference according to the
+			initializer,which is used in range-based for loop.
+
+			template<class T, auto I>  //  auto would be deduced to the type of a non-type 
+			struct | class ...     	   //  template parameter.
+
+			The auto specifier may also appear in the simple type specifier of an explicit type
+			    auto(expr) and auto{expr}
+			Its type is deduced from the expr.
+
+			if type-constraint is Concept<A1, ..., An>, then the constrain expression is
+			Concept<T, A1, ..., An>  //  (T from deduced by auto)
+			otherwise,Concept<T>;  //  no arg-list
+
+			auto cant deduce from brace-init-list.
+			     template<auto n>
+			     auto f() -> std::pair<decltype(n), decltype(n)> { ... }
+			     	      	 	//  cant use auto instead to decltype be there.     	      	 
+
+	       =default | =delete
+		 special syntax for define member functions.
+		 Usage:
+			struct a {
+			       a(auto c) =default;
+			       void func2(void) =delete;
+			};		
+	      		struct a i;	//  ERROR,because the default constructor is a::a(auto c).
+			struct a j(3);	//  RIGHT,will invoke a::a(auto c).
+			j.func2();	//  ERROR,because func2() was defined as deleted.
+		
+	       final | overrid
+	         final specifier:
+		     specifies that a virtual function cant be overridden in a derived class or that
+		     a class cant be derived from.
+		     Usage:
+				struct A final {
+				       ...
+				};
+				struct B : A { ... };  //  ERROR,because A cant be derived.
+
+				struct C {
+				       ...
+				       virtual void func1(void) final;
+				};
+				struct D : C {
+				       ...
+				       virtual void func1(void) { ... }  //  ERROR,because C::func1()
+				       	       	    		      	 //  cant be overriden.
+				};
+
+
+		 overrid specifier:
+		     specifies that a virtual function overrides another virtual function.
+		     Usage:
+				struct A {	//  virtual void A::func1(void) isnt existed.
+				       ...
+				};
+				struct B : A {
+				       virtual void func1(void) override;  //  ERROR,because func1() doesnt
+				       	       	    			   //  overrides anything.
+				};
+
+				struct C {
+				       virtual void func1(void);
+				       ...
+				};
+				struct D : C { virtual void func1(void) override;
+				       	     //  RIGHT,virtual void D::func1(void) overrides
+					     //  virtual void C::func1(void).
+				
+
+	       trailing return type
+	       		new style for function definition similar with lambda expression.
+			Legacy :
+				<return type> <function-name>(<arg-list>) {<body>}
+
+			trailing return :
+				 auto <function-name>(<arg-list>) -> <return type> {<body>}
+				 //  must use auto keyword.
+
+			Usage:
+				//  legacy
+				template<class T, auto N>
+				int ClassA::func1(void) { ... }
+
+				//  trailing return
+				template<class T, auto N>
+				auto ClassA::func1(void) -> int { ... }
+
+			#  Attention: it isnt supported in all compiler!
+
+	       
+	       reference declaration
+	       		 declares a named variable as a reference,that is,an alias to an already-existing
+			 object or function.
+
+			 &	//  lvalue reference
+			 &&	//  rvalue reference
+
+			 Usage:
+				int i = 3;
+				int &j = i;	//  j is an alias to i.
+
+				auto &&p = std::move(std::make_unique<char>(2));
+						//  p is an alias to an anonymous memory
+						//  applied by std::make_unique.
+
+	       move constructor | move assignment operator
+	       	    a move constructor of class T is a non-template constructor whose first parameter is T &&,
+		    const T &&,volatile T &&,or const volatile T &&,and either there are no other parameters,or
+		    the rest of the parameters all have default values.
+
+		    struct A {
+		    	   ...
+			   A(struct A &&a);  //  move contructor.
+		    };
+
+		    Usage:
+			struct A a;
+			struct A b(std::move(a));  //  std::move can transform lv to rv.
+			       	 		   //  after move,dont use struct A a as well,
+						   //  because its state is unsure.
+
+		    a move assignment operator of class T is a non-template non-static member function with
+		    the name operator= that takes exactly one parameter of type T &&,const T &&,volatile T &&,
+		    or const volatile T &&.
+
+		    struct A {
+		    	   ...
+			   struct A &operator=(struct A &&a);  //  move assignment operator
+		    };
+
+		    Usage:
+			struct A a;
+			struct A b = std::move(a);  //  after move,dont use struct A a as well,
+			       	     		    //  because its state is unsure.
+
+		    #  move semantics provides a solution to such issues:
+		       	    move constructors/assignment operators typically 'steal' the resources of
+			    the argument.
+			    leave the argument in a valid but indeterminate state.
+			    greatly enhances performance in some cases.
+		    
+		    #  compiler provides
+		       		a> copy-constructor
+				b> copy-assignment operator
+				c> move constructor
+				d> move assignment operator
+				e> constructor
+				f> destructor
+
+		       		E(x): x is existed.				
+				E(c)->notE(a) and notE(b) and notE(d) and notE(f)
+				E(d)->notE(a) and notE(b) and notE(c) and notE(f)
+
+		       if wantnt compiler provides move constructor or assignment operator,
+		       should define it as =delete.
+
+		       implicitly-defined move constructor:
+		         For union type:
+			     it copies the object representation (as by std::memmove)
+			 For non-union class type:
+			     it performs full member-wise move of the object's bases and non-static
+			     members,in their initialization order,using direct initialization with
+			     an xvalue(l | r) argument
+		       implicitly-defined move assignment operator:
+		         For union type:
+			     it copies the object representation (as by std::memove)
+			 For non-union type:
+			     it performs full member-wise move assignment of the object's direct bases
+			     and immediate non-static members,in their declaration order,using built-in
+			     assignment for the scalars,memverwise move-assignment for arrays,and
+			     move assignment operator for class types
+
+			 it for a class T is constexpr if
+			    T is a literal-type,and
+			    the assignment operator selected to move each direct base class subobject is a
+			    constexpr function,and
+			    for each non-static data member of T that is of class type(or array etc.),the
+			    assignment operator selected to move that member is a constexpr function
+
+
+		    #  move-constructor will be defined as =delete: (any is true)
+		            T has non-static data members that cant be moved
+			    T has direct or virtual base class that cant be moved
+			    T has direct or virtual base class or a non-static data member with
+			    a deleted or inaccessiable destructor
+			    T is a union-like class and has a variant member with non-trivial move
+			    constructor
+		    #  move-assignment operator will be defined as =delete: (any is true)
+		       	    T has a non-static data member that is const
+			    T has a non-static data member of a reference type
+			    T has a non-static data member or a direct base class that cant be
+			    move-assigned
+
+
+		    #  trivial move constructor (also trivial move assignment operator)
+		         trivial move constructor is a constructor that performs the same action as the
+			 trivial copy constructor,that is,makes a copy of the object representation as
+			 if by std::memmove.
+		         the move constructor for class T is trivial if all of the following is true:
+			    it is not user-provided
+			    T has no virtual member functions
+			    T has no virtual base classes
+			    the move constructor selected for every direct base of T is trivial
+			    the move constructor selected for every non-static class type(or array of class type)
+			    member of T is trivial
+
+		    #  eligible move constructor
+		         a move constructor is eligible if it is not deleted.
+			 a move constructor is eligible if
+			   it is not deleted,and
+			   its associated constraints,if any,are satisfied,and
+			   no move constructor with the same first parameter type
+			   is more constrained than it
+
+		    #  eligible move assignment operator
+		         a move assignment operator is eligible if it is not deleted
+			 a move assignment operator is eligible if
+			   it is not deleted,and
+			   its associated constraints,if any,are satisfied,and
+			   no move assignment operator with the same first parameter type
+			   and the same cv/ref-qualifiers(if any) is more constrained than it
+
+	       
+	       scoped enum
+	       	      syntax:
+			enum struct | class <name> {enumerator = constexpr, enumerator = constexpr, ...};
+			enum struct | class <name> : <type> {enumerator = constexpr, enumerator = const expr, ...};
+			enum struct | class <name>;
+			enum struct | class <name> : <type>;
+			
+			syntax1>
+				declares a scoped enumeration type whose underlying type is int (the keywords class
+				and struct are exactly equivalent)
+
+			syntax2>
+				declares a scoped enumeration type whose underlying type is <type>
+			
+			syntax3>
+				opaque enum declaration for a scoped enumeration whose underlying type is int
+				
+			syntax4>
+				opaque enum declaration for a scoped enumeration whose underlying type is <type>
+
+		      each enumerator becomes a named constant of the enumeration's type(the <name>),which is contained
+		      within the scope of the enumeration,and can be accessed using scope resolution operator.there are
+		      no implicit conversions from the values of a scoped enumerator to integral types,although 
+		      static_cast may be used to obtain the numberic value of the enumerator.
+
+		      Usage:
+			enum class Color { red, green, blue };	
+			Color c = Color::red;
+			switch (c) {
+			case Color::red   :  ...
+			case Color::green :  ...
+			case Color::blue  :  ...
+			}			
+
+		      an enumeration can be initialized from an integer without a cast,using list initialization,if all of
+		      the following are true:
+		      	  the initialization is direct-list-initialization
+			  the initializer list has only a single element
+			  the enumeration is either scoped or unscoped with underlying type fixed
+			  the conversion is non-narrowing
+
+		      Usage:
+			enum class byte : unsigned char { };
+			byte a{4}; 	  	//  OK   
+			byte b{byte{4}};	//  OK
+			byte c = {42};		//  ERROR
+
+		      #  unscoped enumerations
+		      	   legacy C enumeration:
+			   	  enum <name> { enumeration = constexpr, enumeration = constexpr, ... };
+				  enum <name> : <type> { enumeration = constexpr, enumeration = constexpr, ... };
+				  enum <name> : <type>;
+
+		      #  difference between scoped and unscoped:
+		      	   values of unscoped enumeration type are implicitly-convertible to integral types.
+			   but scoped cant be implicitly-converted.
+			   scoped enumberation is used to make a class which has members of constants. (make a new type)
+
+		      #  using enum declaration
+		      	   using enum <nested-name-specifier>(optional) <name>;
+			   
+			   where <nested-name-specifier> <name> must not name a dependent type and must name an
+			   enumeration type
+
+			   Usage:
+				enum class E1 : int { a = 3, b };
+				enum class E2 : int { c = 9, a };
+
+				struct A {
+				       using enum E1;
+				       //  using enum E2;  //  enumeration conflict between E1::a and E2::a
+				};		
+
+				struct A a;
+				a.a;		//  OK
+				a::a;		//  OK
+			
+
+	       constexpr
+			constexpr - specifies that the value of a variable or function can appear in constant expressions.
+			that means,it is possible to evaluate the value of the function or variable at compile time.
+
+			a constexpr specifier used in an object declaration or non-static member function implies const.
+			a constexpr specifier used in a function or static data member declaration implies inline.
+
+			constexpr variable:
+			  a constexpr variable must satisfy the following requirements:
+			    its type must be a LiteralType
+			    it must be immediately initialized
+			    the full-expression of its initialization,including all implicit conversions,
+			    constructors calls,etc,must be a constant expression
+			    it must have constant destruction,
+			       either:
+				 it is not of class type nor array thereof,or
+				 it is of class type or array thereof,that class type has a constexpr destructor,and
+				 for a hypothetical expression whose only effect is to destroy the object,would be a
+				 core constant expression if the lifetime of the object and its non-mutable subobjects
+				 were considered to start within
+
+			  # if a constexpr variable is not translation-unit-local(c++20),it should not be
+			    initialized to point to,or refer to,or have a (possibly recursive)subobject 
+			    that points to or refers to,a translation-unit-local entity that is usable in
+			    const expression.
+
+			constexpr function:
+			  a constexpr function must satisfy the following requirements:
+			    it must not be virtual
+			    it must not be a function-try-block
+			    it must not be a coroutine(c++20)
+			    for constructor and destructor,the class must have no virtual base classes
+			    its return value and each of its parameters must be of a LiteralType
+			    there exists at least one set of argument values such that an invocation of the function
+			    could be an evaluated subexpression of a core constant expression,No diagnostic is required
+			    for a violation of this bullet
+			    the function body must be either deleted or default or contain only the following:
+			    	null statements
+				static_assert
+				typedef declarations and alias declarations that dont define classes or enumerations
+				using declarations
+				using directives
+				if the function is not a constructor,exactly one return statement
+			    the function body must not contain:
+			    	a goto statement
+				a statement with a label other than case and default
+				a try-block(for exception)
+				a definition of a variable for which no initialization is performed
+				a defintion of a variable of non-literal type
+				a definition of a variable of static or thread storage duration
+
+
+			    Usage:
+				struct A {
+				       constexpr int func1(int a, int b)
+				       {
+						int c(30);
+						//  std::istream *pIstream(&std::cin);  //  ERROR
+						    		 			//  std::istream is not a
+											//  literal type
+						/*  ERROR try-block					
+						try {
+						    ...
+						} catch (...) {
+						    ...
+						}*/						
+						return a + b + c;
+				       } 
+				};
+
+			constexpr constructor:
+			  a constexpr constructor whose function body is not =delete,must satisfy the following additional
+			  requirements:
+				for the constructor of a class or struct,every base class sub-object and every non-variant
+				non-static data member must be initialized,if the class is a union-like class,for each of 
+				its non-empty anonymous union members,exactly one variant member must be initialized
+				for the constructor of a non-empty union,exactly one non-static data member must be initialized
+				every constructor selected to initializing non-static data members and base class must be a
+				constexpr constructor
+
+			constexpr destructor:
+			  a constexpr destructor whose function body is not =delete,must satisfy the following additional
+			  requirements:
+				every destructor used to destroy non-static data members and base class must be constexpr
+				destructor
+
+			#  for template function,at least one specialization must satisfy the constexpr requirements.
+			   other specializations are still considered as constexpr,even though a call to such a function
+			   cant appear in a constant expression.
+			   if no specialization satisfy to requirements while try to make a instant of template function,
+			   the template is ill-formed,no diagnostic required.
+
+
+	       LiteralType
+			specifies that a type is a literal type,LiteralType are the types of constexpr variables and they
+			can be constructed,manipulated,and returned from constexpr functions.
+
+			a literal type is any of the following:
+			  possibly cv-qualified void (so that constexpr functions can return void);
+			  scalar type;
+			  reference type;
+			  an array of literal type;
+			  possibly cv-qualified class type that has all of the following properties:
+			  	   has a trivial constexpr destructor
+				   is one of
+				      an aggregate type
+				      a type with at least one constexpr constructor that is not a copy or move
+				      constructor
+				      a closure type(c++17)
+				   for unions,at least one non-static data member is of non-volatile literal type
+				   for non-unions,all non-static data members and base classes are of non-volatile literal type
+
+			Usage:
+				struct conststr {
+				       template<std::size_t N>
+				       constexpr conststr(const char (&a)[N], std::size_t size) : m_str(a), m_size(size)
+				       {
+				       }
+				       constexpr char operator[](std::size_t n) const
+				       {
+						return n < m_size ? m_str[n] : throw std::out_of_range("");
+				       }
+
+				       const char *m_str;
+				       std::size_t m_size;
+				};
+
+				constexpr std::size_t countlower(struct conststr s, std::size_t n=0, std::size_t c = 0)
+				{
+					return n == s.m_size ? c :
+					       s[n] >= 'a' && s[n] <= 'z' ? countlower(s, n + 1, c + 1) :
+					       	    countlower(s, n + 1, c);
+				}
+
+				std::cout<<countlower("hello world")<<std::endl;
+					//  there would cause implicitly convert (&a)[sizeof("hello world")] = "hello world"
+				   
+			  
+
