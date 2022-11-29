@@ -680,6 +680,205 @@ cpp11>
 				       using A<U>::A;  //  OK,inherits constructors of A<U>
 				       using T::A;     //  doesnt inherit constructors of T,even though T may be a specialization of A<>
 				};
-			
 
 
+	       nullptr
+			the keyword nullptr denotes the pointer literal.it is a prvalue of type std::nullptr_t.
+			there exist implicit conversions from nullptr to null pointer value of any pointer type
+			and any pointer to member type.similar conversions exist for any null pointer constant,
+			which includes values of type std::nullptr_t as well as the macro NULL.
+
+	       char16_t and char32_t
+	       		char16_t -
+				    type for UTF-16 character representation,required to be large enough to
+				    represent any UTF-16 code unit(16 bits).it has the same size,signedness,
+				    and alignment as std::uint_least16_t,but is a distinct type.
+
+			char32_t -
+				    type for UTF-32 character representation,required to be large enough to
+				    represent any UTF-32 code unit(32 bits).it has the same size,signedness,
+				    and alignment as std::uint_least32_t,but is a distinct type.
+
+	       type alias
+			type alias is a name that refers to a previously defined type(similar to typedef).
+			alias template is a name that refers to a family to types.
+
+			syntax:
+				using <identifier> <attr>(optional) = <type-id>;
+				template<template-parameters>
+				using <identifier> <attr>(optional) = <type-id>;
+
+			Usage:
+				using ipv4_address = struct sockaddr_in;
+				template<class T>
+				using key_value = std::pair<int, T>;
+
+				ipv4_address myaddr;			//  create an object of struct sockaddr_in 
+				key_value<std::string> v_s;		//  create an object of std::pair<int, std::string>
+
+			#  when the result of specializing an alias template is a dependent template-id,
+			   subsequent substitutions apply to that template-id.
+
+			#  the type produced when specializing an alias template is not allowed to directly or 
+			   indirectly make use of its own type.
+			   E.g.
+				template<class T>
+				struct A;
+				template<class T>
+				using B = typename A<T>::U;
+				template<class T>
+				struct A { typedef B<T> U; };   //  B<T> = A<T>::U
+				B<int> b;			//  ERROR
+				       				//  T = int with B<T> = A<int>::B<int> = A<int>::A<int>::U
+								//  cycle to resolve typename
+
+			#  alias template are never deduced by template-argument-deduction when deducing a template 
+			   template parameter.
+			   it is not possible to partially or explicitly specialize an alias template.
+
+			#  alias template can only be declared at class scope or namespace scope.
+
+
+	       attribute specifier sequence
+	       		 introduces implementation-defined attributes for types,objects,code, etc.
+			 
+			 syntax:
+				[[attribute-list]]
+				[[using atrribute-namespace: attribute-list]]
+
+				attribute-list is a comma-separated sequence of zero or more attributes
+				  identifier -
+				  	        simple attribute,such as [[noreturn]]
+				  attribute-namespace::identifier -
+				  		attribute with a namespace,such as [[gnu::unused]]
+				  identifier(argument-list) -
+				  		attribute with arguments,such as [[deprecated("because")]]
+				  attribute-namespace::identifier(argument-list) -
+				  		attribute with both a namespace and an argument list
+
+			 #  if using namespace: appears in the begining of an attribute list,no other attributes 
+			    in the attribute list can specify a namespace: the namespace specified in a using
+			    applies to them all.
+
+			 #  attribute often as the compiler extension such as __attribute__((...)) in gnu/gcc,
+			    use these extension can demand compiler do something when construct program.
+
+
+	       parameter pack
+	       		 a template parameter pack is a template parameter that accepts zero or more template arguments(
+			 non-types,types or templates)
+			 a function parameter pack is a function parameter that accepts zero or more function arguments
+			 a template with at least one parameter pack is called a variadic template
+
+			 syntax:
+				<1> <type> ... pack-name(optional)
+				    typename | class ... pack-name(optional)			  
+				    <type-constraint> ... pack-name(optional)				  c++20
+				    template<parameter-list> class ... pack-name(optional)		  c++17
+				    template<parameter-list> typename | class ... pack-name(optional) 	  c++17
+
+				function parameter pack
+					 <5> pack-name ... pack-param-name(optional)
+
+				parameter pack expansion
+					     pattern ...
+
+			 <1> a non-type template parameter pack with an optional name
+			     a type template parameter pack with an optional name
+			     a constrained type template parameter pack with an optional name
+			     a template template parameter pack with an optional name
+			 <5> a function parameter pack with an optional name
+			     parameter pack expansion:
+			       expands to comma-separated list of zero or more patterns.
+			       patterns must include at least one parameter pack.
+
+			 Usage:
+				template<unsigned short N, typename... Args>
+				unsigned short func1(Args... args)
+				{
+					return n * (args + ...);
+					//  args + is a pattern
+					//  it expands to E1 + E2 + ...
+				}
+
+				template<typename...>
+				struct Tuple {};
+				template<class T1, class T2> struct Pair {};
+				template<class... Args1>
+				struct zip {
+				       template<class... Args2>
+				       struct with {
+				       	      typedef Tuple<Pair<Args1, Args2>...> type;
+					      //  Args1 and Args2 are parameter pack
+					      //  Pair<Args1, Args2> is the pattern
+					      //  Pair<Args1, Args2>... is expand parameter-packs
+				       };
+				};
+
+				typedef zip<short, int>::with<unsigned short, unsigned>::type T1;
+				//  Pair<Args1, Args2>... expands to
+				//  Pair<short, unsigned short> and Pair<int, unsigned int>
+				//  T1 = Tuple<Pair<short, usnigned short>, Pair<int, unsigned>>
+       
+			 #  &args...  //  pack expands to &e1, &e2, ..., &eN
+			 #  args...   //  pack expands to e1, e2, ..., eN
+			 #  ++args... //  pack expands to ++e1, ++e2, ..., ++eN
+
+			 #  if the names of two parameter packs appear in the same pattern,they are expanded
+			    simultaneously,and they must have the same length.	
+
+			 #  if a pack expansion is nested with in another pack expansion, the parameter packs that
+			    appear inside the innermost pack expansion are expanded by it,and there must be another
+			    pack mentioned in the enclosing pack expansion,but not in the innermost one
+			      E.g.
+				template<class... Args>
+				void func1(Args... args)
+				{
+					f(const_cast<const Args *>(&args)...);
+					//  const_cast<const Args *>(&args) is a pattern
+					//  it expands to const_cast<const TYPE1 *>(&E1), const_cast<const TYPE2 *>(&E2), ...
+
+					f(h(args...) + args...);
+					//  args is a pattern,it expands to E1, E2, E3, ...
+					//  h(args...) + args is a pattern,
+					//  it expands to h(args...) + E1, h(args...) + E2, ...
+					//  == h(E1, E2, ...) + E1, h(E1, E2, ...) + E2, ...
+				}
+
+			 #  expansion loci :
+			      depending on where the expansion takes place,the resulting comma-separated list is a
+			      different kind of list: function parameter list,member initializer list,attribute list, etc.
+
+			 #  base specifiers and member initializer lists :
+			      a pack expansion may designate the list of base classes in a class declaration.
+			      typically,this also means that the constructor needs to use a pack expansion in 
+			      the member initializer list to call the constructors of the these base classes.
+			        E.g.
+				  template<class... Bases>
+				  class A : public Bases... {
+				  public:
+					A(const Bases&... bc) : Bases(bc)...
+					{
+						...
+					}
+					//  Bases(bc) is a pattern expands to BaseClass1(E1), BaseClass2(E2), ...
+				  };
+
+			 #  the sizeof... operator
+			      the sizeof... operator is classified as a pack expansion as well.
+			      E.g.
+			        template<class... Args>
+				size_t howManyArgs(Args...)
+				{
+					return sizeof...(Args);  //  sizeof...(Args) will count number of types in pack
+				}
+
+			 #  using-declarations
+			      in using declaration,ellipsis may appear in the list of declarators,this is useful when
+			      deriving from a parameter pack.
+			      E.g.
+			        template<typename... bases>
+				struct X : bases... {
+				       using bases::g...;
+				};
+				X<B, D> x;  //  using B::g, D::g;
