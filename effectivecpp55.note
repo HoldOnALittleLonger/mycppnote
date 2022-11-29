@@ -1,0 +1,97 @@
+chapter1>
+	Item1 : view c++ as a federation of languages
+	      c++ is a multiparadigm programming language,one supporting
+	      a combination of procedural,object-oriented,functional,generic,
+	      and metaprogramming features.
+	      the primary sub-languages of c++ is :
+	      	  C language,C++ is still based on C
+		  Object-Oriented C++
+		    contains:
+			classes
+			encap-sulation
+			inheritance
+			polymorphism
+			virtual function
+			.etc
+		  Template C++
+		    contains:
+			template rules to make generic programming
+		  The STL
+		    contains:
+			containers
+	
+		iterators
+			algorithms
+			function objects
+			
+		#  for easier to understand c++,these sublanguages is very important.
+		#  may be encounter situations where effective programming requires that
+		   change strategy when switch from one sublanguage to another.
+		#  for built-in type,pass-by-value is more efficient than pass-by-reference.
+		   pass-by-reference-to-const is better when deal with C++ template.
+		   but when using STL,pass-by-value rule applies again,because that iterators
+		   and function objects are modeled on pointers in C.
+
+	       !!  rules for effective c++ programming vary,depending on the part of c++ you are using !!
+
+
+	Item2 : prefer consts,enums,and inlines to #defines
+	      because preprocessor isnt a part of c++ language,it is a behavior for compiler.
+	      preprocess macro may be removed by the preprocessor before the source code ever
+	      gets to a compiler,then it will not be contained into symbol table,this would
+	      cause problem for use a constant.
+	      this problem can also crop up in a symbolic debugger,because,again,the name of
+	      macro may not be in the symbol table.
+
+	      #define PI 3.1415             //  may be a problem 
+	      const double pi = 3.1415;     //  better
+	      enum : double {PI = 3.1415};  //  best
+
+	      #  constant may be yield smaller code than macro definition,because compiler may
+	         be produces more copies to that constant.
+
+	      two special important case:
+	        1> in the case defining constant pointers
+		   e.g.
+			const char *const example = "example"; //  const char * const bind symbol
+			      	   	  	    	       //  example just refers to string "example"
+			const std::string example("example");  //  best (as much as possible use c++
+			      		  		       //  std::string to instead c-style string)
+
+		2> class-specific constans
+		   to limit the scope of a constant to a class,must make it a member,
+		   and to ensure there is at most one copy of the constant.
+		   e.g.
+			struct A {
+			       static const double pi;
+			       enum : double {PI = 3.1415};  //  enum hack
+			};
+			const double A::pi = 3.1415;
+
+			#  usually,static class member cant be initialized in declaration,
+			   in-class initialization is allowed only for integral types and
+			   only for constants.
+			#  if need a contant in class declaration or definition,enumerated type
+			   is more useful than constant declaration.
+			#  enum hack never take an unnecessary memory allocation,but constant 
+			   objects will take.
+
+	      use inline template function to instead macro function:
+	      	  macro function :
+		  	#define CALL_FUNC(a, b) func((a) > (b) ? (a) : (b))
+			int a = 3, b = 0;
+			CALL_FUNC(++a, b);  //  a would increase twice,it's not right
+
+		  inline template function:
+		  	 template<class T>
+			 inline void call_func(T &a, T &b)
+			 {
+				f(a > b ? a : b);
+			 }
+
+			 int a = 3, b = 0;
+			 call_func(++a, b);  //  right,a just increase once
+
+	      !!  for simple constants,prefer const objects or enums to #defines !!
+	      !!  for function-like macros,prefer inline functions to #defines !!
+
