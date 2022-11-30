@@ -882,3 +882,115 @@ cpp11>
 				       using bases::g...;
 				};
 				X<B, D> x;  //  using B::g, D::g;
+
+
+	       union in c++
+	       	     	declare syntax:
+				union <attr> <class-head-name> { ... };
+
+			a union can have member functions,but not virtual functions
+			a union cant have base classes and cant be used as a base class
+			a union cant have non-static data members of reference types
+			unions cant contain a non-static data member with a non-trivial special member function(
+			copy constructor,copy-assignment operator or destructor).
+			if a union contains a non-static data member with a non-trivial special member function(
+			copy/move constructor/assignment,destructor),that function is deleted by default in the
+			union and needs to be defined explicitly.
+			if a union contains a non-static data member with a non-trivial default constructor,the
+			default constructor of the union is deleted by default unless a variant member of the 
+			union has a default member initializer.
+			at most one variant member can have a default member initializer
+			just like in struct declaration,the default member access in a union is public
+
+	       
+	       union-like classes
+	       		a union-like class is either a union,or a class(non-union) that has at least one anonymous
+			union as a member
+			a union-like class has a set of variant members:
+			  the non-static data members of its member anonymous unions
+			  in addition,if the union-like class is a union,its non-static data members that are not
+			  anonymous unions
+
+			Usage:
+				struct union_like {
+				       union {
+				       	     int x;
+					     float y;
+					     char z;
+				       };
+				       //  int j;  //  ERROR,non-static data members should in anonymous union
+				};
+				union union_like_x {
+				      int x;
+				      float y;
+				      char z;
+				};      
+
+
+	       PODs
+			PODType is plain old data type,this means the type is compatible with the types used in
+			C programming language,that is,can be exchanged with C libraries directly,in its binary form.
+			(PODType is deprecated in c++20)
+			POD types :
+			    scalar types :
+			    	   arithmetic types
+				   enumeration types
+				   pointer types
+				   pointer-to-member types (&Class::member)
+				   std::nullptr_t
+				   
+			    POD classes : 	   
+			    	   a POD class is a class that
+				     is an aggregate,
+				     has no user-declared copy assignment operator,
+				     has no user-declared destructor,and
+				     has no non-static data members of type non-POD class or reference,
+				     is a trivial class,
+				     is a standard-layout class,and
+				     has no non-static data members of type non-POD class
+
+			    #  a POD struct is a non-union POD class,a POD union is a union that is a POD class
+
+			    arrays of such types
+			    
+			    cv-qualified versions of these types
+
+			E.g.
+				struct c_struct {
+				       int x;
+				       char y;
+				       float z;
+				       struct c_struct *next;
+				};  //  c_struct just a POD type struct
+
+
+	       unicode string literals
+	       	       	      syntax:
+					"<s-char-sequence>(optional)";		//  ordinary string literal,type is const char[LENGTH]
+					L"<s-char-sequence>(optional)";		//  wide string literal,type is const wchar_t[LENGTH]
+					u8"<s-char-sequence>(optional)";	//  utf-8 string literal,type is const char[LENGTH]
+					u"<s-char-sequence>(optional)";		//  utf-16 string literal,type is const char16_t[LENGTH]
+					U"<s-char-sequence>(optional)";		//  utf-32 string literal,type is const char32_t[LENGTH]
+					<prefix>(optional)R"<d-char-sequence>(optional)
+					(<r-char-sequence>(optional))<d-char-sequence>(optional)"
+										//  raw string literal,used to avoid escaping of any
+										//  character.anything between the delimiters becomes
+										//  part of the string.
+										//  prefix,if present,has the same meaning as prefix
+										//  descriptions.the terminating d-char-sequence is the
+										//  same sequence of characters as the initial d-char-sequence.
+										
+
+					#  prefix : L | u8 | u | U
+					#  d-char-sequence : a sequence of one or more d-chars,at most 16 characters long
+					#  d-char : a character from the "basic source character set"(c++23)
+					            "basic character set"(c++23),except parentheses,backslash and spaces
+					#  r-char-sequence : a sequence of one or more r-chars,except that it must not 
+					   		     contain the closing sequence   )d-char-sequence"
+					#  r-char : a character from the "source character set"(c++23)
+					   	    "translation character set"(c++23)
+
+				#  if a character lacks representation in the associated character encoding:
+				      if the string literal is an ordinary string literal or wide string literal,it is
+				      conditionally-supported and an implementation-defined code unit sequence is encoded
+				      otherwise,the string literal is ill-formed
