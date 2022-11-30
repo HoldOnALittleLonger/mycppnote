@@ -32,7 +32,7 @@ chapter1>
 		   but when using STL,pass-by-value rule applies again,because that iterators
 		   and function objects are modeled on pointers in C.
 
-	       !!  rules for effective c++ programming vary,depending on the part of c++ you are using !!
+	       !!  rules for effective c++ programming vary,depending on the part of c++ you are using  !!
 
 
 	Item2 : prefer consts,enums,and inlines to #defines
@@ -92,6 +92,162 @@ chapter1>
 			 int a = 3, b = 0;
 			 call_func(++a, b);  //  right,a just increase once
 
-	      !!  for simple constants,prefer const objects or enums to #defines !!
-	      !!  for function-like macros,prefer inline functions to #defines !!
+	      !!  for simple constants,prefer const objects or enums to #defines  !!
+	      !!  for function-like macros,prefer inline functions to #defines  !!
+
+
+	Item3 : use const whenever possible
+	      the wonderful thing about const is that it allow you to specify a semantic
+	      constraint - a particular object should not be modified - and compilers will
+	      enforce that constraint.
+
+	      const Type Obj;  //  declares an Obj of Type that is a constant.
+	      Type *const Obj; //  declares a pointer of Type and this pointer is constant
+	      const Type *Obj; //  declares a pointer of Type and the object which points to
+	      	    	       //  is constant
+	      const Type *const Obj;  //  declares a pointer is constant which points to an 
+	      	    	 	      //  object of Type that is constant
+
+	      #  const Type *obj; as same with Type const *obj;
+	      #  having a function return a constant value is generally inappropriate,but
+	         sometimes doing so can reduce the incidence of client errors without
+		 giving up safety or efficiency.
+		 E.g.
+		   struct A {
+		   	  struct A operator*(const struct A &a, const struct A &b)
+			  {
+				...
+				return *this;
+			  }
+			  struct A operator=(const struct A &a) { ... }
+		   };
+
+		   struct A a, b, c;
+		   a * b = c;  //  a.operator*(&a, &b) returned a
+		       	       //  a.operator=(c)
+			       //  it's work but should not assign an lvalue to rvalue
+			       //  ill-form
+
+		   if (a * b = c);  //  suppose operator==() been defined.
+		      	       	    //  if operator=() doesnt return constant value,
+				    //  this expression would pass checking by compiler.
+
+				    //  if operator=() returns constant value,
+				    //  compiler would throw error try to changing a constant object.
+				    //  that is helpful to avoid logical error.
+
+	      const member functions:
+	      	    the purpose of const on member functions is to identify which member functions
+		    may be invoked on const objects
+		    there has two important reasons to do this:
+		    	  first>
+				they make the interface of a class easier to understand.
+
+			  second>
+				they make it possible to work with const objects.
+
+			  #  one of the fundamental ways to improve a c++ program's performance is to
+			     pass objects by reference-to-const,this technique is viale only if there are
+			     const member functions with which to manipulate that resulting const-qualified
+			     objects.
+			  #  a fact:
+			       member functions differing only in their constness can be overloaded,this is an
+			       important feature of c++.
+			       E.g.
+				struct A {
+				       char &operator[](std::size_t pos) { ... }
+				       //  realy parameters of this overload operator [] is
+				       //  char &operator[](struct A &, std::size_t);
+
+				       const char &operator[](std::size_t pos) const { ... }
+				       //  realy parameters of this overload operator [] is 
+				       //  const char &operator[](const struct A &, std::size_t);
+				};
+				//  const member function works with a const object,so,cant modify anything of
+				//  the const object in the body of that const member function.(excluding static
+				//  data members,because them are not inside to class object)
+
+		    bitwise constness AND logical constness:
+		    	    bitwise-constness> (it's c++'s definition of constness)
+				a member function is const if and only if it doesnt modify any of the object's
+				data members(excluding static data member),if it doesnt modify any of the bits
+				inside the object.
+
+			    logical-constness>
+				even create a constant object and invoke only const member functions on it,may
+				still change its value.
+
+			    #  a const member function might modify some of the bits in the object on which it's
+			       invoked,but only in ways that clients cant detect.
+
+			    E.g.
+				struct A {
+				       char *strC;
+				       char &operator[](std::size_t pos) const { ... };
+				};
+
+				const struct A a;	//  constant object
+				char *pChar(nullptr);
+				pChar = &a[0];		//  invoked a const member function of a constant object
+				*pChar = '\0';		//  but still can change bits inside the constant object
+				       	 		//  there has a way make operator[] becomes bitwise-constness
+							//  is that return a const reference.
+
+		    a way to change bits of object in a const member function that is
+		    use 'mutable' keyword,'mutable' frees non-static data members from the
+		    constraints of bitwise constness.
+		    E.g.
+			struct A {
+			       mutable std::size_t _length;
+			       ...
+			       std::size_t getLength(void) const
+			       {
+					return _length = std::strlen(<char pointer>);
+			       }
+			};
+		    
+	      avoiding duplication in const and non-const member functions:
+	      	    may be some overload member functions do same procedure in their body,for avoiding
+		    duplication,can make a member function to wrap that procedure,and use function calling
+		    to instead procedure codes.
+		    but this is still duplication be there.
+		    a way to avoiding duplication :
+		      let version A to call version B,and invoke that procedure function in version B.
+
+		    for const and non-const member functions,when using that way to avoid duplication
+		    have to limit order between them :
+		    	 version A must be non-const member function,
+			 version B must be const member function
+
+			 reason : const member function did a promise that never change bits on which invoked.
+			 	  non-const member function didnt does that promise.this means non-const member
+				  function can freely change anything in the object.
+				  if reverse order,the promise would be ridded temporary in const member function
+				  when control deliver to non-const member function,it's wrong.
+
+			 E.g.
+				struct A {
+				       const char &operator[](std::size_t pos) const { ... }
+				       char &operator[](std::size_t pos)
+				       {
+						...
+						return const_cast<char &>(static_cast<const char &>(*this)[pos]);
+				       }
+				       ...
+				};
+
+				//  casting away is not a good idea,but for avoiding duplication,there isnt other
+				//  way to avoid duplication between const and non-const member functions.
+
+	      !!  declaring something const helps compilers detect usage errors.const can be applied
+	          to objects at any scope,to function parameters and return types,and to member functions
+		  as a whole  !!
+	      !!  compilers enforce bitwise constness,but you should program using logical constness  !!
+	      !!  when const and non-const member functions have essentially identical implementations,
+	          code duplication can be avoided by having the non-const version call the const version !!
+
+		    
+
+
+
 
