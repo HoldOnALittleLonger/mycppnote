@@ -994,3 +994,100 @@ cpp11>
 				      if the string literal is an ordinary string literal or wide string literal,it is
 				      conditionally-supported and an implementation-defined code unit sequence is encoded
 				      otherwise,the string literal is ill-formed
+
+	       
+	       user defined literals
+	       	    	    allows integer,floating-point,character,and string literals to produce objects of user-defined
+			    type by defining a user-defined suffix.
+			    (it is a feature to custom suffix in c++)
+
+			    syntax:
+				<decimal-literal><ud-suffix>			//  integer
+				<octal-literal><ud-suffix>			//  integer
+				<hex-literal><ud-suffix>			//  integer
+				<binary-literal><ud-suffix>			//  integer
+				<fractional-constant exponent-part><ud-suffix>	//  floating-point
+				<digit-sequence exponent-part><ud-suffix>	//  floating-point
+				<character-literal><ud-suffix>			//  character
+				<string-literal><ud-suffix>			//  string
+
+				ud-suffix : an identifier,introduced by a literal operator or a literal operator template
+					    declaration.all ud-suffixes introduced by a program must begin with the underscore
+					    character _ ,the standard library ud-suffixes do not begin with underscores.
+
+				#  in the integer and floating-point digit sequences,optional separators ' are allowed
+				   between any two digits and are ignored.
+				#  if a token matches a user-defined literal syntax and a regular literal syntax,it is assumed to
+				   be a regular literal(cant overload LL in 123LL)
+				#  when the compiler encounters a user-defined literal with ud-suffix <X>,it performs unqualified 
+				   name lookup,looking for a function with the name operator""<X> ,if the lookup doesnt find a 
+				   declaration,the program is ill-formed
+
+				for user-defined integer literals :
+				    a>  parameter type is unsigned long long,the user-defined literal expression is treated as
+				        a function call operator""<ud-suffix>(nULL), n is the literal without ud-suffix
+				    b>  not a>
+				    	  1> a raw literal operator was included into overload set,the user-defined literal
+					     expression is treated as a function call operator""<X>("n")
+					  2> a numeric literal operator template was included into overload set,the expression
+					     is treated as a function call operator""<X><'c1', 'c2', ..., 'ck'>(),
+					     c1, ..., ck are the individual characters of n and all of them are from the
+					     basic source character set or basic character set.
+
+				for user-defined floating-point literals :
+				    it is treated alike in user-defined integer literals,but it is a floating-point value.
+				    (type of long double will be operator""<X>(fL).)
+
+				for user-defined string literals,let str be the literal without ud-suffix : 
+				    a>  if the overload set includes a string literal operator template with a non-type
+				        template parameter for which str is a well-formed template argument,then the 
+					user-defined literal expression is treated as a function call operator""<X><str>()
+				    b>  not a>,the user-defined literal expression is treated as a function call
+				    	operator""<X>(str,length_of_str),it is excluding '\0'
+
+				for user-defined character literals : 
+				    the user-defined literal expression is treated as a function call operator""<X>(the_char),
+				    where the_char is the literal without ud-suffix
+
+			    literal operators : 
+			    	    the function called by a user-defined literal is known as literal operator,
+				    it is declared just like any other function or function template at namespace scope,
+				    except for the following restrictions.
+				    
+				    name of the function can have one of the two forms : 
+				    	 operator""<identifier>
+					 operator <user-defined-string-literal>
+
+				    only the following parameter lists are allowed on literal operators : 
+				    	 (const char *)
+					 (using long long int)
+					 (long double)
+					 (char)
+					 (wchar_t)
+					 (char8_t)
+					 (char16_t)
+					 (char32_t)
+					 (const char *, std::size_t)
+					 (const wchar_t *, std::size_t)
+					 (const char8_t *, std::size_t)
+					 (const char16_t *, std::size_t)
+					 (const char32_t *, std::size_t)
+
+			    Usage :
+				std::string operator""_S(const char *,std::size_t);
+				unsigned long long int operator""_km(unsigned long long int);
+				char operator""_c(char i)
+				{
+					//  can has more statements to do something
+					return i - 1;
+				}
+				
+
+				256_km;	      	   //  operator""_km ull literal 256
+				"hello world"_S;   //  operator""_S  string literal std::string{"hello world"}
+				'k'_c; 		   //  operator""_c  char literal 'k' - 1 = 'j'
+
+
+				        
+
+				
