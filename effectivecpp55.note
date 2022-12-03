@@ -246,6 +246,140 @@ chapter1>
 	      !!  when const and non-const member functions have essentially identical implementations,
 	          code duplication can be avoided by having the non-const version call the const version !!
 
+	 Item4 : make sure that objects are initialized before they're used
+	       reading uninitialized values yields undefined behavior,that may halt program,or readed semi-random
+	       bits,and then pollute the object you read the bits into,eventually leading to inscrutable program
+	       behavior and a lot of unpleasant debugging.
+
+	       For example :
+	       	   int a;
+		   int b;
+		   return a + b;  //  a + b maybe equals to 10, a = 3, b = 7, or a = 1, b = 9, or a = -2, b = 12
+
+		   int *a;
+		   *a = 36;	  //  a had not initialized,if the address a points to in the process address space,
+		      		  //  it just has exception,if it is not,systemctl will send SIGSEGV,that would occurs
+				  //  process exit.
+
+	      built-in type :
+	      	       int a(10);
+		       char c('c');
+		       const char *const conststr("hello world");
+		       struct the_data td{x, y, z};
+
+		       #  built-in type is in C part of C++,that almost alike in assignment,
+		       	  but shouldnt use any objects of built-in type before initialized.
+
+	      user-defined C++ type :
+	      	       class A {
+		       	     A() { ... }
+			     A(const std::string &s1, const std::string &s2, const std::vector &v2, std::size_t st)
+			     {
+			       _s1 = s1, _s2 = s2;
+			       _v1 = v1;
+			       _st = st;
+			     }
+			     A(const std::string &s1, const std::string &s2, const std::vector &v2, std::size_t st)
+			     : _s1(s1), _s2(s2), _v1(v1), _st(st) { }
+
+		       private:
+		         std::string _s1, _s2;
+			 std::vector _v1;
+			 std::size_t _st;
+		       };
+
+		       there has two versions :
+		       	     <1> assignment-based
+			     <2> member-initialization-list-based
+
+			     <1> : first use default constructor to construct _s1, _s2, _v1
+			           second use assignment-constructor to assign _s1, _s2, _v1
+				   finished.
+
+			     <2> : first use copy-constructor to construct _s1, _s2, _v1
+			     	   finished.
+				   //  less cost
+
+			so <2> is better than <1>,but may be there has several constructors they has
+			such member-initialization-list,for simply work,if some data member is not
+			used immediately,can place them into a function which use assignment to
+			assign them.
+			E.g.
+				private:
+				  A_init_built_in(arg-list) { <assignment with data member> }
+				  //  constructor can calls this function
+
+			but base class object have to initialized before derived class object!!!
+
+			!!  c++ class data member would be initialized in the order them is declared,
+			    that is,the order of member-initialization-list doesnt influence the order
+			    they will be initialized.
+			    in the example, _s1 -> _s2 -> _v1 -> _st  !!
+
+	      translation unit : 
+	      		  A translation unit is the source code giving rise to a single object file.
+			  It's basically a single source file,plus all of its #include files.
+
+			  A static object is one that exists from the time it's constructed until the end of
+			  the program.stack and heap-based objects are thus excluded.included are global
+			  objects,objects defined at namespace scope,objects declared static inside classes,
+			  objects declared static inside functions,and objects declared static at file scope.
+
+			  local static object is such object which is static and in a function's body.
+			  others known as non-local static objects.
+
+			  !!  relative order of initialization of non-local static objects defined in different
+			      translation units is undefined  !!
+
+			  E.g.
+				file1.c : int a = 10;
+				file2.c : int b = a;
+				file3.c : int c = b;
+
+				the order of initialization for them is undefined,because these file are
+				different translation units.
+
+				maybe c would be initialized at first,then them has error values.
+
+			  How to prevent this ?
+			  :  let non-local static objects become local static objects.
+
+			  can define a function which contains local static object and it will returns a reference to
+			  these local static object.
+			  like this :
+
+			       int &global_value_a(void)
+			       {
+			         static int a = 16;
+				 return a;
+			       }
+
+			  //  a would be created and initialized when function global_value_a() is invoke,and a will be
+			  //  recycle after program exit.if dont call that function at anywhere,it will not incur 
+			  //  runtime cost.
+
+			  //  the better way is define such function as inline function.
+			  //  not only built-in type can do this,other user-defined c++ type also can do this as well.
+			      struct X &global_object_sX(arg-list)
+			      {
+			        static struct X sX{arg-list};
+				return sX;
+			      }
+
+
+	         !!  manually initialize objects of built-in type,because c++ only sometimes initializes them itself  !!
+		 //  initializes them to zero,but not always
+
+		 !!  in a constructor,prefer use of the member initialization list to assignment inside the body of
+		     the constructor.list data members in the initialization list in the same order they're declared 
+		     in the class. (for prevent confusion)  !!
+		 !!  avoid initialization order problems across translation units by replacing non-local static objects
+		     with local static objects.  !!
+			      		   
+
+
+
+
 		    
 
 
