@@ -763,6 +763,31 @@ cpp11>
 			 #  attribute often as the compiler extension such as __attribute__((...)) in gnu/gcc,
 			    use these extension can demand compiler do something when construct program.
 
+			 standard attributes :
+			 	  [[noreturn]]  indicates that the function doesnt return
+				  [[carries_dependency]]  indicates that dependency chain in release-consume
+				  			  std::memory_order propagates in and out of the function
+				  [[deprecated]]  
+				  [[deprecated("reason")]]  indicates that the use of the name or entity declared 
+				  			    with this attributes is allowed,but discouraged for
+							    some "reason"
+				  [[fallthrough]]  indicates that the fall through from the previous case label is
+				  		   intentional and should not be diagnosed by a compiler that warns
+						   on fall-through
+				  [[nodiscard]]
+				  [[nodiscard("reason")]]  encourages the compiler to issue a warning if the return value
+				  			   is discarded
+				  [[maybe_unused]]  suppresses compiler warnings on unused entities,if any
+				  [[likely]]
+				  [[unlikely]]  indicates that the compiler should optimize for the case where a path
+				  		of execution through a statement is more or less likely than any other
+						path of execution
+				  [[no_unique_address]]  indicates that a non-static data member need not have an address
+				  			 distinct from all other non-static data members of its class
+				  [[assume]]  specifies that an expression will always evaluate to true at a given point
+				  [[optimize_for_synchronized]]  indicates that the function definition should be optimized
+				  				 for invocation from a synchronized statement
+
 
 	       parameter pack
 	       		 a template parameter pack is a template parameter that accepts zero or more template arguments(
@@ -1086,6 +1111,151 @@ cpp11>
 				256_km;	      	   //  operator""_km ull literal 256
 				"hello world"_S;   //  operator""_S  string literal std::string{"hello world"}
 				'k'_c; 		   //  operator""_c  char literal 'k' - 1 = 'j'
+
+
+	       lambda expressions
+			constructs a closure: an unnamed function object capable of capturing variables in scope.
+
+			syntax:
+				[captures](parameters) -> <ret> <specifiers> { <body> };
+				//  full form
+
+				[captures]<specifiers> { <body> };
+				//  omitted parameter list,no return,no argument taken.
+
+				[captures]<tparameters> requires(optional) (parameters) -> <ret> <specifiers> { <body> };
+				[captures]<tparameters> requires(optional) -> <ret> <specifiers> { <body> };
+				//  generic lambda and explicitly provides a list of template parameters
+
+				captures :
+					 [= | & , <variables accessible>]
+					 = - access object by-copy (default)
+					 & - access object by-reference 
+
+					 v is a non-local variable or has static or thread local sorage duration
+					 or a reference that has been initialized with a constant expression,
+					 then v can be used even it is not in capture-list.
+
+					 v is a variable has const non-volatile integral or enumeration type and
+					 has been initialized with a constant expression or constexpr and has
+					 no mutable members,then v can be readed even it is not in capture-list.
+				
+				tparameters :
+					      a non-empty comma-separated list of template parameters,used to provide
+					      names to the template parameters of a generic lambda.
+				parameters :
+					   function argument list.
+				<ret> :
+				      type to returns.
+				<specifiers> :
+					     mutable | constexpr | consteval | static
+
+					     mutable :
+					     	     allow to modify the objects captured by copy,and to call their
+						     non-const member functions.
+					     
+					     consteval :
+					     	       specifies that the function call operator or any given operator
+						       themplate specialization is an immediate function,consteval and
+						       constexpr will conflicts to each other.
+
+			#  if auto is used as a type of a parameter or an explicit template parameter list is provided,
+			   the lambda is a generic lambda.
+			#  a vairable __func__ is implicitly defined at the begining of body,with semantics as described
+			   like this :
+			   	static const char __func__[] = "function-name";
+				//  this variable has block scope and tatic storage duration.
+				//  can use std::cout to print this char array.
+
+		 	#  the lambda expression is a prvalue expression of unique unnamed non-union non-aggregate class type,
+			   known as closure type,which is declared in the smallest block scope { ... },class scope,or namespace
+			   scope that contains the lambda expression.
+			   E.g.
+				void func(void)
+				{
+					auto internal_func = [] -> void { return; };
+					//  func::internal_func
+				}
+
+			   the closure type cannt be explicitly instantiated,explicitly specialized,or named in a friend declaration.
+			   ret ClosureType::operator()(parameters) { <body> }
+			   template<template-parameters>
+			   ret ClosureType::operator()(parameters) { <body> }
+
+			   ClosureType::operator ret(*)(params)()
+			   using F = ret(*)(params);
+			   operator F() const nonexcept;
+			   using F = ret(*)(params);
+			   constexpr operator F() const noexcept;
+
+			   using F = int(*)(const int &);
+			   operator F() const noexcept;
+
+			   template<tparams> using fptr_t = ret| tparams (*)(tparams fparams);
+			   template<tparams> operator fptr_t<tparams>() const noexcept;
+			   template<tparams> using fptr_t = ret | tparams (*)(tparams fparams);
+			   template<tparams> constexpr operator fptr_t<tparams>() const noexcept;
+
+			   template<class T> using fptr_t = T (*)(const T &);
+			   template<class T> operator fptr_t<T>() const noexcept;
+
+			   #  this user-defined conversion function is only defined if the capture list of the lambda-expression
+			      is empty,it is a public,constexpr,non-virtual,non-explicit,const noexcept member function of the 
+			      closure object.
+
+			      user-defined conversion function :
+			      		   enables implicit conversion or explicit conversion from a class type to another type.
+
+					   double f(3.11);
+					   operator double()(double x)
+					   {	    
+						return (int)x;
+					   }
+
+					   std::cout<<double(f);  //  convert f 3.11 to 3
+					   
+					   syntax : 
+					   	  conversion function is declared like a non-static member function or member 
+						  function template with no parameters,no explicit return type,and with the name
+						  of the form: 
+
+					   	  operator <conversion-type-id>
+						  explicit operator <conversion-type-id>
+						  explicit (<expression>) operator <conversion-type-id>
+
+			Usage:
+				auto func1 = []<class T> requires std::integral<T> (T a, T b) -> T {
+				     	   return a + b * 2;
+					   };
+
+				int main(void)
+				{
+					int a(1), b(2);
+					auto func2 = [a, b](void) -> decltype(a) {
+					     return func1(a, b);
+					     };
+					return func2();     
+				}
+
+			#  for the purpose of name lookup,determining the type and value of the this pointer and for accessing
+			   non-static class members,the body of the closure types's function call operator or operator template
+			   is considered in the context of the lambda-expression.
+			   E.g.
+				struct X {
+				       int x, y;
+				       int operator()(int);
+				       void f()
+				       {
+						//  the context of the following lambda is the member function X::f
+						[=]() -> int
+						{
+							return operator()(this->x + y);
+							//  X::operator()(this->x + (*this).y)
+							//  this has type X *
+						};
+				       }
+
+
 
 
 				        
