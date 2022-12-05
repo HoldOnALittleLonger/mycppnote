@@ -377,7 +377,29 @@ chapter1>
 		     with local static objects.  !!
 			      		   
 
+	 Item5 : known what functions C++ silently writes and calls
+	       a class is an empty if c++ isnt get through with it.
+	       if there is none of constructor or destructor or copy constructor or copy assignment operator was
+	       defined in a class,compiler will automatically defines them implicitly,if they are needed,but it
+	       doesnt take much to need them.all these function will both public and inline.
+	       (from c++11,compiler will defines move constructor move assignment operator implicitly,if they were
+	       not defined)
 
+	       if there is a constructor was defined,have to defined a default constructor be there,of course,
+	       use =default specifier is the other way.
+
+	       #  the generated destructor is non-virtual unless it's for a class inheriting from a base class that
+	          itself declares a virtual destructor.
+	       #  compiler generated copy assignment operator only when the resulting code is both legal and has a
+	          reasonable chance of making sense.
+		  if a base class placed its copy assignment operator in private,then compiler will refuse to defines
+		  copy assignment operator implicitly for derived class.
+
+	       #  the compiler generated copy constructor and copy assignment operator will does shallow duplication,
+	          that is,copy bits not copy object.
+
+	       !!  compilers may implicitly generate a class's default constructor,copy constructor,copy assignment 
+	           operator,and destructor.  !!
 
 
 		    
