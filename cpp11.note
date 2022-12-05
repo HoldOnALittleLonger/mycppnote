@@ -1247,6 +1247,58 @@ cpp11>
 				       }
 
 
+	       noexcept specifier
+			specifies whether a function could throw exceptions.
+
+			syntax :
+			       noexcept
+			       noexcept()
+			       throw()			//  removed in c++20,deprecated in c++17
+
+			       noexcept is same as noexcept(true)
+			       if the expression evaluates to true,the function is declared not to throw any
+			       exceptions.
+
+			       noexcept-specification is not a part of the function type and can only appear as
+			       a part of a lambda declarator or a top-level function declarator.
+			       it cant appear in a typedef or type alias declaration.
+			       noexcept-specification can nest.
+
+			       potentially-throwing :
+			       			    'noexcept(flase)' follows a function declarator.
+						    or none of except-specifier follows a function declarator.
+
+			       non-throwing :
+			       		    'noexcept' or 'noexcept(true)' follows a function declarator.
+
+			       #  for constructor,destructor,copy/move constructor,copy/move assignment operator,
+			          comparison operator,any function in these is implicitly declared or is defaulted,it will
+				  be a non-throwing function unless a invocation in it or a base or member (if existing)
+				  is potentially-throwing.(base destructor is potentially throwing or base constructor is
+				  potentially-throwing,or a subexpression is potentially-throwing)
+
+			          #  for default constructor,if a default member initializer is potentially-throwing,then
+				     this default constructor is also potentially-throwing.
+
+			       #  deallocation functions are non-throwing
+				  
+
+			Usage:
+				void func(void) noexcept(false);
+				void func1(void);
+
+				void func2(void) noexcept;
+				void func3(void) noexcept(true);
+
+				void (&)(void) noexcept func4(int (*)(int) noexcept) noexcept;
+
+
+		        #  if a function is noexcept but throws an exception,then std::terminate will be called.
+			#  the exception specification of a function template specialization is not instantiated along
+			   with the function declaration;it is instantiated only when needed.
+			#  an overrider of a non-throwing virtual cant be potentially-throwing.
+
+
 
 
 				        
