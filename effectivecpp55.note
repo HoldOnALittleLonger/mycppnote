@@ -402,6 +402,76 @@ chapter1>
 	           operator,and destructor.  !!
 
 
+	 Item6 : explicitly disallow the use of compiler-generated functions you dont want
+	       for preventing compiler-generated version can eliminate some bugs when try to copy a class inadvertently.
+	       
+	       method1>
+			declare copy-constructor and copy-assignment as private members and never implement them.
+			E.g.
+				class A {
+				public:
+				  ...
+
+				private:
+				  A(const A &);
+				  A &operator=(const A &);
+				};
+
+				//  just declaring,dont implement.
+				//  if anywhere try to copy class A through these functions,
+				//  linker would throw error.
+
+	       method2>
+			define a empty base class,and declare its copy-constructor and copy-assignment as private members,
+			dont implement them.
+			other class which dont want to be copied can inherit from the class.
+			E.g.
+				class Uncopyable {
+				private:
+				  Uncopyable(const Uncopyable &);
+				  Uncopyable &operator=(const Uncopyable &);
+				};
+
+				//  neednt inherit Uncopyable with public
+				//  and neednt declare its destructor as a virtual function(it has no data)
+				class A : private Uncopyable {
+				  ...
+				};
+
+				//  compiler would generates copy-constructor and copy-assignment for class A if anywhere
+				//  try to copy class A.
+				//  but for copy class A,the base class Uncopyable have to be copied as well,so compiler
+				//  try to copy it through its copy-constructor or copy-assignment,but them are private,
+				//  derived class cant access base class'private members straight.
+				//  compiler would throw an error.
+
+			#  Uncopyable contains no data,so it is eligible for the empty base class optimization,but 
+			   because it is a base class,use of this technique could lead to multiple inheritance.
+			   Multiple-Inheritance,in turn,can sometimes disable the empty base class optimization.
+
+
+	       method3>
+			from c++11,function-qualifier = delete can declare that the function was deleted.
+			E.g.
+				class A {
+				public:
+				  A(const A &) = delete;
+				  A &operator=(const A &) = delete;
+				  ...
+				};
+
+				//  anywhere try to call deleted function,compiler would throws error.
+
+
+	       #  for method1,error would be thrown while link-time,
+	       	  for method2 and method3,error would be thrown while compile-time.
+		  throw error at compile-time is better than throw error at link-time.(if program use dynamic library,
+		  	      	 	      	 	     	   	    	       link-time error would crash program)
+
+	       !!  to disallow functionality automatically provided by compilers,declare the corresponding member functions
+	           private and give no implementations.
+		   Using a base class like Uncopyable is one way to do this.  !!
+
 		    
 
 
