@@ -1299,6 +1299,65 @@ cpp11>
 			#  an overrider of a non-throwing virtual cant be potentially-throwing.
 
 
+	       alignof operator AND alignas specifier
+			queries alignment requirements of a type.
+			syntax:
+				alignof(<type-id>)
+				//  returns a value of type std::size_t
+
+				operand of alignof() could be complete object type,an array type whose element type is complete,
+				or a reference type to one of those types.
+
+			#  type-id = reference,returns the alignment of referenced type
+			#  type-id = array type,returns the alignment of the element
+
+			specifies the alignment requirement of a type or an object.
+			syntax:
+				alignas(<expression>)
+				alignas(<type-id>)
+				alignas(<pack...>)
+
+				expression must be an integral constant expression that evaluates to zero,or to a valid value 
+				for an alignment or extended alignment.
+
+				alignas(<pack...>) <=> alignas(e1), alignas(e2), ...
+				//  pack could be type parameter pack or non-type parameter pack.
+				
+
+			#  alignas cant applies a function parameter or the exception parameter of a catch clause.
+			   and also cant applies a bitfield class data member.
+			   E.g.
+				void func(int alignas(int) a);  //  ERROR
+				try {
+				    ...
+				} catch (int alignas(int) x) {  //  ERROR
+
+				    ...
+				}
+				struct alignas(int) X {		//  OK
+				       int alignas(int) bits:2; //  ERROR
+				};
+
+			#  if the strictest(largest) alignas on a declaration is weaker than the alignment it would have
+			   without any alignas specifiers,the program is ill-formed.
+			   E.g.
+				struct alignas(8) X { };
+				struct alignas(1) Y { struct X x; };  //  ill-formed, 1 < 8
+			#  several alignas() in a declaration,would use the strictest(largest) alignas(),unless it would 
+			   weaken the natural alignment of the type.
+			   E.g.
+				struct alignas(1) X {
+				       int x;
+				       char c;
+				       double f;
+				};  //  alignment would be alignas(double)
+
+				int alignas(2) a(13);  //  ill-formed
+
+			#  alignas(0) is always ignored. (invalid non-zero expression such as 3, 5, 7, a + b = 9)
+
+
+
 
 
 				        
