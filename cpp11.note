@@ -1357,9 +1357,62 @@ cpp11>
 			#  alignas(0) is always ignored. (invalid non-zero expression such as 3, 5, 7, a + b = 9)
 
 
+	       multithreaded memory model
+	       		     a thread of execution is a flow of control within a program that begins with the invocation of a 
+			     top-level function by std::thread::thread,std::async,or other means.
 
+			     method for avoid conflicting evaluations:
+			     	    conflicting evaluations execute on the same thread or in the same signal handler.
+				    conflicting evaluations are atomic operations,or one of the conflicting evaluations 
+				    happens-before another.(sync)
 
+			     memory order
+			     	    when a thread reads a value from a memory location,it may see the initial value,the value
+				    written in the same thread,or the value written in another thread.
+				    std::memory_order introduces how to access memory location.
 
-				        
+		             obstruction freedom
+			     	    when only one thread that is not blocked in a standard library function executes an 
+				    atomic function that is lock-free,that execution is guaranteed to complete.
+				    (local atomic operations)
 
+			     lock freedom
+			     	    when one or more lock-free atomic functions run concurrently,at least one of them is 
+				    guaranteed to complete.
+
+			     lock-free
+			            for a concurrent implementation,if running as enough time there at least has a process
+				    progressed or completed whatever state the implementation is.
+				    
+			     progress guarantee
+			     	    in a valid c++ program,every thread eventually does noe of the following:
+				       terminate,
+				       makes a call to an I/O library function,
+				       performs an access through a volatile glvalue,
+				       performs an atomic operation or a synchronization operation
+
+				    #  no thread of execution can execute forever without performing any of these 
+				       observable behaviors.
+				    #  a thread is said to make progress if it performs one of these executions.
+				       blocks in a std function,or calls an atomic lock-free function that does not
+				       complete because of a non-blocked concurrent thread.
+
+			     concurrent forward progress
+			            if a thread offers concurrent forward progress guarantee,it will make progress
+				    in finite amount of time,for as long as it has not terminated,regardless of 
+				    whether other threads are making progress.
+
+				    #  std encourages : 
+				       	   main thread and thread started by std::thread should offers
+					   concurrent forward progress.
+
+			     parallel forward progress
+			     	    if a thread offers parallel forward progress guarantee,the implementation is not
+				    required to ensure that the thread will eventually make progress if it has not
+				    yet executed any progress guarantee operation,but once this thread has executed
+				    such operation,it provides concurrent forward progress guarantees.
+
+			     weakly parallel forward progress
+			     	    if a thread offers weakly parallel forward progress guarantee,it does not guarantee
+				    to eventually make progress,regardless of whether other threads make progress or not.
 				
