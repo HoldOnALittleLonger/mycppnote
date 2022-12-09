@@ -473,7 +473,45 @@ chapter1>
 		   Using a base class like Uncopyable is one way to do this.  !!
 
 		    
+	 Item7 : declare destructors virtual in polymorphic base classes
+	       c++ specifies that when a derived class object is deleted through a pointer to a base class with a 
+	       non-virtual destructor,results are undefined.
 
+	       if try to delete a derived class object through a base class pointer,then the resource of derived
+	       would not be deleted.
+	       E.g.
+			class A { ... };  //  destructor of A is not a virtual function
+			class B : public A { ... };
 
+			A *ab = new class B;
+			delete ab;  //  resoure of B would not be deleted.
+
+	       if a class has virtual function,then pointer vptr and array vtbl would be contained.
+	       vptr is "virtual table pointer"
+	       vtbl is "virtual table"
+	       	    //  exactly form of them is designed by implementation detail.
+		    //  maybe not an array.
+		    //  vptr and vtbl is not portiable! (it is the second part of C++)
+
+	       it A has a virtual destructor,then statement 'delete ab' would invoke B::~B() first,then invoke
+	       A::~A().
+
+	       vtbl is used to determine which function should be invoke through object pointer or reference.
+	       so,vptr and vtbl would increase size of class,if dont want such class as base class,should not
+	       declare any virtual function in it.
+	       (a class maybe occopied 64bits,but it will occopied 128bits if there has a virtual function in it.)
+
+	       !!  polymorphic base classes should declare virtual destructors,if a class has any virtual functions,
+	           it should have a virtual destructor.  !!
+	       !!  classes not designed to be base classes or not designed to be used polymorphically should not
+	           declare virtual destructors.  !!
+		   #  STL and std::string and std::input_iterator_tag and etc. are not designed to allow the
+		      manipulation of derived class objects via base class interfaces.
+		      (dont inherit from STL !!)
+
+	       !!  occasionally it can be convenient to give a class a pure virtual destructor,a class has pure virtual
+	           function would be abstract class,it cant be instantiated.but if declare the destructor of this class
+		   as a virtual function,have to defined its body,because of it is that when delete resource of a derived
+		   class via destructor,the lateast invocation of function must be base class destructor.  !!
 
 
