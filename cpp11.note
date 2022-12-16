@@ -1117,7 +1117,7 @@ cpp11>
 			constructs a closure: an unnamed function object capable of capturing variables in scope.
 
 			syntax:
-				[captures](parameters) -> <ret> <specifiers> { <body> };
+				[captures](parameters) <specifiers> -> <ret> { <body> };
 				//  full form
 
 				[captures]<specifiers> { <body> };
@@ -1132,7 +1132,18 @@ cpp11>
 					 = - access object by-copy (default)
 					 & - access object by-reference 
 
-					 v is a non-local variable or has static or thread local sorage duration
+					 !!  if captures list is null = [],that is cant access external object from body.
+					 !!  if captures list is capture by-reference equal to [&],that is all external object
+					     can be accessed from body.
+					 !!  if captures list is capture by-copy equal to [=],that is all changes on external object
+					     just change the copy version.
+					 !!  E.g.
+					     [&, a, b] { ... return k += 3; };
+					     //  default capture-mode is by-reference
+					     //  but a and b is captured by-copy,other objects in body would captured by-reference
+					     //  k is captured by-reference
+
+					 v is a non-local variable or has static or thread local storage duration
 					 or a reference that has been initialized with a constant expression,
 					 then v can be used even it is not in capture-list.
 
