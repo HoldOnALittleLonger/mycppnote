@@ -515,3 +515,37 @@ chapter1>
 		   class via destructor,the lateast invocation of function must be base class destructor.  !!
 
 
+	 Item8 : Prevent exceptions from leaving destructors
+	       C++ doest allows one too many exceptions is existed in program.
+	       suppose,container v is destroying,then all element in it have to be destroyed,too.
+	       the first destroy failed and throw an exception,but remainder is still have to be
+	       destroyed,then the second exception is thrown in encountered.by the time,program
+	       has two exceptions aliving,this is a problem.
+
+	       if exception from destructor,then there is hard to react the condition that exception
+	       was thrown.
+	       several exceptions is aliving that cause premature program termination or undefined 
+	       behavior.
+
+	       First method :
+	       	     use try { ... } catch () { ... } in destructor,there can ignore an exception from
+		     try {} or deal with it in catch {}.
+		     suppose a destructor will calls func() to does some works,but it maybe throw an
+		     exception,then have to put the invocation of it into try {}.
+		     deal with the exception or ignore it(just record log,but do nothing) is optional.
+
+		     #  deal with the exception to terminate the program.
+		     #  swallow the exception,record log and ignore it.
+
+	       Second method :
+	       	      wrap such function it might throw exception as a user interface,user should call that interface
+		      manually even it recycle class resource.there has a way to capture such exception and can
+		      react the condition in debugging time.of course,could deal with it or ignore it in program.
+
+		      #  the exception has to come from some non-destructor function.
+
+	       !!  destructors should never emit exceptions.if functions called in a destructor may throw,the destructor should
+	           catch any exceptions,then swallow them or terminate the program(std::abort()). !!
+	       !!  if class clients need to be able to react to exceptions thrown during an operation,the class should provide 
+	           a regular function that performs the operation.  !!
+

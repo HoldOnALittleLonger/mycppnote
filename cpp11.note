@@ -1426,4 +1426,50 @@ cpp11>
 			     weakly parallel forward progress
 			     	    if a thread offers weakly parallel forward progress guarantee,it does not guarantee
 				    to eventually make progress,regardless of whether other threads make progress or not.
+
+
+	       thread-local storage
+	       		    thread storage duration.
+			    The storage for the object is allocated when the thread begins and deallocated when the 
+			    thread ends.each thread has its own instance of the object.
+			    only objects declared thread_local have this storage duration.
+			    thread_local can appear together with static or extern to adjust linkage.
+
+			    Usage:
+				thread_local int x(3);
+			    	...
+
+	       module linkage
+	       	      the name can be referred to only from the scopes in the same module unit or in the other translation
+		      units of the same named module.
+		      names declared at namespace scope have module linkage if  their declarations are attached to a named
+		      module and are not exported,and dont have internal linkage.
+
+		      Usage:
+			file - xxx.c :
+			     namespace _xxx {
+			     	       int x(10);
+			     }
+
+			file - yyy.c :
+			     namespace _xxx {
+			     	       int y(x);
+			     }
+			     namespace _yyy {
+			     	       int z(_xxx::y);
+			     }
+
+
+	       GC interface(removed in C++23)
+	       	  Garbage collector support
+
+	       	  	header <memory> ; namespace std
+			[type] 		    [name]			[description]
+			<function> 	    declare_reachable		declares that an object cant be recycled
+			<function template> undeclare_reachable		declares that an object can be recycled
+			<function>  	    declare_no_pointers		declares that a memory area does not contain traceable pointers
+			<function> 	    undeclare_no_pointers	cancels the effect of std::declare_no_pointers
+			<enum> 		    pointer_safety		lists pointer safety models
+			<function> 	    get_pointer_safety		returns the current pointer safety model
+			
 				
