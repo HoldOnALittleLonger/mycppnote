@@ -1471,5 +1471,80 @@ cpp11>
 			<function> 	    undeclare_no_pointers	cancels the effect of std::declare_no_pointers
 			<enum> 		    pointer_safety		lists pointer safety models
 			<function> 	    get_pointer_safety		returns the current pointer safety model
-			
-				
+
+
+	       Range-based for loop (boost library)
+	         executes a for loop over a range.used as a more readable equivalent to the traditional for loop operating
+		 over a range of values,such as all elements in a containter.
+
+		 syntax:
+		   <attr(optional)> for (<init-statement(optional)> <range-declaration> : <range-expression>)
+		   		    	<loop-statement>
+
+		     attr - any number of attributes(C++ attr)
+		     init-statement - (since c++20) either an expression statement or a simple declaration(variable with initializer,...)
+		     		      (or be null, just a ";" can omit the symbol)
+
+		     range-declaration - a declaration of a named variable,whose type is the type of the element of the sequence
+		     		         represented by range-expression,or a reference to that type.
+					 often uses the auto specifier for automatic type deduction.
+		     range-expression - any expression that represents a suitable sequence or a braced-init-list.
+		     		      	(often use a container)
+		     loop-statement - any statement.(loop body)
+
+		     //  range-declaration may be a structed binding declaration:
+		     //  for (auto &&[first, second] : mymap) { ... }
+
+		 usage:
+			std::vector<int> y{1, 2, 3, 4, 5};
+			for (auto x : y) {
+			    ...
+			}
+
+		 attention:
+		   range for loop is a simplify version of for loop when it works on a sequence.
+		   the aboce syntax produces code equivalent to the following except for the lifetime expansion of
+		   temporaries of range-expression.
+		   {
+			<init-statement>
+			auto &&__range = <range-expression>;
+			auto __begin = <begin-expr>;
+			auto __end = <end-expr>;
+			for ( ; __begin != __end; ++__begin) {
+			    <range-declaration> = *__begin;
+			    <loop-statement>
+			}
+		   }
+
+		   so range-for use iterator of the sequence to traverses it.(c++17 no this request)
+		   __begin evaluate from container.begin()
+		   __end evaluate from container.end()
+		   if range-expression returns a temporary,its lifetime is extended until the end of the loop,
+		   as indicated by binding to the forwarding reference __range.lifetimes of all temporaries within
+		   range-expression are not extended if they would otherwise be destroyed at the end of range-expression.
+
+
+	       static_assert declaration (boost library)
+	         performs compile-time assertion checking.(not in running time)
+		 
+		 syntax:
+		   static_assert(<bool-constexpr>, <message>);
+		   static_assert(<bool-constexpr>);
+
+		   message - optional(since c++17) string literal that will appears as compiler error if bool-constexpr is fale,
+		   	     except that characters not in the basic source character set are not required to appear.
+
+		 a static assert declaration may appear at namespace and block scope and inside a class body.if bool-constexpr 
+		 is false,then a compiling error would be thrown out,if it is true,then no effect.
+
+		 usage:
+			class A {
+			  public:
+			    int i;
+			  private:
+			    enum { EA, EB};
+			    static_assert(EA >= 0, "bad enum EA");
+			};
+
+
+END
