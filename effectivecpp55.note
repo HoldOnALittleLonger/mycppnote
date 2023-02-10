@@ -549,3 +549,50 @@ chapter1>
 	       !!  if class clients need to be able to react to exceptions thrown during an operation,the class should provide 
 	           a regular function that performs the operation.  !!
 
+
+	 Item9 : Never call virtual functions during construction or destruction
+	       C++ dont allow to call virtual function during construction or destruction.
+	       If base class call virtual function during constructor,and the derived class has override the virtual function,
+	       when derived class is constructing,its virtual function would never be called by base class that the virtual
+	       function had not been initialized.
+	       During base class construction,virtual functions never go down into derived classes.
+	       Calling down to parts of an object that have not yet been initialized is inherently dangerous.
+
+	       E.g.
+	         class A {
+		   public:
+		     A() { vfunction(); ... }
+		     virtual void vfunction(void) { ... }
+		     ...
+		 };
+
+		 class B : A {
+		   public:
+		     B() { ... }
+		     //  during constructor of A,the vfunction is point to A::vfunction,not B::vfunction.
+		     //  if A::vfunction is a pure virtual function,linker would cant find such function for link.
+		     //  because instanse of the virtual function was made up after object of B is created.
+		     virtual void vfunction(void) { *** }
+		 };
+
+	       #  not only do virtual functions resolve to the base class,but the parts of the language using runtime type
+	       #  information treat the object as a base class type.(dynamic_cast ...)
+
+	       An object doesnt become a derived class object until execution of a derived class constructor begins !
+	       An object is a derived class object until execution of a derived class destructor begins !
+
+	       The same reasoning applies during destruction.Once a derived class destructor has run,the object's derived class
+	       data members assume undefined values.so at the time,the type of this object is that of base class.
+
+	       #  All functions called in constructor or destructor each also cant calls virtual function.
+
+	       Cant use virtual functions to call down from base classes during construction,but for compensate,can having derived
+	       classes pass necessary construction information up to base class constructors.
+	       Use a special named function in derived class to make parameter for base class constructor is more readable.
+
+	       !!  dont call virtual functions during construction or destruction,because such calls will never go to a more
+	           derived class than of the currently executing constructor or destructor.  !!
+
+
+
+
