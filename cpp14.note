@@ -1,0 +1,57 @@
+C++14
+    C++14 is a minor version after the major version C++11,featuring mainly minor improvements and defect fixes.
+
+> Variable template :
+    A variable template defines a family of variables or static data members.
+    Syntax:
+      template<parameter-list> variable-declaration;
+
+      variable-declaration :
+        a declaration of a variable,the declared variable name becomes a template name.
+
+      parameter-list :
+        a non-empty comma-separated list of the template parameters,each of which is either non-type parameter,
+	a type parameter,a template parameter,or a parameter pack of any of those.
+
+    A variable instantiated from a variable template is called an instantiated variable.
+    A static data member instantiated from a static data member template is called an instantiated static data member.
+    A variable template may be introduced by a template declaration at namespace scope,where variable-declaration declares
+    a variable.
+    #  class static data member template is defined outside the class definition.
+
+
+    E.g. :
+      template<class T>			//  constant template
+      constexpr T pi = T(3.1415926L);
+
+      return pi<float> * 2;
+
+      template<class _CType>		//  alias template
+      using vec = std::vector<_CType>;
+
+      vec<std::string> s_vec;
+
+      template<class _CType>		//  variable template ::(global namespace)
+      std::vector<_CType> vec;	
+      std::vector<int> *pVec1 = &vec<int>;
+      std::vector<int> *pVec2 = &vec<int>;
+
+      //  pVec1 == pVec2
+
+      #  A template declaration of a static data member at namespace scope may also be a definition of a non-template 
+      #  data member of a class template
+
+      struct A {
+        template<typename T> static const T min;  //  declaration  A::(namespace scope)
+			     	    	    	  //  definition of a static data member must outside of class definition
+      };
+      template<class T>
+      const T A::min = { };			  //  definition
+
+    #  variable template is implicitly instantiated when a specialization of the variable template is referenced in
+    #  a context that requires a variable definition to exist or if the existence of the definition affects the 
+    #  semantics of the program (if the variable is needed for constant evaluation by an expression).
+
+
+
+    
