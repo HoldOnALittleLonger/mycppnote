@@ -53,5 +53,83 @@ C++14
     #  semantics of the program (if the variable is needed for constant evaluation by an expression).
 
 
+> generic lambda expression :
+    generic lambda expresson depend on ClosureType.
+    syntax :
+      [captures] <template-parameters> requires(optional) (arguments) specs requires(optional) { body };
+      [captures] <template-parameters> requires(optional) { body };
+      [captures] <template-parameters> requires(optional) specs { body };
+
+      specs : consists of specifiers,exception,attributes and trailing-return-type in that order;
+      	      each of these is optional.
+
+    usage : 
+      int i = 3, j = 4;
+      auto tf = [=] <class _T> requires std::floating_point<_T> (_T x) -> _T
+        {
+	  return (i + j) * x;
+	};  /*  for restrict template,could use concept  */
+      
+      return tf(3.5);
+
+    members of ClosureType :
+      //  they cant be explicitly instantiated,explicitly specialized or
+      //  (since c++14)named in a friend declaration.
+
+      ret ClosureType::operator()(params);
+      template<template-params>
+      ret ClosureType::operator()(params);
+
+      ClosureType::operator ret(*)(params)();
+      E.g.
+        capture-less non-generic lambda :
+	  using F = ret(*)(params);	/*  until c++17  */
+	  operator F() const noexcept;
+
+	  using F = ret(*)(params);	/*  since c++17  */
+	  constexpr operator F() const noexcept;
+
+	capture-less generic lambda :
+	  template<template-params> using fptr_t = ret(*)(params);  /*  since c++14,until c++17  */
+	  template<template-params> operator fptr_t<template-params>() const noexcept;
+
+	  template<template-params> using fptr_t = ret(*)(params);  /*  since c++17  */
+	  template<template-params> constexpr operator fptr_t<template-params>() const noexcept;
+
+      #  a generic captureless lambda has a user-defined conversion function template with the
+         same invented template parameter list as the function-call operator template.
+	 if the return type is empty or auto,it is obtained by return type deduction on the 
+	 function template specialization,which,in turn,is obtained by template argument deduction
+	 for conversion function templates.
+
+
+      ClosureType::ClosureType() = default;  /*  since c++20,only if no captures are specified  */
+      ClosureType::ClosureType(const ClosureType &) = default;
+      ClosureType::ClosureType(ClosureType &&) = default;
+
+      #  ClosureType have no constructor in c++14
+      #  copy-constructor and move-constructor of ClosureType is implicitly defined by compiler.
+
+      ClosureType &ClosureType::operator=(const ClosureType &) = delete;  /*  until c++20  */
+
+      ClosureType &ClosureType::operator=(const ClosureType &) = default;  /*  since c++20,only if no captures are specified  */
+      ClosureType &ClosureType::operator=(ClosureType &&) = default;  /*  since c++20,only if no captures are specified  */
+      ClosureType &ClosureType::operator=(const ClosureType &) = delete;  /*  since c++20,if have captrues were specified  */
+
+      ClosureType::~ClosureType();
+
+      ClosureType::<Captures>;
+
+
+    #  lambda expression could be default value to function argument,but it must be no captures or all 
+       captures have initializers. (since c++14)
+       E.g.
+         int x = 3, y = 4;
+         void func1(int (*fp = ([x = 1, y = 2](int) -> int { ... }))(int)();
+	 //  even x and y had been declared,the noname lambda expression cant captures them.
+
+      
+
+
 
     
