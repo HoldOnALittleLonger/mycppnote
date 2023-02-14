@@ -594,5 +594,120 @@ chapter1>
 	           derived class than of the currently executing constructor or destructor.  !!
 
 
+	 Item10 : Have assignment operators return a reference to *this
+	 	The convention for assignment that is assignment returns a reference to its left-hand argument.
+		So there could has such statement :
+		  int x = 3;
+		  int y, z;
+		  y = z = x + 3;
+		  //  y = (z = (x + 3))
+
+		Ofcourse,the c++ class' assignment operator should follow the convention.
+		Thus,these prototype is allowed in c++ class :
+		  Class &Class::operator=(const Class &);
+		  Class &Class::operator+=(const Class &);
+
+		Each of these operator overload function should has statement "return *this;".
+
+		#  The convention just a suggestion,code could pass compile without such convention,but all built-in types
+		   are follow the convention,and the types in standard library also.
+
+		!!  Have assignment operators return a reference to *this  !!
+
+
+	 Item11 : Handle assignment to self in operator=
+	 	self-assignment-safe :
+		  int x = 3;
+		  x = x;
+
+		The statement is work fine,but in a class operator= overload,have to care implement code.
+		>
+		  class A {
+		    public:
+		      A &operator=(const A &oa)
+		      {
+		        delete vc;
+			vc = makevc(oa.vc);
+			return *this;
+		      }
+
+		      std::vector<char> *makevc(std::vector<char> *oldvc);
+
+		      std::vector<char> *vc;
+		  };
+
+		  the operator= overload function in class A is both self-assignment-unsafe and exception-unsafe.
+		  if &oa == this and an exception occured in makevc() ,the rest that is vc point to a deleted pointer.
+		  (might another exception was thrown)
+
+		  for prevent point to deleted pointer error,could add identity test top at the function.
+
+		  A &operator=(const A &oa)
+		  {
+		    if (&oa == this)
+		      return *this;
+		    delete vc;
+		    vc = makevc(oa.vc);
+		    return *this;
+		  }  //  identity test would reduce efficiency,if same objects assignment not often occur.
+
+		  if &oa == this,then work fine,but while they are not,the function still exception-unsafe.
+		  if an exception was thrown by makevc(),vc will point to a deleted pointer.
+		  but there has a good idea to solve self-assignment-unsafe and exception-unsafe,that is assure the function
+		  is exception-safe will let it becomes self-assignment-safe.
+
+		  for prevent exception-unsafe could change order of statement(follow copy-and-swap) to deal with it :
+		  
+		  A &operator=(const A &oa)
+		  {
+		    decltype(this->vc) opvc = this->vc;
+		    vc = makevc(oa.vc);
+		    delete opvc;
+		    return *this;
+		  }
+
+		  class could has swap() method to help implement copy-and-swap code.
+
+		  void A::swap(A &a);
+		  A &operator=(const A &oa)
+		  {
+			A temp(oa);
+			swap(temp);
+			return *this;
+		  }
+
+		  A variation on this theme takes advantage of the facs that 
+		    a class's copy assignment operator may be declared to take its argument by value and 
+		    passing something by value makes a copy of it
+		    
+		  A &operator=(A oa)
+		  {
+		    swap(oa);
+		    return *this;
+		  }
+
+		  //  while call operator= for A,compiler would automatically create a temporary object that type of A.
+		  //  then operator= invokes swap() to swap *this and oa.
+		  //  but this approach sacrifices clarity.
+
+		  //  A x, y;
+		  //  x = y;  #  OK,y passed by value,then x swapped with temporary A object(copy of y).
+
+		!!  make sure operator= is well-behaved when an object is assigned to itself.
+		    Techniques include comparing address of source and target objects,
+		    careful statement ordering,and copy-and-swap.  !!
+		!!  make sure that any function operating on more than one objects behaves correctly
+		    if two or more of the objects are the same.  !!
+
+
+
+
+
+
+
+
+		  
+
+
 
 
