@@ -103,18 +103,18 @@ C++14
 	 for conversion function templates.
 
 
-      ClosureType::ClosureType() = default;  /*  since c++20,only if no captures are specified  */
-      ClosureType::ClosureType(const ClosureType &) = default;
-      ClosureType::ClosureType(ClosureType &&) = default;
+      ClosureType::ClosureType() =default;  /*  since c++20,only if no captures are specified  */
+      ClosureType::ClosureType(const ClosureType &) =default;
+      ClosureType::ClosureType(ClosureType &&) =default;
 
       #  ClosureType have no constructor in c++14
       #  copy-constructor and move-constructor of ClosureType is implicitly defined by compiler.
 
-      ClosureType &ClosureType::operator=(const ClosureType &) = delete;  /*  until c++20  */
+      ClosureType &ClosureType::operator=(const ClosureType &) =delete;  /*  until c++20  */
 
-      ClosureType &ClosureType::operator=(const ClosureType &) = default;  /*  since c++20,only if no captures are specified  */
+      ClosureType &ClosureType::operator=(const ClosureType &) =default;  /*  since c++20,only if no captures are specified  */
       ClosureType &ClosureType::operator=(ClosureType &&) = default;  /*  since c++20,only if no captures are specified  */
-      ClosureType &ClosureType::operator=(const ClosureType &) = delete;  /*  since c++20,if have captrues were specified  */
+      ClosureType &ClosureType::operator=(const ClosureType &) =delete;  /*  since c++20,if have captrues were specified  */
 
       ClosureType::~ClosureType();
 
@@ -127,6 +127,80 @@ C++14
          int x = 3, y = 4;
          void func1(int (*fp = ([x = 1, y = 2](int) -> int { ... }))(int)();
 	 //  even x and y had been declared,the noname lambda expression cant captures them.
+
+
+> lamabda init-capture (concept)
+    init-capture also called "generalized lambda captures",which allow to specify,in the capture brackets :
+      the NAME of a data member in the closure class generated from the lambda
+      an EXPRESSION INITIALIZEING that data member
+
+    syntax :
+      [capture = rvalue] () { <body> };
+
+      E.g.
+        auto pUnique = std::make_unique(5);
+	auto lambda = [ p = std::move(pUnique) ] () { return *p + 5; };
+
+	#  this will basically move the pointer object into the data member 'p' of the closure class created
+	   from the lambda.  // auto p = std::move(pUnique); ClosureType lambda.p
+	#  std::bind is posibility to emulate the move capture
+	     auto pUnique = std::make_unique(5);
+	     auto lambda = std::bind([] (const std::unique_ptr &p) { return *p + 5; }, std::move(pUnique));
+
+
+> new/delete elision
+    syntax :
+      ::(optional) new (type) initializer(optional)
+      ::(optional) new new-type initializer(optional)
+      ::(optional) new (placement-params) (type) initializer(optional)
+      ::(optional) new (placement-params) new-type initializer(optional)
+
+      type : type-id,which may be array type,and may include a placeholdertype specifier(c++11),or inlcude a class template name
+             whose argument is to be deduced by class template argument deduction.
+	     placeholdertype : auto | decltype (auto)
+
+      new-type : same as type,but is cannot include parentheses
+      	         additional : new-type is greedy,it will include every token that can be a part of a declarator.
+		 E.g.
+		   new int + 1;  //  parsed as (new int) + 1,but cant be "new int * 1;"
+
+      placement-params : a buffer where new allocate memory for the object.
+      		         E.g.
+			   char buffer[256];
+			   auto i = new (buffer) int(16);  //  allocate memory from buffer and init *i as 16.
+			   	    		 	   //  type of i would be automatically deduced to int pointer.
+
+      initializer : it is not optional if 
+      		      type or new-type is an array of unknown bound;
+		      a placeholder is used in type or new-type,that is,auto or decltype(auto),possibly combined with
+		      a type constraint;
+		      a class template is used in type or new-type whose arguments need to be deduced;
+
+      #  new would automatically adjust alignment via std::align_val_t()
+         new int == new(sizeof(int), std::align_val_t(alignof(int)))  //  operator new()
+	 //  overhead would effective when allocate an array. new(sizeof(Type) + overhead, std::align_val_t(alignof(Type)))
+
+      #  delete should combined a part with new,
+         delete[] should combined a part with new[]
+
+
+> relaxed restrictions on constexpr functions
+    the function body must not contain :
+      < a goto statement
+      < a statement with a label other than case and default
+      < a try-block
+      < an asm declaration
+      < a definition of a variable for which no initialization is performed
+      < a definition of a variable of non-literal type
+      < a definition of a variable of static or thread storage duration
+      
+    #  a function body that is =default or =delete contains none of the above
+    #  for non-const constexpr methods :
+         A constexpr specifier used in an object declaration or non-static member function implies const.
+	 A constexpr specifier used in a function or static data member(c++17) declaration implies inline.
+	 If andy declaration of a function or function template has a constexpr specifier,then every declaration
+	 must contain that specifier.
+
 
       
 
