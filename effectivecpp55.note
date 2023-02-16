@@ -700,6 +700,75 @@ chapter1>
 		    if two or more of the objects are the same.  !!
 
 
+	 Item12 : Copy all parts of an object
+	 	If data members for the class all type is built-in,then just use the compiler provided copy-constructor,
+		program should work fine.
+		but if it isnt in such case or the base class has data members isnt built-in type,the copy-constructor provided
+		by compiler would cause problem.
+
+		E.g.
+		  class A {
+		    public:
+		      int x;
+		      int y;
+
+		    private:
+		      char c;
+		      void copyC(const A &);
+		  };
+
+		  the compiler provides copy-constructor is like this function :
+		    A(const A &j)
+		    {
+		      x = j.x;
+		      y = j.y;
+		      copyC(j);
+		    };  //  it's work well
+
+		  but in another case, class has dynamic pointer
+		  class A {
+		    public:
+		      int *x;
+		      A() { x = new int[5]; }
+		      ~A() { delete[] x; x = nullptr; }
+		  }
+
+		  the compiler provided copy-constructor just do assignment "x = j.x",after j was destroyed,
+		  program try to access i.x would occur segmentfault,or occur the error while destroy i.
+		  (access a memory is not in bound of program or delete a pointer twice)
+
+		  for solve such problem,have to defined copy-constructor manually :
+		    A::A(const A &j)
+		    {
+			x = new int[5];
+			memcpy(x, j.x, sizeof(int) * 5);
+		    }
+
+		  the copy-assignment operator have to follow same conventions.
+		  of course,dont just copy all parts of the derived class,should copy all parts of the base class as well.
+		  E.g.
+		    class A : public B { ... };
+		    A::A(const A &x) : B(x) { ... }
+		    //  derived class cant access data members in private of base class B,so have to call constructor of B
+		        to copy base class,there would happen top-force-convert B(x),x would be resolved to type B.
+			(type of x is A,A public inherit from B)
+			(object convert derived-to-base-safe,object convert base-to-derived-unsafe)
+			(the parts of derived class is not defined in base class,but derived class has the parts of base class)
+
+		    A &A::operator=(const A &x) { B::operator=(x); ... }  //  manually invoke B::operator=()
+		    //  there has same principle.
+
+		  if copy-assignment operator and copy-constructor has same behavior for the class,should put the copying
+		  statements into a common function,and it would be called by them.
+		  //  this means,dont call copy-assignment operator in copy-constructor or
+		      call copy-constructor in copy-assignment operator,assignment operator applies only to objects 
+		      that have already been initialized,it had been existed(but constructor build a new object).
+		      and perform an assignment on an object under construction would mean doing something to a 
+		      not-yet-initialized object that makes sense only for an initialized object.
+
+		!!  copying functions should be sure to copy all of an object's data members and all of its base class parts.  !!
+		!!  dont try to implement one of the copying functions in terms of the other.
+		    instead,put common functionality in a third function that both call.  !!
 
 
 
