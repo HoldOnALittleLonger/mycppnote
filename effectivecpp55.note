@@ -1,4 +1,5 @@
-chapter1>
+chapter1> Fundamental
+
 	Item1 : view c++ as a federation of languages
 	      c++ is a multiparadigm programming language,one supporting
 	      a combination of procedural,object-oriented,functional,generic,
@@ -376,6 +377,7 @@ chapter1>
 		 !!  avoid initialization order problems across translation units by replacing non-local static objects
 		     with local static objects.  !!
 			      		   
+Chapter2> Constructors,Destructors,and Assignment Operators
 
 	 Item5 : known what functions C++ silently writes and calls
 	       a class is an empty if c++ isnt get through with it.
@@ -771,6 +773,89 @@ chapter1>
 		    instead,put common functionality in a third function that both call.  !!
 
 
+Chapter3> Resource Management
+
+	 Item13 : Use objects to manage resources
+	   	The situations would cause memory leak :
+		  1> forget to call delete for memory dynamically allocated.
+		  2> try to delete memory before block exit but program exited the block before
+		     the delete statement was executed.
+		  3> before delete statement was executed,program thrown an exception.
+
+		E.g.
+		  int *f(void) { return new int; }  // caller may be forget to call delete.
+
+		  void f(void) { int *x = new int; return; delete x; return; }
+		  // delete statement would never be executed.
+		  
+		  void fex(void) noexcept(false)
+		  {
+		    throw 3;
+		  }
+
+		  void f(void)
+		  {
+		    int *x = new int;
+		    fex();
+		    delete x;
+		    return;
+		  }
+
+		  // before the delete statement was executed,an exception occurred,
+		  // but function f dont catch it,so the exception would be delivered to
+		  // the caller of f (next to next until find try-catch block which catch int exception).
+		  // there would happens stack-unwinding,the resource on stack would be
+		  // automatically deleted,but the dynamic memory in heap,they would never
+		  // be deleted.
+
+		For prevent resource leaks,have to use class object to manage it,because the destructor would be automatically
+		invoked while the block which contains the object exit.
+		but if the manager is allocated also through dynamic memory allocating,would happens same problems.
+
+		RAII (Resource Acquisition Is Initialization) :
+		  
+		  c++ provides smart pointer to help manage resource.
+		  std::auto_ptr      	(deleted since c++11)
+
+		  //  RCSP (reference-counting smart pointer) had been merged into RAII.
+		  std::unique_ptr	(since c++11)
+		  std::shared_ptr	(since c++11)
+
+		  //  std::shared_ptr is the feature of TR1,but all TR1 features had merged into c++11 RAII.
+		  //  before c++11,the shared_ptr has namespace resolve std::tr1::
+
+		  for use RAII to manage resource,just do assignment to the class object with acquired pointer.
+
+		  E.g.
+		    int *x = new int;
+		    std::auto_ptr<int> pI(x);  //  the destructor of auto_ptr would invoke delete to its pointer,
+		    		       	       //  it means would execute "delete x;" in it.
+
+		  #  dont delete a pointer more than once,so cant manually execute "delete x;" after assign x to pI.
+
+		  #  std::auto_ptr is allowed to copying but have not same behavior with other copiable class.
+		     E.g.
+		       int *x = new int;
+		       std::auto_ptr<int> pI1(x);
+		       std::auto_ptr<int> pI2(pI1);
+
+		       //  pI1 would delivers its ownership to pI2 for the pointer.
+		       //  then pI2 == x,pI1 == null.
+		  #  std::shared_ptr is allowed to copying.
+		     the resource was managed by std::shared_ptr would be deleted until the last std::shared_ptr object is
+		     destroyed.(this is alike of linux file descriptor)
+
+		#  RAII object just invoke "delete" in its destructor,dont invoke "delete[]".
+		   so cant use RAII object to manage an array pointer.
+		   because STL container contains some array similar containers,if there is not reasonable,dont use
+		   user-defined array structure.
+
+		!!  to prevent resource leaks,use RAII objects that acquire resources in their constructors and release them
+		    in their destructors.  !!
+		!!  resource is not only contains memory,but also contains file-descriptor,socket,mutex,semphore,etc.  !!
+
+
+		       
 
 
 
