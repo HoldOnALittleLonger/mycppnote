@@ -202,6 +202,32 @@ C++14
 	 must contain that specifier.
 
 
+> binary literals AND digit separator
+    the integer literal form :
+      decimal-literal integer-suffix
+      octal-literal integer-suffix
+      hex-literal integer-suffix
+      binary-literal integer-suffix
+
+      integer-suffix : unsigned-suffix u|U[std::size_t(c++23)]
+      		       long-suffix l|L
+		       long-long-suffix ll|LL(c++11)
+		       size-suffix z|Z[std::size_t](c++23)
+
+      #  binary-literal is the character sequence 0b or the character sequence 0B followed by one or more binary digits
+      	 0b01101111
+	 0B11111111
+
+      #  literal is rvalue.
+      #  letters in the integer literals are case-insensitive
+      	 0xabcd == 0xABCD == 0xaBcD
+
+    digit separator : (c++14)
+      optional single quotes(') may be inserted between the digits as a separator,they are ignored during compilation.
+      E.g.
+        int x = 123'000;
+
+
       
 
 
