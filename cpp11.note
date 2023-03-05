@@ -1547,4 +1547,170 @@ cpp11>
 			};
 
 
+	       c++11 memory
+	         <memory>
+		 std::unique_ptr
+		 std::share_ptr
+		 std::weak_ptr
+		 std::auto_ptr  (deprecated in c++11,removed in c++17)
+
+		 std::unique_ptr :
+		   template<class T, class Deleter = std::default_deleter<T>>
+		   class unique_ptr;  //  for single object
+
+		   template<class T, class Deleter>
+		   class unique_ptr<T[], Deleter>;  //  for object array
+
+		   unique_ptr is a smart pointer that owns and manages another object through a pointer and disposes of that
+		   object when the unique_ptr goes out of scope.(via destructor to delete)
+		   
+		   //  unique_ptr object has its ownership,so cant copy pointer through copy-methods (copy-constructor or copy-assignment)
+		       e.g.
+		         std::unique_ptr<int> i = new int;
+			 std::unique_ptr<int> b(i);
+			 
+			 //  ownership of the anoymous memory would deliver to b,i would be set to NULLPTR.
+			     b points to the anoymous memory.
+
+		   member types :
+		     pointer  -  std::remove_reference<Deleter>::type::pointer if that type exists,otherwise T*.
+		     	      	 must satisfy nullablepointer.
+		     element_type  -  T,the type of the object managed by this unique_ptr.
+		     deleter_type  -  Deleter,the function object or lvalue reference to function or to function object,
+		     		      to be called from the destructor.
+
+	           member functions :
+		     (constructor)
+		     (destructor)
+		     operator=
+
+		     release  -  returns a pointer to the managed object and releases the ownership
+		     reset  -  replaces the managed object  
+		     swap  -  swaps the managed object
+		     
+		     get  -  returns a pointer to the managed object
+		     get_deleter  -  returns the deleter that is used for destruction of the managed object
+		     operator bool  -  checks if there is an associated managed object
+
+		     operator*  -  dereferences pointer to the managed object
+		     operator->  -  same feature
+
+		     operator[]  -  provides indexed access to the managed array
+
+		 std::shared_ptr :
+		   template<class T> class shared_ptr;
+
+		   shared_ptr is a smart pointer that shared object through a pointer between several shared_ptr objects.
+		   so shared_ptr is allow to copying.
+		   the resource pointed by the pointer would be recycle until the last shared_ptr object is destructed.
+		   shared ownership between shared_ptr objects.
+
+		   member types :
+		     element_type  -  T,std::remove_extent_t<T>
+		     weak_type(since c++17)  -  std::weak_ptr<T>
+
+		   member functions :
+		     shared_ptr almost has same member functions as unique_ptr,there is same different :
+		       shared_ptr dont has release method;
+		       shared_ptr dont has get_deleter method;
+		       shared_ptr has use_count method,returns the number of shared_ptr objects referring to the same
+		       managed object;
+		       shared_ptr has unique(until c++20) method,checks whether the managed object is managed only by the
+		       current shared_ptr instance;
+		       shared_ptr has owner_before method,provides owner-based ordering of shared pointers.
+
+		 std::weak_ptr :
+		   template<class T> class weak_ptr;
+
+		   std::weak_ptr is a smart pointer that holds a non-owning("weak") reference to an object that is managed
+		   by std::shared_ptr.
+		   it must be converted to std::shared_ptr in order to access the referenced object.
+
+		   the ordinary feature std::weak_ptr does :
+		     models temporary ownership :
+		       when an object needs to be accessed only if it exists,and it may be deleted at any time by someone else,
+		       std::weak_ptr is used to track the object,and it is converted to std::shared_ptr to assume temporary ownership.
+		     break reference cycle :
+		       there has reference cycles formed by objects managed by std::shared_ptr(no outside shared pointers into the cycle),
+		       the shared_ptr reference counts cant reach zero and the memory is leaked.to prevent this,one of the pointers in the
+		       cycle can be made weak.
+
+		   member types :
+		     element_type  -  T,std::remove_extent_t<T>
+		     
+		   member functions :
+		     (constructor)
+		     (destructor)
+		     operator=
+
+		     reset  -  releases the ownership of the managed object
+		     swap  -  swaps the managed objects
+
+		     use_count  -  returns the number of shared_ptr objects that manage the object
+		     expired  -  checks whether the referenced object was already deleted
+		     lock  -  creates a shared_ptr that manages the referenced object
+		     owner_before  -  provides owner-based ordering of weak pointers
+
+
+	       forwarding reference :
+	         If a typedef-name or a decltype-speficier denotes a type TR that is a reference to a type T,
+		 an attempt to create the type "lvalue reference to cv TR" creates the type "lvalue reference to T",
+		 while an attempt to create the type "rvalue reference to cv TR" is called a forwarding reference and creates the type TR.
+
+		 A reference type that is declared using & is called an lvalue reference,and a reference type that is declared using && is
+		 called an rvalue reference or a forwarding reference.lvalue references and rvalue references and forwarding references are
+		 distinct types.except where explicitly noted,they are semantically equivalent and commonly referred to as references.
+
+		 in c++ template,the parameter has type T&& means this parameter is a forwarding reference.
+		 E.g.
+
+  		   void foo(X&& x);
+
+		   template<class Y>
+		   void bar(Y&& x);
+
+		   foo takes an rvalue reference to non-cons.
+		   bar takes an lvalue or rvalue reference to everything: const,volatile,bothn,and neither.
+		   foo accepts only rvalue X objects.
+		   bar accepts all Y objects.
+		   foo's parameter is for capturing temporaries(and other rvalues).
+		   bar's parameter is for forwaring its argument onward.
+
+		   //  forwarding reference cant has cv-qualifier
+		 
+		 auto&& used for local variables really are forwarding references too.
+		 //  lambda expression or for loop etc.
+
+
+	       std::forward :
+	         <utility>
+		 template<class T>
+		 T&& forward(typename std::remove_reference<T>::type& t) noexcept;
+		 template<class T>
+		 constexpr T&& forward(std::remove_reference_t<T>& t) noexcept;
+		 template<class T>
+		 T&& forward(typename std::remove_reference<T>::type&& t) noexcept;
+		 template<class T>
+		 constexpr T&& forward(std::remove_reference_t<T>&& t) noexcept;
+
+		 forward() forwards lvalues as either lvalues or as rvalues,depending on T.
+		 when t is a forwarding reference,this overload forwards the argument to another function with
+		 the value category it had when passed to the calling funcion.
+
+		 forward() prohibit forwards rvalues as lvalues via overload version has parameter of type &&,
+		 these overload version would forwards rvalues as rvalues.
+
+
+	       std::remove_reference :
+	         <type_traits>
+		 template<class T>
+		 struct remove_reference;
+
+		 if the type T is a reference type,provides the member typedef type which is the type referred to
+		 by T.
+		 otherwise type is T.
+
+		 //  the behavior of a program that adds specializations for remove_reference is undefined.
+
+
 END

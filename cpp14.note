@@ -228,8 +228,155 @@ C++14
         int x = 123'000;
 
 
-      
+> function return type deducation
+    if the decl-specifier-seq of the function declaration contains the keyword auto,trailing return type may be omitted,
+    and will be deduced by the compiler from the type of the expression used in the return statement.if the return type
+    does not use decltype(auto),the deducation follows the rules of template argument deduction.
+
+    usage :
+      auto func(void) { return 3; }  //  return type of func() would be automatically deduced to int
+
+    //  "const decltype(auto)&" is an error,decltype(auto) must be used on its own
+    //  if there are multiple return statements,they must all deduce to the same type.
+        e.g.
+	  auto func(void) { if 1 > 0 return 1; return 1.2; }
+	  //  error,return type cant is float and int.
+
+    //  no return statement or the argument of the return statement is a void expression,the declared return type
+        must be either decltype(auto) {1> void or auto || 2> void}
+
+    //  compiler automatically deduce only occur at the time that first return statement was found.
+
+    the cases allow to use return type deduction :
+      1>  function template
+      2>  user-defined conversion function
+      3>  general function
+
+      #  virtual function and coroutines dont allow to use return type deduction.
+      #  braced-init-list return statement dont allow to use return type deduction.
+
+    //  redeclarations or specializations of functions or function templates that use return type deduction must
+        use the same return type placeholders.
+    //  explicit instantiation declarations do not themselves instantiate function templates that use return
+        type deduction.
+	e.g.
+	  template<typename T>
+	  auto func(T i) { return i; }
+	  extern template auto func(int);  //  does not instantiate f<int>
+
+	  int (*p)(int) = f;  //  instantiates f<int> to determine its return type.
 
 
-
+> aggregate initialization
+    initializes an aggregate from an initializer list,it is a form of list-initialization.      
     
+    syntax :
+      T object = {arg1, arg2, arg3, ...};
+      T object{arg1, arg2, ...};
+      T object = {.des1 = arg1, .des2{arg2}, ...};
+      T object{.des1 = arg1, .des2{arg2}, ...};
+
+      1,2>  initializing an aggregate with an ordinary initializer list.
+      3,4>  initializing an aggregate with designated initializers(aggregate class only)
+
+    an aggregate is one of the following types :
+      array type
+      class type(typically,struct or union),that has
+        no user-declared constructors  (until c++11)
+	no user-provided,inherited,or explicit constructors  (since c++11,until c++20)
+	no user-declared or inherited constructors  (since c++20)
+	no private or protected direct(c++17) non-static data members
+	no base classes  (until c++17)
+	no virtual base classes  (--
+	no private or protected direct base classes  (--  since c++17)
+	no virtual member functions
+	no default member initializers  (since c++11,until c++14)
+
+    the elements of an aggregate are :
+      for an array,the array elements in increasing subscript order.
+      (until c++17) for a class,the non-static data members that are not anonymous bit-fields,in declaration order.
+      (since c++17) for a class,the direct base classes in declaration order,followed by the direct non-static data members that
+      	     	    are neither anonymous bit-fields nor members of an anonymous union,in declaration order.
+
+    #  designated initializer :
+         struct A { int a; int b; int c; };
+	 struct A a = {
+	   .b = 4,
+	   .a = 3,
+	   .c = 5
+	 };  //  such initializer was often occurred in linux kernel code.
+
+
+> smart pointer producter
+    std::make_unique , std::make_unique_for_overwrite :
+      <memory>
+
+      //  only for non-array types. since c++14 until c++23
+      template<class T, class... Args>
+      unique_ptr<T> make_unique(Args&&... args);
+      template<class T, class... Args>
+      constexpr unique_ptr<T> make_unique<Args&&... args);
+
+      //  only for array types with unknown bound. since c++14 until c++23
+      template<class T>
+      unique_ptr<T> make_unique(std::size_t size);
+      template<class T>
+      constexpr unique_ptr<T> make_unique(std::size_t size);
+
+      //  only for non-array types. since c++20 until c++23
+      template<class T>
+      unique_ptr<T> make_unique_for_overwrite();
+      template<class T>
+      constexpr unique_ptr<T> make_unique_for_overwrite();
+
+      //  only for array types with unknown bound. since c++20 until c++23
+      template<class T>
+      unique_ptr<T> make_unique_for_overwrite(std::size_t size);
+      template<class T>
+      constexpr unique_ptr<T> make_unique_for_overwriter(std::size_t size);
+
+      make_unique() constructs an object of type T and wraps it in a std::unique_ptr.
+      if make_unique() received template-parameter pack,then it use these parameters to constructs
+      object of type T via its constructor.
+      for array types,it takes a size to allocate memory length is equivalent to sizeof(T) * size.
+
+      //  the function is equivalent to :
+          unique_ptr<T>(new T(std::forward<Args>(args)...));
+
+
+    std::make_shared , std::make_shared_for_overwrite :
+      <memory>
+      
+      //  since c++11, T is not array
+      template<class T, class... Args>
+      shared_ptr<T> make_shared(Args&&... args);
+
+      //  since c++20, T is U[]
+      template<class T>
+      shared_ptr<T> make_shared(std::size_t N);
+
+      //  since c++20, T is U[N]
+      template<class T>
+      shared_ptr<T> make_shared();
+
+      //  since c++20, T is not U[]
+      template<class T>
+      shared_ptr<T> make_shared_for_overwrite();
+
+      //  since c++20, T is U[]
+      template<class T>
+      shared_ptr<T> make_shared_for_overwrite(std::size_t N);
+
+      make_shared() is similiar with make_unique(),but it constructs std::shared_ptr object.
+
+    Usage :
+      std::make_unique()  --
+
+        std::unique_ptr<int> uP = std::make_unique<int>(3);
+	//  uP would automatically destructed after exit current block
+
+      std::make_shared()  --
+      
+        std::shared_ptr<int> sP = std::make_shared<int>(3);
+	std::shared_ptr<int> sPa(sP);
+	//  sP,sPa would automatically destructed after exit current block
