@@ -854,6 +854,40 @@ Chapter3> Resource Management
 		    in their destructors.  !!
 		!!  resource is not only contains memory,but also contains file-descriptor,socket,mutex,semphore,etc.  !!
 
+	 Item14 : Think carefully about copying behavior in resource-managing classes
+	 	For heap-resource,RAII classes work fine,but they cant be used for stack-resource,because the resource was 
+		managed by RAII class object would be deleted after the destructor called.
+		For this reason,have to implement a user-defined RAII-alike class to manage resource.
+
+		There has some problems to do copy for such class object.
+		Several possibilities :
+		  1>  prohibit copying :
+		        If copying makes no sense for an RAII class,should prohibit copying.
+			(resource dont allows to be copied,or each such resource is unique)
+
+		  2>  reference-count the underlying resource :
+		        resource allows to be copied,but there should has a counter to count references.this is alike of 
+			linux file-descriptor(or std::shared_ptr class).could simply let the user-defined class to contains
+			std::shared_ptr object to implement reference-counter.but the resource is stack-resource,so the second
+			argument of constructor of std::shared_ptr class should is a user-defined function(the Deleter) it dont
+			delete resource.(std::shared_ptr default delete resource).
+
+		  3>  copy the underlying resource :
+		        for example,std::string class.when try to copy a string object,its copy-functions would does deep copying.
+			so user-defined RAII-alike class also do deep copying as well.
+
+		  4>  transfer ownership of the underlying resource :
+		        maybe the resource if only if has one owner at same time,copy-function should not does deep copying,it have
+			to transfer ownership for the resource to another class object.(e.g. std::unique_ptr)
+
+		!!  if no sense to make copying,then prohibit it,if need reference-count,should use std::shared_ptr.  !!
+		!!  copying an RAII object entails copying the resource it manages,so the copyong behavior of the resource 
+		    determines the copying behavior of the RAII object.  !!
+		!!  common RAII class copying behaviors are disallowing copying and peforming reference counting,but other behavior
+		    are possible.  !!
+		    (this means,the reference-counter should be a static data member,or take synchronization during copying)
+			
+
 
 		       
 
