@@ -886,6 +886,63 @@ Chapter3> Resource Management
 		!!  common RAII class copying behaviors are disallowing copying and peforming reference counting,but other behavior
 		    are possible.  !!
 		    (this means,the reference-counter should be a static data member,or take synchronization during copying)
+
+
+	 Item15 : Provide access to raw resources in resource-managing classes
+	 	Sometimes,code need to accesses the raw resource inside an RAII class.
+		e.g.
+		  void func(struct A *a);
+
+		but if such struct object is managed by a RAII class,this invoke would fault :
+		  std::unique_ptr<struct A> a = std::make_unique<struct A>();
+		  func(a);  //  ERROR,func() expect an argument of type struct A pointer,
+		  	    //  but a is type of std::unique_ptr.
+
+		generally,there has two ways to support raw resource accessing :
+		  1>  explicit
+		  2>  implicit
+
+		  explicit :
+		    use a member method to covert underlying resource explicitly.
+		    some RAII class provide get() member method to supports raw resource accessing,
+		    like this :
+		      T* std::unique_ptr::get(void) const { return @__raw_resource_pointer; }
+
+		    so func() could be invoke with these codes :
+		      func(a.get());
+		    if program accesses raw resource frequently,so everywhere try to access the raw resource have to use
+		    get() member method.it is a off-putting way.
+
+		  implicit :
+		    use operator overload to implement implicit coverting.
+		    like this :
+		      T *operator RAW_TYPE(RAII_TYPE) const { return @__raw_resoure_pointer; }
+		    this way could prevent off-putting explicit convert,but it also cause some problem.
+		    that is unintended type conversions.
+
+		    //  T *struct USER_RAII::operator T*(struct USER_RAII &c) const
+		    //	{
+		    //	  return c.@__raw_pointer;
+		    //	}
+		    struct USER_RAII<struct A> ur(new struct A);
+		    struct A *la = ur;
+					//  ur is an RAII class can has managed a unamed struct A object.
+					//  la = ur try to assign ur to la,there would occurs implicit covert,
+					//  type USER_RAII -> type struct A*.
+		  
+		    the raw resource would be released after ur was destructed,la would becomes dangle pointer.
+
+		other problems :
+		  provide a way to access raw resource maybe occurs encapsulation contrary.
+		  but RAII class dont exist to encapsulate something,it exist to ensure that a particular action
+		  - resource release - takes places.
+		  mention this is for noticify that the design detail have to be pay attention.
+		  but c++ class supports friend declaring,that is same as this discussion..
+
+		!!  APIs often require access to raw resources,so each RAII class should offer a way to get at the resource 
+		    it manages.  !!
+		!!  access may be via explicit conversion or implicit conversion.in general,explicit conversion is safer,but
+		    implicit conversion is more convenient for clients.  !!
 			
 
 
