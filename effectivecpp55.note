@@ -943,6 +943,46 @@ Chapter3> Resource Management
 		    it manages.  !!
 		!!  access may be via explicit conversion or implicit conversion.in general,explicit conversion is safer,but
 		    implicit conversion is more convenient for clients.  !!
+
+
+	 Item16 : Use the same form in corresponding uses of new and delete
+	  	Two things happen during employ a new expression for create an object :
+		  1>  memory allocated
+		  2>  one or more constructors are called for that memory
+		Two things happen during employ a delete expression for destroy memory :
+		  1>  if it is exist,then call destructor for that memory
+		  2>  destroy memory
+
+		but there has a important question,how many constructors should be called?
+		>  delete expression just destroy one unit of memory,so just one destructor
+		   would be invoked.
+		   but delete[] expression should destroy more memory units as well,so there
+		   would happens such number of destructors to be invoked for the memory units.
+
+		so,have to pair 'new' and 'delete',and also have to pair 'new[]' and 'delete[]'
+		program would has fault for these case each is not a good pair :
+		  new <> delete[]
+		    SIGSEGV : try to destroy more memory units than allocated,
+		    or the remainder units allow to be accessed,but they are not suit type possible
+		    to be destroyed via destructor.
+		  new[] <> delete
+		    only destroy the first memory unit of the memory units were allocated by new[]
+
+		attention :
+		  caution of use typedef with an array :
+		    typedef std::string theArray[4];
+		    std::string *pS = new theArray;
+		    delete pS;  //  wrong,must use delete[] to destroy pS because the underlying type of theArray
+		    	   	//    is an array of std::string.
+
+		    //  for prevent this,abstain use typedef to define custom array-like struct,use STL container to
+		    //  instead.
+		    //  e.g.  std::vector<std::string> *pS = new std::vector<std::string>;
+
+		!!  if use [] in a new expression,must use [] in the corresponding delete expression.
+		    if dont use [] in a new expression,must not use [] in the corresponding delete expression.  !!
+		!!  abstain use typedef keyword to define custom array-like structure,use STL container to 
+		    instead of such method as well.  !!
 			
 
 
