@@ -983,6 +983,40 @@ Chapter3> Resource Management
 		    if dont use [] in a new expression,must not use [] in the corresponding delete expression.  !!
 		!!  abstain use typedef keyword to define custom array-like structure,use STL container to 
 		    instead of such method as well.  !!
+
+
+	 Item17 : Store newed objects in smart pointers in standalone statements
+	 	Example :
+		  int priority(void);
+		  void processWidget(std::shared_ptr<Widget> pw, int priority);
+
+		  A call to processWidget() :
+		    processWidget(new Widget, priority());
+
+		 if there has no member function which convert Widget to std::shared_ptr<Widget>,compiler would
+		 throw an error.
+		 of course,even the first parameter of processWidget is "std::shared_ptr<int> pi",then would 
+		 thrown an error though passed a int pointer via (new int).(need a convert function)
+
+		 another problem on there,the evaluate order for function argument is unknown.
+		 In C program,all function parameter would be pushed into stack in the order right->left,
+		 C++ program is apply such rule.
+
+		 suppose,compiler executes (new Widget) at first,then call priority(),call constructor of 
+		 std::shared_ptr::shared_ptr() at last;
+		 if there is an exception thrown by priority(),then the memory allocated by new expression
+		 would leak,its pointer lost.normally,the pointer should be managed by pw,but exception prevent the 
+		 action to construct pw.
+
+		 A good method is use standalong statement to construct the first argument for processWidget() :
+		   std::shared_ptr<Widget> pw(new Widget);
+		   processWidget(pw, priority());
+
+		   //  it is possible to send reference to instead value copy for std::shared_ptr object.
+
+		!!  store newed objects in smart pointers in standalone statements.failure to do this can lead to
+		    subtle resource leaks when exception are thrown.  !!
+		 
 			
 
 
