@@ -1,0 +1,70 @@
+C++17
+
+Removed Features :
+  std::auto_ptr
+  deprecated function objects
+  std::random_shuffle
+  std::unexpected
+  the obsolete iostreams aliases
+  trigraphs
+  the register keyword
+  bool increment
+  dynamic exception specification  //  throw(type-id-list) follows a function declaration
+
+Deprecated :
+  std::iterator
+  std::raw_storage_iterator
+  std::get_temporary_buffer
+  std::is_literal_type
+  std::result_of
+  all of <codecvt>
+
+
+> u8 character literal
+    u8 character literal is literal data
+    Syntax :
+      u8'c-char'
+
+      c-char : either
+      	         > basic-c-char
+		 > an escape sequence
+		 > a universal character name
+
+    UTF-8 character literal,such literal has type char(until c++20) or char8_t(since c++20) and the value equal to
+    ISO/IEC 10646 code point value of c-char,provided that the code point values is representable with a single UTF-8
+    code unit(range 0 - 255)
+
+    //  if c-char is not representable with a signle UTF-8 code unit,the  character literal is ill-formed.
+
+    e.g.
+      char c = u8'\xff';
+      char b = u8'\027';
+      char d = u8'd';
+
+      char_t u8c = u8'c';  //  char_t since c++20
+
+
+> made noexcept part of type system
+    this is means the noexcept specifier would as a part of function type.
+    function has type same as its return type before this feature came.
+    but functions differing only in their exception specification cant be overloaded.
+    (just like the return type,exception specification is part of function type,but not part of the
+    function signature)
+
+    e.g.
+	void f(int a) noexcept;
+	void f(int a);
+			//  the second f() cant be overloaded version of the first,
+			//  because the different between them only in their exception specification.
+			//  the second is no exception,the first is potentially exception.
+
+	g() noexcept(false);
+	g();
+			//  both declarations for g are potentially throwing,but there have not overload.
+
+	void f(void) noexcept;
+	void (*pf)(void) = f;  //  error
+	     		       //  f is noexcept,but pf requires a function which is potentially throwing.
+
+	void (*pf2)(void noexcept = f;  //  OK 
+
