@@ -68,3 +68,62 @@ Deprecated :
 
 	void (*pf2)(void noexcept = f;  //  OK 
 
+
+> new order of evaluation
+    every expression has a well-defined evaluation order !
+
+    postfix expressions are evaluated from left to right.this includes functions calls and member selection
+    expressions.
+    assignment expressions are evaluated from right to left.this includes compound assignments.
+    operands to shift operators are evaluated from left to right.
+
+    Summary :
+      the following expressions are evaluated in the order a,then b,then c,then d >
+        a.b
+	a->b
+	a->*b
+	a(b1,b2,b3)
+	b @= a  //  '@' means any operator which can be combined with '='
+	a[b]
+	a << b
+	a >> b
+
+      #  additional rule :
+      	   the order of evaluation of an expression involving an overloaded operator is determined by the
+	   order associated with the corresponding built-in operator,not the rules for function calls.
+
+         function calls :
+	   the function is evaluated before all its arguments,but any pair of arguments(from the argument list) 
+	   is indeterminately sequenced;meaning that one is evaluated before the other but the order is not
+	   specified;it is guaranteed that the function is evaluated before the arguments.
+
+    //  new order of evaluation is to solve a problem occurs in chaining expressions like :
+    	  std::cout<<f()<<t()<<c();  //  a chaining member functions calls.
+
+
+> lambda capture of *this
+    the current object *this can be implicitly captured if either capture default is present,if implicitly
+    captured,it is always captured by reference,even if the capture default is '='.
+    (c++20,the implicit capture of *this when the capture default is '=' is deprecated)
+
+    captures :
+      [this]	simple by-reference capture of the current object
+      [*this]	simple by-copy capture of the current object
+
+    attention :
+      lambda expression is a closure class object,that means it has this pointer point to the object,so
+      have to prevent the following usage :
+        void class A::func(void)
+	{
+	  auto l_func = [this](void) -> void 
+	    {
+	      return this;  //  this != A::this
+	    };
+	  //  the this pointer captured by l_func is not A::this,it is the pointer point to 
+	  //  closure class object.  
+	  /*
+	   *  auto pA(this);
+	   *  auto l_func[&pA](void) -> void { return pA; };
+	   *  //  pA == A::this
+	  */
+	}
