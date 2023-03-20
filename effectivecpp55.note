@@ -1016,11 +1016,93 @@ Chapter3> Resource Management
 
 		!!  store newed objects in smart pointers in standalone statements.failure to do this can lead to
 		    subtle resource leaks when exception are thrown.  !!
-		 
-			
 
 
-		       
+Chapter4> Designs and Declarations
+	  Software designs :
+	    begin as fairly gerneral ideas,but they eventually become detailed enough to allow for the development
+	    of specific interfaces.these interfaces must then be translated into c++ declarations.
+
+	  A good design for interfaces :
+	    they should be easy to use correctly and hard to use incorrectly.
+
+	    <correctness,efficiency,encapsulation,maintainability,extensibility,conformance to convention ...>
+
+	 Item18 : Make interfaces easy to use correctly and hard to use incorrectly
+		C++ is awash in interfaces,interface allows client to interact with code.
+		if the interface does not do the work client wants it to do,then code would not compile;
+		if the code does compile,it will do what the client wants.
+
+		develop an interface which is easy to use correctly and hard to use incorrectly,that means
+		developer have to consider the kinds of mistakes that clients might make.
+
+		if there is not reasonable dont let interface has difference to built-in types.
+		because non-local static objects has different initialization orders,so have to use wrapper to wrap
+		theit initialization as well.
+		the real reason for avoiding gratuitous imcompatibilities with the built-in types is to offer interfaces
+		that behave consistency,for example,C++ STL containers have a member function size() to indicates how many
+		elements in it,and for std::string,has length() member method to indicates how many characters in it.
+		such methods has same effect with the subscript index of built-in array type.
+
+		//  inconsistency imposes mental friction into a developer's work.
+		//  any interface that requires that clients remember to do something is prone to incorreect use,
+		    because clients can forget to do it.
+
+		could create a new type and restrict its behavior to prevent some interface errors :
+		  E.g.
+		    void func(unsigned day, unsigned month, unsigned year);
+
+		    struct Day {
+		      ...
+		      unsigned d;
+		    };
+
+		    struct Month {
+		      ...
+		      unsigned m;
+		    };
+
+		    struct Year {
+		      ...
+		      unsigned y;
+		    };
+
+		    void func(const Day &day, const Month &month, const Year &year);  //  new version
+
+		    //  these structures should has some methods to check assignment and get current data member!
+		    //  if it is possible,should prevent use enum type because enum can be used like int.
+		    //  for predefine type Month from January to December,code could defines some static function which
+		    //  has same name as January ... December like this : (the following code does not use enum type)
+		    	  static struct Month January(void)
+			  {
+			    return Month(1);
+			  }
+			  static struct Month February(void) { return Month(2); }
+			  ...
+
+
+ 		"cross-DLL" error :
+		  this problem crops up when an object is deleted using "new" in one dynamically linked library but is
+		  deleted in a different DLL.(runtime error for a lot of platforms)
+		>  smart pointer could solve such "cross-DLL" error,because smart pointer has a data member named deleter,
+		   deleter is a function which would be called in smart pointer' destructor to delete underlying resource.
+		   deleter have to be bound when smart pointer object creating,so the object and its deleter would in the 
+		   same DLL.if another DLL try to delelte the object,then a DLL which contains its deleter also would be
+		   loaded.(deleter would recycle underlying resource)
+
+		//  Boost's shared_ptr (tr1::shared_ptr) is twice the size of a raw pointer,uses dynamically allocated
+		    memory for bookkeeping and deleter-specific data,uses a virtual function call when invoking its 
+		    deleter,and incurs thread synchronization overhead when modifying the reference count in an application
+		    it believes is multithreaded.
+
+		!!  good interfaces are easy to use correctly and hard to use incorrectly.should strive for these
+		    characteristics in all interfaces.  !!
+		!!  ways to facilitate correct use include consistency in interfaces and behavioral compatiblility with
+		    built-in types.  !!
+		!!  ways to prevent errors include creating new types,restricting operations on types,constrainting object
+		    values,and eliminating client resource management responsibilities.  !!
+		!!  smart pointer supports custom deleters,this prevents the cross-DLL problem,can be used to automatically
+		    unlock mutexes.  !!
 
 
 
