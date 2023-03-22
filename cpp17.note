@@ -110,20 +110,54 @@ Deprecated :
       [this]	simple by-reference capture of the current object
       [*this]	simple by-copy capture of the current object
 
-    attention :
-      lambda expression is a closure class object,that means it has this pointer point to the object,so
-      have to prevent the following usage :
-        void class A::func(void)
+
+> compile-time if constexpr
+    if statement :
+      syntax :
+        <attr>(optional) if constexpr(optional) (<init-statement>(optional) <condition>) <statement-true>
+			 else <statement-false>
+
+      the constexpr keyword in if statement :
+        if present,the statement becomes a constexpr if statement.
+
+      init-statement : (since c++17)
+        either an expression statement or a simple declaration,typically a declaration of a variable with
+	initializer,but it may declare arbitrary many variables or be a structured binding declaration.
+	(an alias declaration (since c++23))
+	//  init-statement must end with a symbol ';',null statement is supported just a ';'.
+
+    constexpr if statement :
+      in a constexpr if statement,the value of condition must be a contextually converted constant
+      expression of type bool(until c++23)<an expression contextually converted to bool,where the
+      conversion is a constant expression.(since c++23)>
+      
+      //  the return statements in a discarded statement do not participate in function return type deduction.
+
+      E.g.
+        template<typename T>
+	auto get_value(T t)
 	{
-	  auto l_func = [this](void) -> void 
-	    {
-	      return this;  //  this != A::this
-	    };
-	  //  the this pointer captured by l_func is not A::this,it is the pointer point to 
-	  //  closure class object.  
-	  /*
-	   *  auto pA(this);
-	   *  auto l_func[&pA](void) -> void { return pA; };
-	   *  //  pA == A::this
-	  */
+	  if constexpr(std::is_pointer_v<T>)
+	    return *t;
+	  else
+	    return t;
 	}
+
+      //  if constexpr is not a substitute for the #if preprocessing directive,this means if constexpr
+      	  statement have not macro alike behavior.
+      //  when constexpr if statement inside a template,and the condition is not value-dependent after
+          instantiation,the discarded statement is not instantiated while the enclosing template is
+	  instantiated.
+
+    //  consteval if since c++23
+
+
+> constexpr lambda
+    syntax :
+      [<captures>] (<params>) <specs requires>(optional) { <body> }
+
+      specs requires = constexpr,the lambda expresion becomes constexpr lambda.
+      that means it has same behavior as constexpr function.
+      and,even constexpr is not present,if the function satisfy all constexpr function requirements,
+      the function call operator of any given operator template specialization(lambda expression indeed is
+      ClosureType) will be constexpr anyway!

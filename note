@@ -382,7 +382,7 @@
 	class inheritance:
 		class <name>:access-specifier virtual-specifier base-list
 	
-		# access-specifier : public,protected,private
+		# access-specifier : public,protected,private (if ommitted,default is private)
 		# virtual-specifier : virtual (only be used for multiple inheritance)
 	
 	# must use member-list initialization to constructe base class.(use the constructor of base class)
