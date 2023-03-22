@@ -920,9 +920,9 @@ Chapter3> Resource Management
 		    this way could prevent off-putting explicit convert,but it also cause some problem.
 		    that is unintended type conversions.
 
-		    //  T *struct USER_RAII::operator T*(struct USER_RAII &c) const
+		    //  T *struct USER_RAII::operator T*() const
 		    //	{
-		    //	  return c.@__raw_pointer;
+		    //	  return @__raw_pointer;
 		    //	}
 		    struct USER_RAII<struct A> ur(new struct A);
 		    struct A *la = ur;
@@ -1105,7 +1105,53 @@ Chapter4> Designs and Declarations
 		    unlock mutexes.  !!
 
 
+	 Item19 : Treat class design as type design
+	   designing a new class is designing a new type.but good types have a natural syntax,intuitive semantics,
+	   and one or more efficient implementations.
 
+	   there has some questions about how to design a new type :
+	     how should objects of new type be created and destroyed?
+	       the answer would influences how to define constructor and destructor.
+
+	     how should object initialization differ from object assignment?
+	       the answer determines the behavior of and the differences between constructors and assignment operators.
+
+	     what does it mean for objects of new type to be passed by value?
+	       !copy-constructor defines the meaning.
+
+	     what are the restrictions on legal values for new type?
+	       !not all combinations of values is valid for class's data members.
+
+	     does your new type fit into an inheritance graph?
+	       if new type enter inheritance graph,then have to consider restrictions in the new type,
+	       it would derives restrictions from base class,and restrict the child classes.
+
+	     what kind of type conversion are allowed for new type?
+	       explicit conversion is more safe than implicit conversion,but it is a matter for frequently call.
+	       if wish the new type could convert to several types,then have to define many convert functions.
+
+	     what operators and functions make sense for the new type?
+	       the answer determines which functions will declare for class,some will be member methods,but some
+	       will not.
+
+	     what standard functions should be disallowed?
+	       define the function as private member to prevent compiler automatically creates.
+
+	     who should have access to the members of new type?
+	       accessing permission.
+
+	     what is the "undeclared interface" of new type?
+	       kind of guarantees does it offer with respect to performance,exception-safety,and resource usage?
+	       
+	     how general is new type?
+	       if wish to define a whole family of types,then should to define a new class template.
+
+	     Is a new type really need?
+	       sometimes,the built-in types does good works,and sometimes,define a derived class from built-in class
+	       does good works,and sometimes,just define some non-member functions or templates is enough.
+
+	       !!  class design is type design,before defining a new type,be sure to consider all the problems would
+	       	   appears at designing.  !!
 
 		  
 
