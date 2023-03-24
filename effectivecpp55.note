@@ -1153,8 +1153,78 @@ Chapter4> Designs and Declarations
 	       !!  class design is type design,before defining a new type,be sure to consider all the problems would
 	       	   appears at designing.  !!
 
-		  
 
+	 Item20 : Prefer pass-by-reference-to-const to pass-by-value
+	 	function parameters are initialized with copies of the actual arguments,and function caller get back a
+		copy of the value returned by the function.(inherit from C default)
+		for copy object,have to call copy-constructor to the object,this would be expensive.
+
+		a lot of C++ implementations treat reference as a pointer,so pass a pointer to bypass constructor and
+		destructor is more efficient than pass-by-value on C++ class object.
+		there has a example :
+		  class A {
+		    string a;
+		    string b;
+		  };
+		  
+		  class B : public {
+		    string c;
+		    string d;
+		  };
+
+		  function(class B cb);
+		  class B theb;
+		  function(theb);
+
+		  //  there would happens six constructor invocation and six destructor invocation. 
+		      1<B::constructor> + 2<B::string object constructors>
+		      + 1<A::constructor> + 2<A::string object constructors>
+		      destructor invocation is same.
+
+		slice problem :
+		  //  use above example.
+		  function(class A a);
+		  function(theb);
+
+		  //  A::copy-constructor would be called, A::copy-constructor(const A &);
+		      class B is inherit from class A,so a reference to A could refer a object is type of B.
+		      but specialized features make the object behave like a derived class object are "sliced off".
+		      
+		  //  inside of function(),object a has same behavior as class A,but the argument theb
+		      is treat as class A object,even it is type of class B inherit from class A.
+		      (if there has some virtual function defined in them,slice problem would bring disaster.)
+
+		  pass-by-reference can prevent slice problem,invoke virtual function via reference has different
+		  behavior.
+		  if dont want the object theb would be changed inside function(),have to use const qualified parameter.
+		  pass-by-reference-const
+
+
+		what is the time to pass-by-value?
+		: 
+		  use pass-by-value on inexpensive built-in-types(int,char, ...),
+		  use pass-by-value on STL iterator and function object types(especial designed type).
+
+		  but pay attention,double object is expensive,because it is longer than long int,
+		  and have to use FPU unit(have to use XMM register save).so should pass a double object with
+		  pass-by-reference-const is more efficent than pass-by-value.
+
+		#  it is not all small object could pass-by-value,user-defined small type should not pass-by-value.
+		   e.g.
+		     struct b {
+		       double bb;
+		     };
+
+		     double bbb;
+
+		     //  bb and bbb might have different size in different C++ implementation,
+		         and struct would be filled in normally.
+
+		!!  prefer pass-by-reference-to-const over pass-by-value.it is typically more efficient and it avoids
+		    the slicing problem.  !!
+		!!  the rule doesnt apply to built-in types and STL iterator and function object types.for them,
+		    pass-by-value is usually appropriate.  !!
+		  
 
 
 
