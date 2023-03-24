@@ -125,6 +125,7 @@ Deprecated :
 	initializer,but it may declare arbitrary many variables or be a structured binding declaration.
 	(an alias declaration (since c++23))
 	//  init-statement must end with a symbol ';',null statement is supported just a ';'.
+	//  more than one init should use comma as separator.
 
     constexpr if statement :
       in a constexpr if statement,the value of condition must be a contextually converted constant
@@ -161,3 +162,109 @@ Deprecated :
       and,even constexpr is not present,if the function satisfy all constexpr function requirements,
       the function call operator of any given operator template specialization(lambda expression indeed is
       ClosureType) will be constexpr anyway!
+
+
+> inline variable
+    syntax :
+      inline <type> <variable>
+
+      //  inline variable has static storage duration.
+      //  a static member variable declared constexpr is implicitly an inline variable.
+
+    an inline function or inline variable has the following properties :
+      > the definition of an inline function or variable must be reachable in the translation unit where it is
+        accessed.
+      > an inline function or variable with external linkage has the following additional properties :
+        > there may be more than one definition of an inline function or variable in the program as long as each 
+	  definition appears in a different translation unit and all definitions are identical.
+	> it must be declared inline in every translation unit.
+	> it has the same address in every translation unit.
+
+	//  the meaning of the keyword inline for functions came to mean "multiple definitions are permitted" rather
+	    than "inlining is preferred"",that meaning was extended to variables.)(since c++17)
+	//  inline is non-binding,compilers are free to use inline substitution for any function that's not marked
+	    inline,and are free to generate function calls to any function marked inline.
+	//  since c++17,
+	    inline cant be used in block scope.
+	    inline cant re-declare a function or variable that was already defined in the translation unit as non-line.
+
+
+> structured binding declaration
+    binds the specified names to subobjects or elements of the initializer.
+    like a reference,a structured binding is an alias to an existing object,but a structured binding does not
+    have to be of a reference type.
+
+    syntax :
+      <attr>(optional) <cv-auto> <ref-qualifier>(optional) [<identifier-list>] = expression;
+      <attr>(optional) <cv-auto> <ref-qualifier>(optional) [<identifier-list>] {expression};
+      <attr>(optional) <cv-auto> <ref-qualifier>(optional) [<identifier-list>] (expression);
+
+      cv-auto :
+        possibly cv-qualified type specifier auto,may also include storage-class-specifier static or
+	thread_local.(including volatile in cv-qualifiers is deprecated,since c++20)
+      ref-qualifier :
+        & or &&
+      expression :
+        an expression that does not have comma operator at the top level(grammatically,an assignment-expression),
+	and has either arry or non-union class type.if expression refers to any of the name from identifier-list,
+	the declaration is ill-formed.
+
+    usage :
+      int a[2] = {1, 2};
+      auto [x, y] = a;  //  x = a[0], y = a[1]
+      auto& [r, q] = a; //  r refers a[0],q refers a[1]
+
+      float x{};
+      char y{};
+      int z{};
+      std::tuple<float&, char&&, int> tpl(x, std::move(y), z);
+      const auto& [a, b, c] = tpl;
+      //  using Tpl = const std::tuple<float&, char&&, int>;
+      //  a names a structured binding that refers to x(initialized from get<0>(tpl))
+      //  decltype(a) is std::tuple_element<0, Tpl>::type, float&
+      //  ...
+
+      struct S {
+        mutable int x1:2;
+	volatile double y1;
+      };
+
+      struct S s(1, 3.3);
+      const auto [x, y] = s;  //  x is an int lvalue identifying the 2-bit bit field in s.
+      	    	      	       //  y is a const volatile double lvalue.
+
+      (since c++20)
+      //  structured binding cant be constrained.
+      	  e.g.
+	    template<class T>
+	    concept C = true;  //  define a concept object.
+
+	    C auto [x, y] = std::pair{1, 2};  //  error,constrained
+
+
+> initializers for if and switch
+    syntax :
+      <attr>(optional) if constexpr(optional) (<init-statement>(optional) <condition>) <statement-true> else <statement-false>
+
+      <attr>(optional) switch (<init-statement>(optional) <condition>) <statement>
+
+    the form of init-statement is alike for cycle init-statement
+    which have form :
+      <type> <identifier>(<value>), <type> <identifier>(<value>), ... ;
+
+    //  the explanation of init-statement is present in section "compile-time if constexpr"
+
+    null statement use ';' as placeholder.
+
+    example :
+      if (int i = 1; i)
+        ...
+      else
+        ...
+
+      switch (auto k(std::string{"kksk"}); k.length()) {
+        ...
+	default: ...
+      };
+
+
