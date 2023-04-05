@@ -1226,5 +1226,98 @@ Chapter4> Designs and Declarations
 		    pass-by-value is usually appropriate.  !!
 		  
 
+	 Item21 : Dont try to return a reference when you must return an object
+	 	the sense of the title of current section is obviously.
+		function always returns a rvalue object.but if the lvalue object inside the function is not
+		dynamically allocated,then it would be recycle after function returned.
+		if the function return a lvalue reference which refers to an internal object but which is not
+		dynamically allocated,then the lvalue reference would becomes a dangle reference,the object
+		it refers to had been destroyed,it not exist.
+		(after function returned,the data object in its frame would be recycle)
 
+		E.g.
+		  auto &func(void)
+		  {
+		    int a(3);
+		    return a;
+		  }
+
+		  int b = func();  //  try to assign b with a insed func(),but the reference is a 
+		      	  	   //  dangle reference.
+
+		  auto &func(void)
+		  {
+		    std::string s("hello world!");
+		    return s;
+		  }
+
+		  std::string ls(static_cast<const std::string &>(func()));
+		  //  ERROR,no such std::string object is exist.
+
+		  auto func(void)
+		  {
+		    std::string s("hello world!");
+		    return s;
+		  }
+
+		  std::string ls(func());
+		  //  OK,func() returns a rvalue has type std::string,
+		  //  move-constructor std::string::string(const string &&) would be called.
+
+		
+		the another point,use dynamically allocated object how to prevent memory leak?
+		if caller have to invoke delete on the pointer,but in some situations it is not possible
+		to do.
+		E.g.
+		  class A {
+		  public:
+		    A &operator+(const A a, const A b)
+		    {
+		      A *tempA = new A(a.i + b.i);
+		      return *tempA;
+		    }
+		  private:
+		    int i;
+		  };
+
+		  A a(1), b(2), c(3);
+		  A result = a + b + c;  //  potential memory leak.
+		    	       	     	 //  a + b would create tempA on heap.
+					 //  (a + b) + c would create another tempA on heap.
+					 //  then the first tempA is no way to be destroyed,
+					 //  because it is created during compound expression.
+
+
+		of course,static local object could prevent memory leak,but it is not thread-safety.
+		E.g.
+		  struct A {
+		    A &operator+(const A &a, const A &b)
+		    {
+		      static A tempA(a.i + b.i);
+		      return tempA;
+		    }
+		    bool operator==(const A &a, const A &b)
+		    {
+		      return a.i == b.i;
+		    }
+		    int i;
+		  };
+
+		  A a(1), b(2), c(3), d(4);
+		  if ((a + b) == (c + d))
+		    <T expression>
+		  else
+		    <F expression>
+
+		  //  the condition would always true.
+		  //  because tempA would be constructed at first time operator+ is invoking.
+		  //  tempA.i has value 3.
+		  //  then (c + b) dont create new tempA object,because it is static storage during.
+		  //  (a + b) and (c + d) both returns same tempA object,so the condition always true.
+
+		!!  never return a pointer or reference to a local stack object,a reference to a heap-allocated object,
+		    or a pointer or reference to a local static object if there is a chance that more than one such
+		    object will be needed.  !!
+
+					 
 
