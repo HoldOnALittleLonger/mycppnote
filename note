@@ -321,6 +321,22 @@
 
 	# std::move() is exactly equivalent to a static_cast to an rvalue referrence.
 
+	>>  an lvalue designates a function or an object.
+	>>  an xvalue(eXpiring value) also refers to an object,usually near the end of its lifetime.
+	    certain kinds of expressions involving rvalue references yield xvalues.
+	>>  a glvalue(generalized lvalue) is an lvalue or an xvalue.
+	>>  an rvalue is an xvalue,a temporary object or subobject thereof,or a value
+	    that is not associated with an object.
+	>>  a prvalue(pure rvalue) is an rvalue that is not an xvalue.
+
+	//  since c++17,for guaranteed copy elision through simplified value categories :
+	      >>  a glvalue is an expression whose evaluation computes the location of an object,
+	      	  bit-field,or function.
+	      >>  a prvalue is an expression whose evaluation initializes an object,bit-field,or
+	      	  operand of an operator,as specified by the context in which it appears.
+
+	      that is: prvalues perform initialization,glvalues produce locations.
+
 # copy and swap
 	std::swap(class.member,class.member);
 	

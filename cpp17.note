@@ -268,3 +268,49 @@ Deprecated :
       };
 
 
+> Copy elision
+  omits copy and move constructors,resulting in zero-copy pass-by-value semantics.
+  
+  Mandatory elision of copy/move operations :
+    under the following circumstances,the compilers are required to omit the copy and move construction of class objects,
+    even if the copy/move constructor and the destructor have observable side-effects.
+      >  in a return statement,when the operand is a prvalue of the same class type as the function return type.
+      >  in the initialization of an object,when the initializer expression is a prvalue of the same class type as
+         the variable type.
+
+      //  both ignore cv-qualification
+
+  //  until c++17,even compiler does copy elision,but needs a copy/move constructor which is accessible.
+  //  so cant declare =delete to them and expect compiler does copy elision.
+  //  c++17,guranteed copy elision has solved such matter.
+
+  Non-mandatory elision of copy/move operations (since c++11) :
+    under the following circumstances,the compilers are permitted,but not required to omit the copy and move construction
+    of class objects even if the copy/move constructor and the destructor have observable side-effects.
+      >  in a return statement,when the operand is the name of a non-volatile object with automatic storage duration,which
+         isnt a function parameter or a catch clause parameter,and which is of the same class type as the function return type.
+	 (NRVO,named return type optimization)(ignore cv-qualification)
+      >  in the initialization of an object,when the source object is a nameless temporary and is of the same class type as the
+         target object.when the nameless temporary is the operand of a return statement,this variant of copy elision is known
+	 as RVO,return value optimization.(until c++17)(ignore cv-qualification)
+	 //  return value optimization is mandatory and no longer considered as copy elision,since c++17.
+      >  in a throw-expression,when the operand is the name of a non-volatile object with automatic storage duration,which
+         isnt a function parameter or a catch clause parameter,and whose scope doesnt extend past the innermost try-block.
+      >  in a catch clause,when the argument is of the same type as the exception object thrown,the copy of the exception object
+         is omitted and the body of the catch clause accesses the exception object directly,as if caught by reference.
+	 (since c++11)(ignore cv-qualification)
+      >  in coroutines,copy/move of the parameter into coroutine state my be elided where this doesnt change the behavior of
+         the program other than by omiiting the calls to the parameter's constructor and destructor.(since c++20)
+  
+  Notes :
+    copy elision is the only allowed form of optimization(until c++14) one of the two allowed forms of optimization,alongside
+    allocation elision and extension,(since c++14)that can change the observable side-effects.
+
+  //  guaranteed copy elision :
+        since c++17,guaranteed copy elision through simplified value catagories.
+	"if the initializer expression is a prvalue and the cv-unqualified version of the source type is the same class as
+	 the class of the destination,the initializer expression is used to initialize the destination object.
+	 T x = T(T(T()));  //  calls the T default constructor to initialize x."
+      
+
+

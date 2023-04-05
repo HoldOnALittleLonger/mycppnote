@@ -98,7 +98,7 @@ cpp11>
 			struct a j(3);	//  RIGHT,will invoke a::a(auto c).
 			j.func2();	//  ERROR,because func2() was defined as deleted.
 		
-	       final | overrid
+	       final | override
 	         final specifier:
 		     specifies that a virtual function cant be overridden in a derived class or that
 		     a class cant be derived from.
@@ -119,7 +119,7 @@ cpp11>
 				};
 
 
-		 overrid specifier:
+		 override specifier:
 		     specifies that a virtual function overrides another virtual function.
 		     Usage:
 				struct A {	//  virtual void A::func1(void) isnt existed.
