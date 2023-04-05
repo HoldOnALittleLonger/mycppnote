@@ -1312,7 +1312,7 @@ Chapter4> Designs and Declarations
 		  //  the condition would always true.
 		  //  because tempA would be constructed at first time operator+ is invoking.
 		  //  tempA.i has value 3.
-		  //  then (c + b) dont create new tempA object,because it is static storage during.
+		  //  then (c + b) dont create new tempA object,because it is static storage duration.
 		  //  (a + b) and (c + d) both returns same tempA object,so the condition always true.
 
 		!!  never return a pointer or reference to a local stack object,a reference to a heap-allocated object,
