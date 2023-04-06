@@ -1228,9 +1228,9 @@ Chapter4> Designs and Declarations
 
 	 Item21 : Dont try to return a reference when you must return an object
 	 	the sense of the title of current section is obviously.
-		function always returns a rvalue object.but if the lvalue object inside the function is not
-		dynamically allocated,then it would be recycle after function returned.
-		if the function return a lvalue reference which refers to an internal object but which is not
+		function can returns a pointer or reference of lvalue object,but if the lvalue object inside the 
+		function is not	dynamically allocated,then it would be destroyed after function returned.
+		if the function returns a lvalue reference which refers to an internal object but which is not
 		dynamically allocated,then the lvalue reference would becomes a dangle reference,the object
 		it refers to had been destroyed,it not exist.
 		(after function returned,the data object in its frame would be recycle)
@@ -1320,4 +1320,49 @@ Chapter4> Designs and Declarations
 		    object will be needed.  !!
 
 					 
+	 Item22 : Declare data members private
+	 	private offers encapsulation and accessing controls.
+		for the public data members,anyone can read-write them,and they are unchangeable,because if they changed,
+		all client code used them have to be rewritten.
+		for the protected data members,they are as same as public data members,unencapsulation,unchangeable,all
+		derived class can read-write them.if they changed,all derived class used them have to be rewritten.
 
+		so public and protected doesnt offer implementation flexibility.
+		why private data members offer encapsulation and accessing controls,and also offer implementation flexibility?
+		>  first,private member just can be accessed by client via public interfaces,this provides accessing control.
+		   //  because accessing via class method,designer can free to make some mechanisms for notify accessing in
+		       thread environment(save mechanism)(fine-grained access control).
+
+		   second,client code doesnt use private member directly,it accessing through public interface,so private
+		   members is free to change,if public interface was not changed.this provides encapsulation.
+
+		   third,if there has more effeciency implementation,can eazy to change their implementations,client just
+		   need to recompile program.this provides implementation flexibility.
+		   //  e.g. x % 10 ==> x - (x / 10) * 10
+
+		protected data members are not more encapsulated than public data members.
+		syntactic consistency and fine-grained access control is clearly as applicable to protected data as 
+		to public data.
+
+		something is encapsulation is inversely proportional to the amount of code that might be broken if that
+		something changes.the encapsulatedness of a data member,then is inversely proportional to the amount of
+		code that might be broken if that data member changes.
+
+		//  if want to provide public interface to access private member,can follow this name-format :
+		      T <action><member_name>(arg-list);
+		    E.g.
+		      class A {
+		      public:
+		        auto getInode(void) const { return _the_inode; }
+			void setInode(decltype(_the_inode) i) { _the_inode = i; }
+		      private:
+		        unsigned _the_inode;
+		      };
+
+		!!  declare data members private.it gives clients syntactically uniform access to data,affords
+		    fine-grained access control,allows invariants to be enforced,and offers class authors 
+		    implementation flexibility.  !!
+		!!  protected is no more encapsulated than public.  !!
+		
+		
+		   
