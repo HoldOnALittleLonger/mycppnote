@@ -311,6 +311,30 @@ Deprecated :
 	"if the initializer expression is a prvalue and the cv-unqualified version of the source type is the same class as
 	 the class of the destination,the initializer expression is used to initialize the destination object.
 	 T x = T(T(T()));  //  calls the T default constructor to initialize x."
-      
+
+
+> temporary materialization
+  a prvalue(pure rvalue) of any complete type T can be converted to an xvalue of  the same type T.
+  this conversion initializes a temporary object of type T from the prvalue by evaluating the prvalue with the
+  temporary object as its result object,and produces an xvalue denoting the temporary object.
+  if T is a class or array of class type,it must have an accessible and non-deleted destructor.
+
+  the situations that temporary materialization occurs (since c++17):
+    when binding a reference to a prvalue ;
+    when performing a member access on a class prvalue ;
+    when performing an array-to-pointer conversion or subscripting on an array prvalue ;
+    when initializing an object of type std::initializer_list<T> from a braced-init-list ;
+    when typeid is applied to a prvalue ;
+    when sizeof is applied to a prvalue ;
+    when a prvalue appears as a discarded-value expression ;
+                                //  a discarded-value expression is an expression that is used for its
+				    side-effects only.the value calculated from such expression is discarded.
+				    include :
+				      full-expression of any expression statement ;
+				      the left-hand operand of the built-in comma operator ;
+				      the operand of a cast-expression that casts to the type void ;
+
+  //  temporary materialization doesnt occur when initializing an object from a prvalue of the 
+      same type,such object is initialized directly from the initializer.(guaranteed copy elision)
 
 
