@@ -1363,6 +1363,48 @@ Chapter4> Designs and Declarations
 		    fine-grained access control,allows invariants to be enforced,and offers class authors 
 		    implementation flexibility.  !!
 		!!  protected is no more encapsulated than public.  !!
+
+
+	 Item23 : Prefer non-member non-friend functions to member functions
+	 	object-oriented principles dictate that data and the functions that operate on them should be bundled
+		together.object-oriented principles dictate that data should be as encapsulated as possible.
+		but the principles does not dictate have to pack compound-functionality together.
+		  for example :
+		    object A has actions jump,walk,run
+		    when try to encapsulate it,there should has action functions jump,walk,run
+		    but should not has action function run-jump,walk-jump,
+		    because the compound functionality is not own to A,they are compounded actions,
+		    if such action functions were existed,will lost some encapsulation,
+		    counterintuitive,will yield greater packaging flexibility and fewer compilation dependecies and
+		    increase extensibility.
+
+		if something is encapsulated,it is hidden from view,the more something is encapsulated,the fewer things
+		can see it,the greater flexibility we have to change it,because our changes directly affect only those
+		things that can see what we change.
+		encapsulation affords the flexibility to change things in a way that affects only limited number of clients.
+		the more functions that can access it,the less encapsulated the data.
+
+		//  member functions and friend functions have same access to private member,
+		//  but non-member non-friend function have to access private member via member functions or friend functions,
+		//  so define a non-member non-friend function to operate object does not less encapsulation,because the more
+		//  functions that can access it,the less encapsulated the data.
+
+		//  note,a function be a non-member of one class doesnt mean it cant be a member of another class.
+
+		benefits of non-member non-friend functions :
+		  convenience functions(functionality) could be defined in another namespace another source file,
+		  dont have to be contained in class definition file.
+		  for example,std::vector in <vector>,std::list in <list>,if user dont need such functionality,then dont
+		  need include such headers,because there is no reason for these functionality to be compilation dependent on.
+		  user could free to extend functionality just create new header and define convenience functions.
+		  class member function is encapsulated and closed to extension by other user,even class could be derived,
+		  but not all class is allowed to be inherited.if create a new class inherited from other,then there has more
+		  class status have to be keep and pay attention.
+
+		!!  prefer non-member non-friend functions to member functions.doing so increases encapsulation,
+		    packaging flexibility,and functional extensibility.  !!
+
+
 		
 		
 		   
