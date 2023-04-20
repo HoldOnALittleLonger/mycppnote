@@ -1405,6 +1405,45 @@ Chapter4> Designs and Declarations
 		    packaging flexibility,and functional extensibility.  !!
 
 
+	 Item24 : Declare non-member functions when type conversions should apply to all parameters
+	 	make implicit conversion for a class is not a good idea,but sometimes,it is necessary.
+		for example,C++ built-in type conversion from int to double is reasonable,it would not loss data.
+		(but from double to int is a bad idea)
+		when design a class type,maybe let it supports some type conversion from built-in to class.
+		
+		a invocation of a function,compiler would try to convert parameter type for satisfy function parameter
+		type if argument is not same type.for built-in type,C++ supports conversion,but for user-defined type,
+		have to provide conversion by yourself.
+		  e.g.
+		    class Rational_Number {
+		    	  ...
+		    	  const Rational_Number operator*(const Rational_Number &);
+		    };
+		    
+		    Rational_Number oneEight(1, 8);
+		    Rational_Number result = oneEight * 2;   //  OK,call operator overload function
+		    Rational_Number result2 = 2 * oneEight;  //  FAILED,because 2 does not has operator overload function
+
+		    //  extend to function call form :
+		      result = oneEight.operator*(2);  //  compiler does implicit conversion from 2 to temporary Rational_Number
+		      	       			       //  through its constructor.(constructor cant be explicit requirement)
+		      result = 2.operator*(oneEight);  //  compiler cant find a eligible operator* function to call
+
+		    //  but multiplication is commutative.
+
+		  parameters are eligible for implicit type conversion only if they are listed in the parameter list.
+		  the implicit parameter corresponding to the object on which the member function is invoked-the one this points to -
+		  is never eligible for implicit conversions.
+		  there has a way to solve such problem that is non-member function :
+		    const Rational_Number operator*(const Rational_Number &, const Rational_Number &);
+		    //  the statement "result2 = 2 * oneEight",compiler can use this operator overload function to
+		    //  implement function call and implicit type conversion from 2 to Rational_Number.
+
+		remember,a function shouldnt be a member doesnt automatically mean it should be a friend.of course,maybe
+		sometimes a non-member friend function is necessary,but for the example is no need.
+
+		!!  if need type conversions on all parameters to a function(including the one that would otherwise
+		    be pointed to by the this pointer),the function must be a non-member.  !!
 		
 		
 		   
