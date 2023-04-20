@@ -377,4 +377,62 @@ Deprecated :
 	      std::cout<<t<<std::endl;
 	      func(args...);
 	    }
+
+
+> class template argument deducation(CTAD)
+    in order to instantiate a class template,every template argument must be known,but not every template argument has to
+    be specified.
+    compiler deduce the template arguments from the type of the initializer :
+      <  any declaration that specifies initialization of a variable and variable template,
+         whose declared type is the class template. (possibly cv-qualified)
+      <  new-expressions.
+      <  function-style cast expressions.
+      <  the type of a non-type template parameter.
+      	e.g.
+  	  template<class T>
+ 	  struct X {
+	    constexpr X(T) {}
+	    auto operator<=>(const X&) const = default;
+	  };
+	  template<X x>
+	  struct Y {};
+	  Y<0> y;  //  OK, Y<X<int>(0)>
+
+    user-defined deduction guides :
+      syntax :
+        explicit-specifier(optional) template-name(parameter-declaration-clause) -> simple-template-id;
+
+	//  it is same as trailing return type syntax but uses template-name as function-name.
+
+      user-defined deduction guides must name a class template and must be introduced within the same semantic scope of 
+      the class template and,for a member class template,must have the same access,but deduction guides do not become
+      members of that scope.
+
+      //  a deduction guide is not a function and does not have a body.
+      //  deduction guides are not found by name lookup and do not participate in overload resolution except for the
+      	  overload resolution against other deduction guides when deducing class template argumnets.
+      //  deduction guides cannot be redeclared in the same translation unit for the same class template.
+
+      e.g.
+        template<class T>
+	struct container {
+	  container(T t) {}
+	  template<class Iter>
+	  container(Iter beg, Iter end);
+	};
+
+	template<class Iter>
+	container(Iter beg, Iter end) -> container<typename std::iterator_traits<Iter>::value_type>;
+
+    note :
+      class template argument deduction is only performed if no template argument list is present.
+      if a template argument list is specified,deduction does not take place.
+
+      user-defined deduction guides do not have to be templates.
+        e.g.
+	  template<class T>
+	  struct S {
+	    S(T);
+	  };
+	  S(char const*) -> S<std::string>;
     
