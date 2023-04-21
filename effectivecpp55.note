@@ -1444,6 +1444,100 @@ Chapter4> Designs and Declarations
 
 		!!  if need type conversions on all parameters to a function(including the one that would otherwise
 		    be pointed to by the this pointer),the function must be a non-member.  !!
-		
+
+
+         Item25 : Consider support for a non-throwing swap
+		namespace std provides general swap function template.but it is not always effective to user-defined type.
+		the normally algorithm of swap is : copy-and-assignment
+		  temp = a; a = b; b = temp;
+		for a class type,there would produce copy-constructor or copy-assignment cost,slow program.
+		  e.g.
+		    struct A {
+		      std::vector<int> a;
+		      ...
+		    };
+
+		    struct B {
+		      A *pA;
+		      ...
+		    };
+
+		    B b1, b2;
+		    swap(b1, b2);
+		      //  copy b1 to temp,via B::copy-assignment.
+		      //  copy b1.pA to temp.pA via A::copy-constructor.
+		      //  ...  same as above.
+
+		  //  there has a simple way to swap pA just exchange pointer.
+		  //  many swap on "pimpl idiom(pointer to implementation)" design approch can simply exchange pointer as well.
+
+		exchange pointer could accomplish swap but std::swap does not have such action.
+		for change std::swap' behavior,can use function template specifilization.
+		  namespace std {
+
+		    template<>
+		    void swap<B>(B &b1, B &b2)
+		    {
+		      swap(b1.pA, b2.pA);
+		    }
+
+		    //  but if data member is private,this specifilization cant be compiled.
+		  }
+
+		  for pass compiling any time :
+		    struct B {
+		      A *pA;
+		      void swap(B &b) noexcept
+		      {
+		        auto temp(b.pA);
+			b.pA = this->pA;
+			this->pA = temp;
+		      }
+		    };
+		    
+		    then let std::swap specifilization call the member swap function. "b1.swap(b2);"
+		    (!!  member swap function should not throwing)
+
+		if the class is a class template,then specifilization of std::swap is difficult :
+		  first,dont know what is the type of the class template;
+		  second,C++ dont allow parially specialize a function template;
+		  third,even could overload function template,but C++ dont allow to augment std namespace;
+
+		a way to solve this problem is use non-member swap function,but still need member swap function
+		and specifilization of std::swap.
+		  use a new namespace to contains non-member swap function for class template
+		    e.g.
+		      namespace B_Stuff {
+		        template<class T>
+			void swap(B<T> &b1, B<T> &b2)
+			{
+			  b1.swap(b2);  //  this statement would invoke class template member function swap()
+			}
+		      }
+
+		  specifilize std::swap for a possible type of class template,and make it could be accessed
+		  in code.
+		  statement "swap(b1, b2);" would process overload resolution.
+		  if std::swap is accessible,then preference order is 
+		    specifilization > general > type-specific-stuff
+
+		why member function swap should not throw exceptions?
+		>  because one of the most useful applications of swap is to help classes or class templates offer
+		   the strong exception-safety guarantee,but the technique is predicated on the assumption that
+		   the member version of swap never throws.
+		   this constraint is not apply to the non-member version,because the default version of swap is based
+		   on copy construction and copy assignment,in general,both allows throw exceptions.
+		   (highly efficient swaps are almost always based on operations on built-in types,and operations on built-in
+		    types never throw exceptions.)
+
+		!!  provide a swap member function when std::swap would be inefficient for custom type.
+		    make sure swap doesnt throw exceptions.  !!
+		!!  if offer a member swap,also offer a non-member swap that calls the member.
+		    for classes or class-templates,specialize std::swap,too.  !!
+		!!  when calling swap,employ a using declaration for std::swap,then call swap without namespace
+		    qualification.  !!
+		!!  it is fine to totally specialized std templates for user-defined types,but never try to add
+		    something completely new to std.  !!
+		!!  if the default swap is works fine and effective,then dont need to define other version of swap.  !!
 		
 		   
