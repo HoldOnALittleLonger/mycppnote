@@ -435,4 +435,38 @@ Deprecated :
 	    S(T);
 	  };
 	  S(char const*) -> S<std::string>;
+
+
+> non-type template parameters declared with auto
+    non-type template parameter syntax :
+      type name(optional)
+      type name(optional) = default
+      type... name(optional)
+      placeholder name
+
+      1>  a non-type template parameter with an optional name
+      2>  a non-type template parameter with an optional name and a default value
+      3>  a non-type template parameter pack with an optional name
+      4>  a non-type template parameter with a placeholder type.
+      	  placeholder may be any type that includes the placeholder auto,a placeholder for a deduced class
+	  type(since c++20),or decltype(auto).
+
+      a non-type template parameter must have a structural type,which is one of the following types :
+        lvalue reference type
+	an integral type
+	a pointer type
+	a pointer to member type
+	an enumeration type
+	std::nullptr_t
+	a floating-point type  (since c++20)
+	a literal class type with the following properties :  (since c++20)
+	  all base classes and non-static data members are public and non-mutable and
+	  type types of all base classes and non-static data members are structural types or array thereof
+
+    //  the type of a non-type template parameter may be deduced if it includes a placeholder type.
+    	the deduction is performed as if by deducing the type of the variable x in the invented declaration
+	T x = template-argument;
+	where T is the declared type of the template parameter.
+	if the deduced type is not permitted for a non-type template parameter,the program is ill-formed.
+    
     
