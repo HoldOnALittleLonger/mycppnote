@@ -1541,3 +1541,82 @@ Chapter4> Designs and Declarations
 		!!  if the default swap is works fine and effective,then dont need to define other version of swap.  !!
 		
 		   
+Chapter5> Implementations
+
+	 Item26 : Postpone variable definitions as long as possible
+	        for built-in type,compiler arranges them on function stack,but for user-defined class object or C++
+	        class object,compiler produce them must via constructor and destroy them via destructor.
+
+	        if a variable is unused,but it still have to be constructed and destructed,that will lead loss performance.
+	          e.g.
+	 	    int func(int &a) noexcept(false)
+	 	    {
+		      int b;
+		      if (!a)
+		        throw -1;
+		      b = 32;
+		      return b * a;
+		    }
+
+		  in this example,variable b is not a fully unused variable,but it still a part unused when func
+		  throws exception.
+		  it is a built-in type,so that is not a matter.
+		  but it is type of std::string,then will incur performance.
+		  for construct std::string object,have to call the default constructor,and call destructor
+		  before function returns.
+		  the variable is a part of unused,for prevent such lower performance,could postpone variable
+		  definition.
+
+		    int func(int &a) noexcept(false)
+		    {
+		      if (!a)
+		        throw -1;
+		      std::string str;  //  std::string str("hellow");
+		      str = ("hellow");
+		      return str.length() * a;
+		    }
+		 
+		  new version of func() has postpone variable definition prevented unused variable.
+		  but there could more effective that is prevent call copy-assignment use initialization
+		  to instead.
+
+	        So,Not only should postpone a variable's definition until right before have to use the variable,
+	        should also try to postpone the definition until have initialization arguments for it!
+
+	        How about loops?
+	        > generaly,there has two methods.
+	          1>
+		    std::string tempStr;
+		    for (int i(0); i < N; ++i) {
+		      tempStr = ...;
+		      dosomethings...;
+		    }
+
+		  2>
+		    for (int i(0); i < N; ++i) {
+		      std::string tempStr(...);
+		      dosomethings...;
+		    }
+
+		  method1 costs :
+		    1 constructor + 1 destructor + N copy-assignment
+		  method2 costs :
+		    N constructor + N destructor
+
+		  minus of method1 :
+		    object tempStr is visible in a large scope,something that is contrary to program comprehensibility
+		    and maintainability.
+		  minus of method2 :
+		    lower performance than method1 if N is too large and constructor-destructor pair is not more
+		    costs less than copy-assignment.
+
+		  Summary :
+		    unless you know that assignment is less expensive than a constructor-destructor pair and you are dealing
+		    with a performance-sensitive part of your code,you should default to using method2.
+
+		!!  postpone variable definitions as long as possible.it increases program clarity and improves program
+		    efficiency.  !!
+
+		   
+
+
