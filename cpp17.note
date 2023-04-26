@@ -470,3 +470,26 @@ Deprecated :
 	if the deduced type is not permitted for a non-type template parameter,the program is ill-formed.
     
     
+> simplified nested namespaces
+    since c++17,a new syntax to simply define a nested namespace.
+    syntax :
+      namespace <ns-name> :: <member-name> { <declarations> }
+
+      for example :
+        namespace A :: B :: C { ... } is equivalent to
+	  namespace A {
+	    namespace B {
+	      namespace C {
+	        ...
+	      }
+	    }
+	  }
+
+    //  inline namespace definition(since c++11)
+    	  inline namespace <ns-name> { <declarations> }
+	    inline namespace definition for the namespace <ns-name>.
+	    declarations inside <ns-name> will be visible in its enclosing namespace.
+
+    //  namespace alias definition
+    	  namespace <name> = <qualified-namespace>;
+	    namespace-alias-definition makes name a synonym for another namespace.
