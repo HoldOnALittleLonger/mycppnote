@@ -1617,6 +1617,64 @@ Chapter5> Implementations
 		!!  postpone variable definitions as long as possible.it increases program clarity and improves program
 		    efficiency.  !!
 
+
+	 Item27 : Minimize casting
+	 	the old-style casting syntax : (from C)
+		  (Type)expression    	//  C style form
+		  Type(expression)	//  function style form
+
+		the new-style casting syntax : (C++ style,RTTI)
+		  const_cast<T>(expression)
+		  dynamic_cast<T>(expression)
+		  reinterpret_cast<T>(expression)
+		  static_cast<T>(expression)
+
+		  const_cast is typically used to cast away the constness of objects.
+		  dynamic_cast is primarily used to perform "safe downcasting" (inheritance hierarchy).
+		  reinterpret_cast is intended for low-level casts that yield implementation dependent results.
+		  static_cast can be used to force implicit conversions.
+
+		Type conversions of any kind often lead to code that is executed at runtime.
+		  e.g.
+		    class Base {...};
+		    class Derived : public Base {...};
+		    Derived d;
+		    Base *pb = &d;
 		   
+		    use Base* object pb points to a Derived object' address.but pb and &d will not be the same
+		    sometimes,an offset is applied at runtime to the Derived* pointer to get the correct Base* pointer
+		    value.
+
+		it is easy to write something that looks right(and might be right in other languages) but is wrong.
+
+		note :
+		  if want to call base class method from a derived class method,dont use static_cast to cast this pointer,
+		  just use BaseClassName::Method() to replace.
+		  because static_cast<BaseClass*>(this) would produces a temporary object that is part of copy of base class
+		  object in the derived class.
+
+		dynamic_cast :
+		  C++ design this casting for cast object which in an inheritance hierarchy.but almost,many implementation
+		  of dynamic_cast is quite slow.
+		  for example,the class name string comparing part is necessary in dynamic_cast.if the inheritance hierarchy
+		  is very deep,then every level to dynamic_cast have to executes string comparing once.
+		  so should esepcially leery of dynamic_cast in performance-senstive code.
+		  if the cant be safe-casted,then dynamic_cast will failed.(from derived to base)
+
+		  the need for dynamic_cast generally arises because you want to perform derived class operations on what you
+		  believe to be a derived class object(base class object),but you have only a pointer or reference to base 
+		  through which to manipulate the object.
+		  in the case,have two methods to prevent use dynamic_cast :
+		    1>  use containers(smart pointer) to store pointers to derived class object directly.
+		    	(maybe needs many container objects)
+		    2>  use virtual function.
+
+		!!  avoid casts whenever practical,especially dynamic_cast in performance-sensitive code.if a design requires
+		    casting,try to develop a cast-free alternative.  !!
+		!!  when casting is necessary,try to hide it inside a function.clients can then call the function instead of
+		    putting casts their own code.  !!
+		!!  prefer C++ style casts to old-style casts.they are easier to see,and they are more specific about what
+		    they do.  !!
+		  
 
 
