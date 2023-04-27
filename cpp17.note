@@ -493,3 +493,37 @@ Deprecated :
     //  namespace alias definition
     	  namespace <name> = <qualified-namespace>;
 	    namespace-alias-definition makes name a synonym for another namespace.
+
+
+> using-declaration declaring multiple names
+    using-declaration syntax :
+      using typename(optional) <nested-name-specifier> <unqualified-id>;
+      using <declarator-list>;
+      
+      declarators-list : comma-separated list of one or more declarators of the typename(optional)
+      		       	 nested-name-specifier unqualified-id.
+			 soem or all of the declarators may be followed by an ellipsis ...
+			 to indicate pack expansion.
+
+    e.g.
+      namespace A {
+        int a;
+	int b;
+	char c;
+	
+	name space B {
+	  float d;
+	}
+      }
+
+      using A::a, A::b, A::c, A::B::d;
+
+      //  multiple names
+      using funcP1 = void (*)(void);
+      using funcP2 = void (*)(void);
+					//  funcP1 == funcP2 a function pointer points to a function
+					//  that no return and no parameter.
+
+
+> attribute namespaces dont have to repeat
+
