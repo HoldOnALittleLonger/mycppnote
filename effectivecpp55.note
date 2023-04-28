@@ -1675,6 +1675,77 @@ Chapter5> Implementations
 		    putting casts their own code.  !!
 		!!  prefer C++ style casts to old-style casts.they are easier to see,and they are more specific about what
 		    they do.  !!
-		  
 
+
+	 Item28 : Avoid returning "handles" to object internals
+		  The risk of returns handle to object internals :
+		    1>  caller of the member function which returns handle will be able to modify internals.
+		    2>  dangle reference or pointer.
+
+		  //  we generally think of an object's "internals" as its data members,but member functions not
+		  //  accessible to the general public(i.e., that are protected or private) are part of an 
+		  //  object's internals,too.
+
+		  1> e.g.
+		    struct A {
+		      int a;
+		      int b;
+		      void setA(int x) { ... };
+		      void setB(int x) { ... };
+		    };
+
+		    class B {
+		    public:
+		      A &getInternals(void) const { ... }
+		    private:		      
+		      std::shared_ptr<A> pA;
+		    };
+
+		    A tempA(1, 2);
+		    B tempB(tempA);
+
+		    //  set internals->a to 12.
+		    tempB.getInternals().setA(12);  //  getInternals() is delcared with const,but it returns a
+		    				    //  handle to internals,the object handle is refers to is 
+						    //  outside of class B object.so the const qualifier of 
+						    //  member function is no effective to prevent modify
+						    //  internals.
+
+		    //  a simply method to solve this problem is let member function returns 
+		    //  const handle.caller cant modify internals via const reference.
+
+		  2> e.g.
+		    in the case that function returns by-value will occur dangle problem.
+		    const B returnB(int x, int y) { ... }
+
+		    A *pA(nullptr);
+		    pA = &(returnB(10, 20).getInternals());
+		       	 	       //  temp object of type const B would be returned by returnB(),
+				       //  then call getInternals() on the temporary object to get reference 
+				       //  of internals,then get address of internals and assign it to pA.
+				       //  but after this statement,the temporary object would destroy.
+				       //  pA points to a object that had been outlive.
+
+
+		  issue 1>
+		    first :
+		      a data member is only as encapsulated as the most accessible function returning a reference
+		      to it.
+		    second :
+		      if a const member function returns a reference to data associated with an object that is 
+		      stored outside the object itself,the caller of the function can modify that data.
+
+		  issue 2>
+		    if a handle refers to a temporary object,that program is ill-form.after the object is
+		    destroyed,the handle becomes dangle handle.
+
+		  but sometimes,class member function have to returns a handle to internals!
+		  for example,std::string::operator[]() and std::vector<T>::operator[],those member function
+		  returns reference to internals,data that is destroyed when the containers themselves are.
+
+		!!  avoid returning handles(references,pointers,or iterators) to object internals.
+		    not returning handles increases encapsulation,helps const member functions act const,
+		    and minimizes the creation of dangling handles.  !!
+		    
+		    
 
