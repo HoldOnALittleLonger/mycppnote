@@ -527,3 +527,71 @@ Deprecated :
 
 > attribute namespaces dont have to repeat
 
+
+> C++ attribute : fallthrough
+    indicates that the fall through from the previous case label is intentional and should not be diagnosed
+    by a compiler that warns on fallthrough.
+    may only be applied to a null statement to create a fallthrough statement.
+    a fallthrough statement may only be used in a switch statement,where the next statement to be executed is
+    a statement with a case or default label for that switch statement.
+    if the fallthrough statement is inside a loop,the next (labeled) statement must be part of the same
+    iteration of the loop.
+
+
+> C++ attribute : maybe_unused
+    suppresses warnings on unused entities.
+    this attribute can appear in the declaration of the following entities :
+      class/struct/union
+      alias-declaration
+      variable,including static data member
+      non-static data member
+      function
+      enumeration
+      enumerator
+      structured binding
+
+
+> C++ attribute : nodiscard
+    if a function declared nodiscard or a function returning an enumeration or class declared nodiscard by value
+    is called from a discarded-value expression other than a cast to void,the compiler is encouraged to issue a 
+    warning.
+
+    if from a discarded-value expression other than a cast to void,
+
+      a function declared nodiscard is called,or
+      a function returning an enumeration or class declared nodiscard by values is called,or
+      a constructor declared nodiscard is called by explicit type conversion or static_cast,or
+      an object of an enumeration or class type declared nodiscard is initialized by explicit type conversion or static_cast,
+
+    the compiler is encouraged to issue a warning.
+
+    //  a discarded-value expression is an expression that is used for its side-effects only,the value calculated from
+    	such expression is discarded.
+
+
+> __has_include
+    source file inclusion checking feature.
+
+    syntax :
+    (A)
+      __has_include("q-char-sequence")
+      __has_include(<h-char-sequence>)
+					//  checks whether a header or source file is avaiable for inclusion.
+    (B)					
+      __has_include(string-literal)
+      __has_include(<h-pp-tokens>)
+					//  if (A) is not matched,h-pp-tokens will undergo macro
+					    replacement.the directive after replacement will be tried to match 
+					    with (A) again.
+
+    e.g.
+      #if __has_include(<sys/socket.h>)
+      #include<sys/types.h>
+          ...
+      #elif __has_include(<unistd.h>)
+      #include<sys/wait.h>    
+          ...
+      #else
+      #include<stdio.h>
+          ...
+      #endif
