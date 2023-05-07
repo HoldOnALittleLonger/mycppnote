@@ -1746,6 +1746,90 @@ Chapter5> Implementations
 		!!  avoid returning handles(references,pointers,or iterators) to object internals.
 		    not returning handles increases encapsulation,helps const member functions act const,
 		    and minimizes the creation of dangling handles.  !!
+
+
+	 Item29 : Strive for exception-safe code
+	 	if the code is exception-unsafe,then the state of program may be modified even some operations
+		are failed,and the data structure might corrupted.
+
+		when an exception is thrown,exception-safe functions :
+		  leak no resources
+		  dont allow data structures to become corrupted
+
+		  leak no resources :
+		    use smart pointer to instead operates resources manually.
+		    for example,if a mutex have to be locked while entry function and released before returning.
+		    if an exception would thrown after locked and before returning,then the mutex will still
+		    locked after leave this function.smart pointer could prevent such problem.
+
+		  dont allow data structures to become corrupted
+		    if an exception is thrown,the data structures have to still be valid state.they are should 
+		    not in a invalid state after exception thrown.
+
+		exception-safe functions offer one of three guarantees :
+		  basic guarantee
+		  strong guarantee
+		  nothrow guarantee
+
+		  basic guarantee :
+		    functions promise that if an exception is thrown,everything in the program remains in a 
+		    valid state.no objects or data structures become corrupted,and all objects are in an
+		    internally consistent state.
+		    (however,the exact state of the program may not be predictable)
+
+		  strong guarantee :
+		    functions promise that if an exception is thrown,the state of the program is unchanged.
+		    calls to such functions are atomic.
+
+		  nothrow guarantee :
+		    functions promise never to throw exceptions,because they always do what they promise to do.
+		    all operations on built-in types are nothrow.
+
+		  //  for offering the strong guarantee,the objects or data structures have to keep same 
+		      state after exception thrown.
+		      copy-and-swap could satisfy this request,and "pimpl idiom" apporach can improve operation
+		      efficiency.
+		  //  an important point for the strong guarantee is inside effects in the function which
+		      offers the strong guarantee.
+		      e.g.
+		        void doSomething(void) noexcept
+			{
+			  ...		//  make changes
+			  f1();
+			  f2();
+			  ...		//  swap copy with original
+			}
+
+			//  noexcept doesnt mean nothrown,it indicates that if the function throws
+			//  an exception means a serious error occured,then unexpected function
+			//  will be called.
+			//  function offes what kind of guarantee is determined by its implementation.
+
+			if function f1() dont offers the strong guarantee,it offers the basic guarantee,
+			then doSomething() have to store state of program before f1() invocation,and
+			restore state if an exception is thrown from f1()(also have to catch exception).
+			program will runs into invalid state even f2() didnt change anything,if dont 
+			catch exception from f1().
+
+			if one of f1() and f2() is not exception-safe,it is exception-unsafe,then doSomething()
+			will failed to offering the strong guarantee with exception-safe promise.because
+			leak resources or corrupted data structures will occur in f1() or f2().program will runs
+			into a invalid state.(doSomething() should offers other guarantee than strong guarantee)
+
+	           in practice,should make functions offers the strong guarantee with exception-safe promise.
+		   if that is cant be,should make functions offers the basic guarantee with exception-safe promise.
+		   if there is not reasonable to do,should always make functions is exception-safe.
+		   (nothrown is difficult to achieve in practice)
+
+		!!  exception-safe functions leak no resources and allow no data structures to become corrupted,
+		    even when exceptions are thrown.such functions offer the basic,strong,or nothrow guarantees.  !!
+		!!  the strong guarantee can often be implemented via copy-and-swap,but the strong guarantee is
+		    not practical for all functions.  !!
+		!!  a function can usually offer a guarantee no stronger than the weakest guarantee of the
+		    functions it calls.  !!
+		!!  if function is exception-safe,should describe what kind of guarantee it offers.
+		    if function is not exception-safe,have to describe reason.  !!
+
 		    
 		    
 
