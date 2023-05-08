@@ -1830,6 +1830,94 @@ Chapter5> Implementations
 		!!  if function is exception-safe,should describe what kind of guarantee it offers.
 		    if function is not exception-safe,have to describe reason.  !!
 
+
+         Item30 : Understand the ins and outs of inlining
+	 	keyword 'inline' is a request to compiler,not a command.
+		compiler might makes function becomes inline implicitly,but add keyword 'inline' front at function declare can
+		explicitly request compiler.
+
+		implicitly :
+		  class A {
+		  public:
+		    void func(void) { ... }
+		  };
+
+		  member function will automatically becomes inlining.
+		  (friend function also can implicitly inlining)
+
+		  but in some cases,compiler refuses make inline function,generate function call to instead.
+		  e.g.
+		    class B {
+		      ...
+		    };
+		    class A : public B{
+		    public:
+		      A() {}
+		    };
+
+		    constructor of A cant becomes inline function,reason :
+		      constructor of A have to generate base class object,and generate class data members,
+		      these members might generate via their constructor.
+		      if exception happend during construction,compiler have to deal with it.
+		      so A() looks like a empty function,but in fact,it is not.
+		      if base class'constructor and data members'constructor all are inlining functions,
+		      then have to be expanded as A()'body,contains exception try-catch,that is a bad idea.
+
+		      C++ says what must happen,but it doesnt say how,that is up to compiler implementers.
+
+		    //  destructor is same as constructor
+
+		explicitly :
+		  inline void f(void) { ... }
+		  
+		  function f() is requested becomes inlining.
+		  but compiler is not always satisfy such request.
+		  e.g.
+		    inline void f(void) { ... }
+		    
+		    void (*pF)(void) = f;
+
+		    f();
+		    pF();
+
+		    if f() becomes inline,then pF cant get address of f(),because its body is expanded,dont generate
+		    function call.
+		    statement f() is name-call,f() could be inlining.
+
+		  keyword 'inline' is also can be used with template,then all instance of the template become inlining,
+		  but if is not necessary,dont do this.
+
+		note :
+		  all inline function should be written in header file.most environment implement inline at compile-time,
+		  some environment implement inline at link-time,some is run-time(.NET).
+		  compiler have to knows what it is for a inline function while compiling.(as same as inline,compiler have
+		  to knows what it is for template)
+		  most compilers refuse to inline functions they deem too complicated(e.g.,those contain loops or recursive),
+		  and all but the most trivial calls to virtual functions defy inlining.virtual function in the sense,that is
+		  postpone determines which function to execute at run-time,but inline at compile-time.
+
+		  some debugger cant debug inline function,because they have not address.
+
+		  empirically determined rule of 80-20 :
+		    a typical program spends 80% of its time executing only 20% of its code.
+
+		    inline just apply to a function its body is simply and short.inline such function could prevent
+		    function call costs.
+
+		  inline will grows code size,if working on a small memory size machine,inline is not a good choice.
+		  (code bloat)
+
+		  for library developer,if function is inlining,and in future,it have to be updated,then all clients
+		  used this inline function have to recompile program code.but in other hand,just relink this function
+		  as well.if this function in a shared library,clients needs to do nothing for it.
+
+		!!  limit most inlining to small,frequently called functions.this facilitates debugging and 
+		    binary upgradability,minimizes potential code bloat,and maximizes the chances of greater
+		    program speed.  !!
+		!!  dont declare function templates inline just because they appear in header files.  !!
+
+
+
 		    
 		    
 
