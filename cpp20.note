@@ -1,0 +1,71 @@
+C++20>
+
+> Feature testing macro
+    Attributes
+      __has_cpp_attribute(<attribute-token>)
+
+      checks for the support of an attribute named by attribute-token
+      __has_cpp_attribute can be expanded in the expression of #if and #elif.
+      it is treated as a defined macro by #ifdef,#ifndef and defined but cannot be
+      used anywhere else.
+
+      attribute-token list :
+      	attribute-token	   attribute			standard	value
+      
+        assume	      	   [[assume]]			C++23		202207L
+	carries_dependency [[carries_dependency]]	C++11		200809L
+	deprecated	   [[deprecated]]		C++14		201309L
+	fallthrough	   [[fallthrough]]		C++17		201603L
+	likely		   [[likely]]			C++20		201803L
+	maybe_unused	   [[maybe_unused]]		C++17		201603L
+	no_unique_address  [[no_unique_address]]	C++20		201803L
+	nodiscard	   [[nodiscard]]		C++17		201603L || 201907L
+	noreturn	   [[noreturn]]			C++11		200809L
+	unlikely	   [[unlikely]]			C++20		201803L
+
+      //  more language features and library features were predefined in standard,
+      //  and cant not use __has_attribute to as checking for support,should use 
+      //  #ifdef,#if defined,#ifndef,#if .etc
+      	  e.g.
+	    #if __cpp_aligned_new >= 201606L
+	    ...
+	    #endif
+
+
+> Three-way comparison
+    the three-way comparison operator expressions has the form 
+      a <=> b
+    the expression returns an object such that
+      (a <=> b) < 0 if a < b
+      (a <=> b) > 0 if a > b
+      (a <=> b) == 0 if a and b are equal/equivalent
+
+    //  if one of the operands is of type bool and the other is not,the program is ill-formed.
+    //	if a narrowing coversion is required,the program is ill-formed.
+
+    if a and b have integral type,the operator yields a prvalue of type std::strong_ordering :
+      std::strong_ordering::equal if both operands are arithmetically equal.
+      std::strong_ordering::less if the first operand is arithmetically less than the second.
+      std::strong_ordering::greater otherwise.
+
+    if a and b have floating-point type,and the operator yields a prvalue of type std::partial_ordering :
+      std::partial_ordering::less if a is less than b.
+      std::partial_ordering::greater if a is greater than b.
+      std::partial_ordering::equivalent if a is equivalent to b.
+      std::partial_ordering::unordered (NaN <=> anything is unordered)
+
+    if both operands have type of enumeration type E,then the operands will convert to the 
+    underlying type of E and compare again.
+
+    if at least one of the operands is a pointer or pointer-to-member,array-to-pointer conversions,
+    derived-to-base pointer conversions,function pointer conversions,and qualification conversions
+    are applied as necessary to convert both operands to the same pointer type,and the resulting pointer
+    type is an object pointer,p <=> q returns a prvalue of type std::strong_ordering :
+      std::strong_ordering::equal if p == q.
+      std::strong_ordering::less if p < q.
+      std::strong_ordering::greater if p > q.
+      unspecified result if comparison is unspecified for these pointer values.
+
+    other situation means program is ill-form.
+
+    
