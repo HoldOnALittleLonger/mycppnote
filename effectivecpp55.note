@@ -1916,8 +1916,166 @@ Chapter5> Implementations
 		    program speed.  !!
 		!!  dont declare function templates inline just because they appear in header files.  !!
 
+	 Item31 : Minimize compilation dependencies between files
+	 	there has a class definition :
+		  #include<string>
+		  #include<memory>
+
+		  class A {
+		  public:
+		    string name(void);
+		    ...
+		  private:
+		    string _name;
+		  };
+
+		  //  main.cc
+		  int main(void)
+		  {
+		    int x = 0;
+		    A a;  //  A *a;
+
+		    return a.name().length();
+		  }
+
+		for compile this program,compiler have to knowns how many memory to be allocated for hold object a.
+		so compiler have to see its definition.if the definition was changed,have to re-compile all client
+		of class A.same case in A,if std::string was changed,then A was changed,compiler have to re-calculate
+		size of A object.
+
+		but a lot of environment defines pointer as an unsigned long value.if use pointer to implementation,
+		then client dont have to re-compile code event implementation was changed,because pointer always have
+		same size of unsigned long value,but for function call,client have to knows function'definition.
+		(Handle class)
+
+		use declare to replace definition!
+
+		Avoid using objects when object references and pointers will do.
+		  define referces and pointers to a type with only a declartion for the type.
+
+		Depend on class declarations instead of class definitions whenever you can.
+		  never need a class definition to declare a function using that class,not even if the function
+		  passes or returns the class type by value.
+
+		Provide separate header files for declarations and definitions.
+		  header files need to come in pairs :
+		    one for declarations,the other for definitions.
+		    these files must be kept consistent.
+
+		  library clients should always #include a declaration file instead of forward-declaring something
+		  themselves,and library authors should provide both header files.for example,C++ library header 
+		  <iosfwd> contains declarations of iostream components whose corresponding definitions are in 
+		  several different headers,including <sstream> <streambuf> <fstream> <iostream>.
+
+		  //  but template have to be defined in one file,because keyword 'export' is not useful in many
+		  //  environment.so,template also have declartion-only file if environment is allows.
+
+		  //  forward-declartion not always correct,for example,"class string;" is incorrect.
+		  //  because string is typedef from basic_string<char>.
+
+		Handle class :
+		  construct handle class.
+
+		  //  interface declaring
+		  class Ainterface {
+		  public:
+		    std::string name(void) const;
+		    Ainterface();
+		    ~Ainterface();
+		  private:
+		    std::shared_ptr<Aimplementation> _name;  //  pimpl idiom
+		  };
+
+		  Ainterface::Ainterface() : _name(new Aimplementation("NULL"))
+		  {
+		  }
+
+		  std::string Ainterface::name(void) const
+		  {
+		    return _name->name();
+		  }
+
+		  //  Ainterface::_name as the handle,and all member methods of Ainterface are the same
+		  //  prototype in Aimplementation,so they are wrappers.
+		  //  all clients of Ainterface dont need to re-compile code even Aimplementation was changed.
+		  //  compiler dont have to know how many size of Aimplementation when compiling Ainterface.
+
+		  //  definition in another file
+		  class Aimplementation {
+		  public:
+		    std::string name(void) const 
+		    {
+		      return *_name;
+		    }
+		    explicit Aimplementation(const char *s) : _name(new std::string(s))
+		    {
+		    }
+		  private:
+		    std::shared_ptr<std::string> _name;
+		  };
+
+		  //  Aimplementation is the real implementation of A.
+
+		Interface class :
+		  use C++ abstract class.
+
+		  //  interface declaring
+		  class Aabstract {
+		  public:
+		    virtual std::string name(void) const = 0;
+		    static std::shared_ptr<Aabstract> createAabstract(const char *s);
+		  };
+
+		  //  pure virtual base class as interface.
+		  //  it is able to instantiated only in hierarchy.
+		  //  clients of interface class dont have to re-compile code if interface was not changed.
+		  //  then definition will not be depended while compiling as longer.
+
+		  //  implementation definition in another file
+		  class A : public Aabstract {
+		  public:
+		    std::string name(void) const;
+		    explicit A(const char *s);
+		    virtual ~A();
+		  private:
+		    std::shared_ptr<std::string> _name;
+		  };
+
+		  A::A(const char *s) : _name(new std::string(s))
+		  {
+		  }
+		  
+		  std::string A::name(void) const
+		  {
+		    return *_name;
+		  }
+
+		  //  this function also be called virtual constructor or factory function
+		  static std::shared_ptr<Aabstract> createAabstract(const char *s)
+		  {
+		    return std::shared_ptr<Aabstract>(new A(s));
+		    //  use base class pointer point to a derived class.
+		  }
+
+		  using Ainterface = class Aabstract;
+
+		  //  use base class pointer point to a derived class,be there,has same functionality as
+		  //  Handle class.
+		  //  user dont use A in-directly via Ainterface.
+
+		  auto a(createAabstract("Hello world"));  //  a has type T == std::shared_ptr<Aabstract>
+		  a->name();  //  calls A::name()
 
 
+		!!  the general idea behind minimizing compilation dependencies is to depend on declarations
+		    instead of definitions.two approaches based on this idea are Handle classes and 
+		    Interface classes.  !!
+		!!  library header files should exist in full and declaration-only forms.this applies regardless
+		    of whether templates are involved.  !!
+
+		  
+
+		  
 		    
 		    
 
