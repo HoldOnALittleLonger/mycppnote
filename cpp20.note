@@ -68,4 +68,69 @@ C++20>
 
     other situation means program is ill-form.
 
+
+> Default comparisons (since C++20)
+    provides a way to request the compiler to generate consistent comparison operators for a class.
+
+    syntax :
+      <return-type> <class-name>::operator<op>(cons <class-name>&) const &(optional) = default;
+      friend <return-type> operator<op>(const <class-name>&, coonst <class-name>&) = default;
+      friend <return-type> operator<op>(<class-name>, <class-name>) = default;
+      <return-type> <class-name>::operator<op>(this const <class-name>&, const <class-name>&) = default;
+      <return-type> <class-name>::operator<op>(this <class-name>, <class-name>) = default;
+
+      return-type - return type  of the operator function,must be 
+      		    auto or one of three comparison category types if op is <=>
+		    otherwise,bool
+
+    defaulted three-way comparison :
+      the default operator<=> performs lexicographical comparison by successively comparing the base
+      (left-to-right,depth-first) and then non-static member(in declaration order) subobjects of T to
+      compute <=> ,recursively expanding array members(in order of increasing subscript),and stopping
+      early when a not-equal result is found.
+
+      //  it is unspecified whether virtual base subobjects are compared more than once.
+
+    defaulted equality comparison :
+      a class can define operator== as defaulted,with a return value of bool.this will generate an equality
+      comparison of each base class and member subobject,in their declaration order.
+      two objects are equal if the values of their base classes and members are equal.
+
+    other defaulted comparison operators :
+      any of the four relational operators(<,>,<=,>=) can be explicitly defaulted.
+      a defaulted relational operator must have the return type bool.
+
+    strong ordering :
+      operator<=> that returns std::strong_ordering is an operator that compares every member of a class,
+      except in order that is different from the default.
+
+    weak ordering :
+      operator<=> that returns std::weak_ordering is an operator that compares string members of a class
+      in case-insensitive manner: this is different from the default comparison and it is possible to 
+      distinguish two strings that compare equal under this comparison.
+
+    partial ordering :
+      partial ordering is an ordering that allows incomparable(unordered) values,such as NaN values in
+      floating-point ordering.
+
+    custom comparisons and comparison categories :
+      when the default semantics are not suitable,such as when the members must be compared out of order,
+      or must use a comparison that is different from their natural comparison,then the programmer can write
+      operator<=> and let the compiler generate the appropriate two-way comparison operators.
+      the kind of two-way comparison operators generated depends on the return type of the user-defined
+      operator<=> .
+
+    
+> Designated initializers (since C++20)
+    syntax :
+      T object = {.des1 = arg1, .des2{arg2} ...};
+      T object{.des1 = arg1, .des2{arg2} ...};
+
+    each designator must name a direct non-static data member of T,and all designators used in the 
+    expression must appear in the same order as the data members of T.
+
+    //  Linux kernel style initializing in C allows different order.(not in C++)
+
+
+
     
