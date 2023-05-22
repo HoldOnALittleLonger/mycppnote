@@ -2073,6 +2073,33 @@ Chapter5> Implementations
 		!!  library header files should exist in full and declaration-only forms.this applies regardless
 		    of whether templates are involved.  !!
 
+
+Chapter6> Inheritance and Object-Oriented Design
+
+	 Item32 : Make sure public inheritance models "is-a"
+	 	public inheritance means "is-a"
+		B base class,D derived class
+		  B represents a more general concept than D,that D represents a more specialized concept
+		  than B.
+		  anywhere an object of type B can be used,an object of type D can be used just as well,
+		  an object of type D,an object of type B will not do: every D is-a B,but not vice versa.
+
+		in generaly,a good design should distinguish ability between B and D,but if forget that,
+		redefine virtual function is a way to forbid bad ability appears in D.but it still means
+		that D has same ability as B,but implement such ability in D is an error.(such error only
+		be detected at runtime)
+		(bird can fly,penguin is bird,but penguin cant fly)
+
+		//  what is a good design for "is-a" depends on what is the things expected system to do.
+
+		student is person,so class student object is a class person object :
+		  class person { ... };
+		  class student : public person { ... };
+		  //  student is a person,but not every person is a student,might a man is a teacher.
+
+		!!  public inheritance means "is-a",everything that applies to base classes must also apply
+		    to derived classes,because every derived class object is a base class object.  !!
+		!!  the code compiles doesnt mean it will work.  !!
 		  
 
 		  
