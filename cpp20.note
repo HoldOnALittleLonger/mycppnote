@@ -132,5 +132,42 @@ C++20>
     //  Linux kernel style initializing in C allows different order.(not in C++)
 
 
+> init-statements and initializers in range-for
+    range-for,executes a for loop over a range.
+    used as a more readable equivalent to the traditional for loop operating over a range of values,
+    such as all elements in a container.
+
+    syntax :
+      <attr>(optional) for (<init-statement>(optional) <range-declaration> : <range-expression>)
+      		         <loop-statement>
+
+
+      init-statement : since C++20
+        an expression statement(which may be a null statement ";").
+	a simple declaration,typically a declaration of a variable with initializer,
+	but it may declare arbitrarily many variables or be a structured binding declaration.
+	an alias declaration.(since C++23)
+	(init-statement end with a semicolon ";")
+      range-declaration : 
+        a declaration of a named variable,whose type is the type of the element of the sequence
+	represented by range-expression,or a reference to that type.
+      range-expression :
+        any expression that represents a suitable sequence
+	(array,object which defined begin() and end() or free functions,braced-init-list)
+
+    if range-expression returns a temporary,its lifetime is extended until the end of the loop.(C++23)
+
+    e.g.
+      std::vector<int> intVec;
+      intVec.push(0);
+      intVec.push(1);
+      intVec.push(2);
+
+      for (int i(2); auto x : intVec) {
+        std::cout<<"Value : ";
+        std::cout<<i * x<<std::endl;
+      }
+
+
 
     
