@@ -2100,9 +2100,78 @@ Chapter6> Inheritance and Object-Oriented Design
 		!!  public inheritance means "is-a",everything that applies to base classes must also apply
 		    to derived classes,because every derived class object is a base class object.  !!
 		!!  the code compiles doesnt mean it will work.  !!
-		  
 
-		  
-		    
-		    
 
+	 Item33 : Avoid hiding inherited names
+		  local scope name will hides global scope name.(current socpe name will hides upper socpe name)
+		  but in class inheritance,has some different.(function overload situation)
+
+		  class Base {
+		  public:
+		    virtual void mf1(void);
+		    virtual void mf1(int x);
+		    void mf2(void);
+		    void mf2(int x);
+		  };
+
+		  class Derived : public Base {
+		  public:
+		    virtual void mf1(void);
+		    void mf2(void);
+		  };
+
+		  scope in the inheritance,it is like that,scope of derived class is nested in scope of base class.
+		  scope Base {
+		    mf1(2 functions)
+		    mf2(2 functions)
+
+		    scope Derived {
+		      mf1(1 function)
+		      mf2(1 function)
+		    }
+		  }
+
+		  Derived a;
+		  a.mf1();	//  OK,call to Derived::mf1
+		  a.mf1(1);	//  ERROR,function Base::mf1(int) was hidden by Derived
+		  a.mf2();	//  OK,call to Derived::mf2
+		  a.mf2(1);	//  ERROR,function Base::mf2(int) was hidden by Derived
+		    
+		  class Derived dont inherits overload from Base,this is an error for "is-a" fundamental.
+		  name mf1 in Derived scope is hides name mf1 in Base scope,but mf1 have some overload version,
+		  except the non-parameter version(had redefined in derived),others will be hidden.(mf2 is same as mf1)
+
+		  public inheritance,all public member of base class will becomes public member of derived class,
+		  but if there are some overload version of base class and derived class had overrided only one in 
+		  them,then others will be hidden.
+		  if virtual function of base class is no longer virtual function in derived class,then non-virtual
+		  member function in derived class will overrides virtual member function in base class.
+		  this means call to Base::virtual_func() is an error.
+
+		  public inheritance have to inherit overload,the keyword "using" could make name of base class is
+		  visible in derived class.
+
+		  class Derived : public Base {
+		  public:
+		    using Base::mf1;
+		    using Base::mf2;
+		    virtual void mf1(void);
+		    void mf2(void);
+		  };
+
+		  Derived a;
+		  a.mf1();	//  OK,call to Derived::mf1();
+		  a.mf1(1);	//  OK,call to Base::mf1(int);
+		  a.mf2();	//  OK,call to Derived::mf2();
+		  a.mf2(1);	//  OK,call to Base::mf2(int);
+
+		  forwarding function : (solve name hiding problem)
+		    forwarding function often is used in private inheritance.in private inheritance,all public member of 
+		    base class will becomes private member of derived class.
+		    use a public function has same name as the private function to indirectly call the private member
+		    function on class object,such function is named forwarding function.
+		    (keyword "using" also could make private member is visible in public zone)
+
+		!!  names in derived classes hide names in base classes.under public inheritance,this is 
+		    never desirable.(violate "is-a" fundamental)  !!
+		!!  to make hidden names visible again,employ using declarations or forwarding functions.  !!
