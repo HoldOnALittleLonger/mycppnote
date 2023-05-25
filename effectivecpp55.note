@@ -2175,3 +2175,82 @@ Chapter6> Inheritance and Object-Oriented Design
 		!!  names in derived classes hide names in base classes.under public inheritance,this is 
 		    never desirable.(violate "is-a" fundamental)  !!
 		!!  to make hidden names visible again,employ using declarations or forwarding functions.  !!
+
+
+	 Item34 : Differentiate between inheritance of interface and inheritance of implementation
+	 	inherit interface only,
+		inherit interface and a default implementation,
+		inherit interface and a mandatory implementation,
+		there is three ways to be selected for how to design class inheritance.
+
+		for inherit interface only,should use pure virtual function.pure virtual function means
+		the class will be an abstract class,and all derived class have to redefines pure virtual function
+		to make its own version.
+		pure virtual function could has its body,could has not,compiler dont care,but pure virtual function
+		has its body could achieve default implementation for derived classes.
+
+		for inherit interface and a default implementation,should use virtual function.
+		declaration and definition of virtual function will be derived.if virtual function has body,that
+		means base class provides a default implementation for all derived classes.derived class can
+		redefines new version for itself,also can use the default implementation provided by base class.
+		--
+		but sometimes,default implementation maybe bring disaster.that is implicitly inherited default
+		implementation even derived class dont want.
+		  e.g.
+		    class Base; class Derived1; class Derived2;
+		    Derived1 and Derived2 should use default implementation as well.
+		    now add a new Derived3,Derived3 is different as Derived1 and Derived2,so Derived3 should
+		    has its own version for a virtual function.but it did not redefine,now Derived3 has same
+		    behavior as Derived1 and Derived2,this is wrong.
+		    
+		    solve1:
+		      let default implementation becomes a non-virtual function as protected member,(virtual
+		      function still has a body)
+		      Derived1 and Dervied2 redefine virtual function which calls to the protected member.
+		      Derived3 redefines virtual function which does not call to the protected member.
+		      even Derived3 did not redefine,now it has different behavior as Derived1 and Derived2.
+
+		    solve2:
+		      use pure virtual function but provide function body for it as default implementation.
+		      Derived1 and Derived2 and Derived3 will inherit interface from base class,then
+		      Derived1 and Derived2 redefine pure virtual function which calls to Base::pure-virtual-function.
+		      Derived3 redefine pure virtual function which does not call to Base::pure-virtual-function.
+		      
+		      //  this will lower accessing level,because interfaces often declared in public zone.
+
+		for inherit interface and a mandatory implementation,should use non-virtual function.
+		non-virtual function means invariant over specialization.such method should not changed by
+		any derived class and it is provided by base class.all derived class have to follow this rule.
+
+
+		pure virtual function :
+		  you must provide a pvf function,but i have no idea how you are going to implement it.
+		  (the purpose of declaring a pure virtual function is to have derived classes inherit
+		   a function interface only.)
+
+		virtual function :
+		  you have got to support a vf function,but if you do not want to write youre own,you can
+		  fall back on the default version in the base class.
+		  (the purpose of declaring a simple virtual function is to have derived classes inherit
+		   a function interface as well as a default implementation.)
+
+		non-virtual function :
+		  you have to follow the rule defined in nvf function,there just the only way to get same
+		  featrue.
+		  (the purpose of declaring a non-virtual function is to have derived classes inherit a
+		   function interface as well as a mandatory implementation.)
+
+		Attentions :
+		  >  dont declare all base class function as non-virtual function,that will cause no space
+		     for specialization.and base class at least have a virtual destructor.
+		  >  dont declare all base class function as virtual function,some functions should not
+		     be redefinable in derived classes.
+
+		!!  inheritance of interface is different from inheritance of implementation,under public
+		    inheritance,derived classes always inherit base class interfaces.  !!
+		!!  pure virtual functions specify inheritance of interface only.  !!
+		!!  simple(impure) virtual functions specify inheritance of interface plus inheritance of a 
+		    default implementation.  !!
+		!!  non-virtual functions specify inheritance of interface plus inheritance of a mandatory
+		    implementation.  !!
+	 	
