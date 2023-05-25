@@ -169,5 +169,41 @@ C++20>
       }
 
 
+> char8_t (since C++20)
+    char8_t type : as the declaration of the type.
+    (char16_t, char32_t, since C++11)
 
+
+> new attributes 
+    [[no_unique_address]]  since C++20
+      allows this data member to be overlapped with other non-static data members or base class subobjects of
+      its class.
+      applies to the name being declared in the declaration of a non-static data member that is not a bit-field.
+
+      e.g.
+        struct A {};
+	struct B : public A {
+	  int x;
+	  [[no_unique_address]] char c;
+	};
+
+    [[likely]], [[unlikely]]  since C++20
+      allow the compiler to optimize for the case where paths of execution including that statement are more or 
+      less likely than any alternative path of execution that does not include such a statement.
+
+      e.g.
+        if (i > 0) [[likely]] {
+	  return i * 2;
+	} else {
+	  return i * 10;
+	}
+
+	switch (i) {
+	  [[likely]] case 7:
+	    return i + 3;
+	  case 2:
+	    return ++i;
+	  default:
+	    return i;
+	}
     
