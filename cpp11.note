@@ -874,6 +874,22 @@ cpp11>
 			      depending on where the expansion takes place,the resulting comma-separated list is a
 			      different kind of list: function parameter list,member initializer list,attribute list, etc.
 
+			 #  function parameter list :
+			      in a function parameter list,if an ellipsis appears in a parameter declaration(whether
+			      it names a function parameter pack(as in, Args... args) or not),the parameter declaration
+			      is the pattern.
+
+			      template<typename... Ts, int... N>
+			      void g(Ts (&...ts)[N]) {}
+
+			      int n[1];
+			      g<const char, int>("a", n);  //  Ts (&...ts)[N] => const char(&)[2], int(&)[1]
+			      	      	    	      	   //  NE1 is 2 because that "a" has two elements,
+							   //  NE2 is 1 because that n has one element.
+
+			      note : Ts (&...)[N] is not allowed because the C++11 grammar requires the parenthesized
+			      	     ellipsis to have a name.
+			      
 			 #  base specifiers and member initializer lists :
 			      a pack expansion may designate the list of base classes in a class declaration.
 			      typically,this also means that the constructor needs to use a pack expansion in 
@@ -907,6 +923,12 @@ cpp11>
 				       using bases::g...;
 				};
 				X<B, D> x;  //  using B::g, D::g;
+
+			 #  pack expansions are allowed in the lists of attributes,if permitted by the attibute's
+			    specification.
+			    e.g.
+			      template<int... args>
+			      [[vendor::attr(args)...]] void *f();
 
 
 	       union in c++

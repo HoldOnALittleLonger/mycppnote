@@ -131,7 +131,7 @@
 	for initialize const member of a class,must initialize it with member-initialization-list at constructor.
 	<class name>(...): const_member(expression) { ... }
 
-# constructor with exactly one argument,treated specially
+# constructor with exactly one argument,treated specially(conversion)
 	struct Foo {
 		Foo(int i) { ... }
 	};
@@ -142,6 +142,11 @@
 	# keyword 'explicit' could disallow implicit conversion for constructor.
 	# print_foo(123); will lead a compiling error.
 	# should use 'explicit' unless have a goo reason not to.
+	# Attention :
+	#   explicit a copy-constructor will forbid pass object as function argument by value,
+	#   and forbid return object from function by value.
+	#   operator= overload cant be explicit,explicit should be used for constructor and conversion.
+
 
 # copy constructor
 	<class name>(<class name> &);

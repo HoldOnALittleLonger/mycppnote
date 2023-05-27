@@ -206,4 +206,87 @@ C++20>
 	  default:
 	    return i;
 	}
+
+
+> Pack-expansions in lambda init-captures
+    template pack is could to extend on lambda init-captures (C++20)
+
+    e.g.
+      template<typename _Type, class ..._TypePack>
+      void func(_Type &&arg, _TypePack... tp)
+      {
+        if (sizeof...(tp) != 0)
+	  std::cout<<std::forward<_Type>(arg)<<std::endl;
+
+        auto local_func = [&, tp...] (void)
+	{
+	  return func(tp...);
+	};
+      }
+
+      void func(void) {};
+
+    //  sizeof... operator is classified as a pack expansion as well.
+    //  ellipsis appears on right side means do a pack expansion.
+    //    e.g.  (tp + ...) => (tp0 + (tp1 + (tp2 + ...)))
+    //	  e.g.  g(std::forward<_TypePack>(tp)...); => 
+    //	  	g(std::forward<_TypePackE1>(A1), std::forward<_TypePackE2>(A2), ...);
+
+
+> removed the requirement to use typename to disambiguate types in many contexts
+    e.g.
+      struct A {
+        typedef UserCustomType int;
+      };
+
+      typename A::UserCustomType a;  //  a has type of int,
+      	       	       	   	     //  but in C++20,does not need typename keywrod any more.
+
+
+> consteval specifier and constinit specifier
+    consteval - specifies that a function is an immediate function,that is,every call to the
+    function must produce a compile-time constant.(contains function template)
+
+    every potentially-evaluated call to the function must produce a compile time constant expression.
+    an immediate function is a constexpr function,same as constexpr,a consteval specifier implies inline,
+    but consteval may not be applied to destructors,allocation functions,or deallocation functions.
+    e.g.
+      consteval int sqr(int n) { return n * n; }
+      constexpr int x = sqr(3);  //  OK,evaluate sqr(3) produce constant 3 * 3.
+      consteval int sqrsqr(int n) { return sqr(sqr(n)); }  //  OK,but not a constant expression,
+      		    	       	    	   		   //  because @n is variable.
+      //  function enclose a consteval function have to be a consteval function too.
+
+    constinit - asserts that a variable has static initialization, i.e. zero initialization and 
+    constant initialization,otherwise the program is ill-formed.
+
+    the constinit specifier declares a variable with static or thread storage duration.
+    (have to use it with 'static' or 'thread_local' together)
+
+    if a variable is declared with constinit,its initializing declaration must be applied with constinit.
+    (constexpr can produce constant at compile-time)
+
+    if a variable declared with constinit has dynamic initialization(even if it is performed as static
+    initialization),the program is ill-formed.
+
+    if no constinit declaration is reachable at the point of the initializing declaration,the program is 
+    ill-formed,no diagnostic required.
+    !!  constinit cannot be used together with constexpr or consteval.
+
+    when the declared variable is a reference,constinit is equivalent to constexpr.
+    when the declared variable is an object,constexpr mandates that the object must have static
+    initialization and constant destruction and makes the object const-qualified,but constinit
+    does not mandate constant destruction and const-qualified.
+    e.g.
+      static constinit int x(3);	//  variable x is static and initialized with 3
+      thread_local constinit int y(4);	//  variable y is thread_local and initialized with 4
+      
+      const char *g() { return "dynamic initialization."; }
+      constexpr const char *f(bool p) { return p ? "constant initializer" : g(); }
+      constinit const char *c = f(true);  //  OK,f(true) returns const char *,and f() is constexpr
+      //constinit const char *c = f(false);  //  ERROR,even g() returns const char *,but g() is not constexpr.
+
+
+> further relaxed constexpr
+
     
