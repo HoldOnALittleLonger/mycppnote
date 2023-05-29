@@ -2253,4 +2253,194 @@ Chapter6> Inheritance and Object-Oriented Design
 		    default implementation.  !!
 		!!  non-virtual functions specify inheritance of interface plus inheritance of a mandatory
 		    implementation.  !!
-	 	
+
+
+	 Item35 : Consider alternatives to virtual functions
+	 	Object-Oriented design is not only one strategy that is virtual function is satisfy.
+		there has more design strategy is useful.
+
+		e.g.
+		  class A {
+		  public:
+		    virtual int calculateValue() const;
+		  private:
+		    int value;
+		  };
+
+		  class B : public A { ... };
+
+		  A::calculateValue() is used to calculate value,but derived class could redefines its own version.
+		  A::calculateValue() is not a pure virtual function,so there has default version,this is a problem
+		  sometimes.and public inheritance is allows client access interface directly,a bettery approch is 
+		  declares it as a private member.derived class can redefines private virtual function but cant
+		  call it without base class member function.
+
+		  < The template method pattern via the non-virtual interface Idiom
+	 	    use wrapper.  (but does not use any c++ template)
+
+		    class A {
+		    public:
+		      int calculateValue() const
+		      {
+		        ...  //  do before stuff
+			int res = doCalculateValue();
+			...  //  do after stuff
+		      }
+		    private:
+		      virtual int doCalculateValue() const;
+		      int Value;
+		    };
+
+		    class B : public A { ... };
+
+		    B is able to defines a new method to help calculte value for itself.but this work is started
+		    by calculateValue(),a non-virtual function.at there,it is a wrapper of the real worker.
+		    that means,before work start,it is going to prepare environment(mutex,log, etc.),after work
+		    done,it have to clean up environment.
+		    this is NVI,non-virtual interface idiom.(template method)
+
+		    redefining a virtual function specifies how something is to be done.
+		    calling a virtual function specifies when it will be done.
+
+		    (it is not strictly private virtual function,it also could be protected,because derived class
+		     can directly access protected member)
+
+		  < The strategy pattern via function pointers
+		    callback function.
+
+		    int defaultDoCalculateValueFunc(const A &);
+		    class A {
+		    public:
+		      typedef int (*doCalculateValueFunc)(const A &);
+		      explicit A(doCalculateValueFunc dcvf = defaultDoCalculateValueFunc) : _dcvf(dcvf)
+		      {
+		        ...
+		      }
+		      int calculateValue() const
+		      {
+		        ...
+			int res = _dcvf(*this);
+			...
+		      }
+		    private:
+		      doCalculateValueFunc _dcvf;
+		      int Value;
+		    };
+
+		    class B : public A { ... };
+
+		    user can defines other do-calculate-value function as well,and it is not necessary a member function
+		    or a friend function.
+		    this method is more flexibility than template method.
+		    different derived class can use same callback function or different callback function,that will be
+		    determined at runtime.(object is going to create)
+		    of course,supports replace callback function.
+		    but have to consider that callback function if need to accessing non-public parts,if needs,have to
+		    declares it as friend,this will weaken the class's encapsulation.
+
+		  < The strategy pattern via std::function // <functional>
+		    callback function,but relaxed limits on it.
+		    
+		    int defaultDoCalculateValueFunc(const A &);
+		    class A {
+		    public:
+		      typedef std::<int(const A &)> dcvf_worker;
+		      explicit A(dcvf_worker dcvf = defaultDoCalculateValueFunc) : _dcvf(dcvf)
+		      {
+		         ...
+		      }
+
+		      int calculateValue() const 
+		      {
+		        ...
+			int res = _dcvf();
+			...
+		      }
+		    private:
+		      int Value;
+		      dcvf_worker _dcvf;
+		    }
+
+		    class B : public A { ... };
+
+		    struct calculator {
+		      int operator()(const A &) const;
+		    };
+
+		    class worker {
+		    public:
+		      int doWork(const A &);
+		      ...
+		    };
+
+		    calculator f;
+		    B t1(f());
+		    worker w;
+		    B t2(std::bind(&worker::doWork, w);  //  establish binding doWork(this = &w, const A &)
+
+		    this approch is more flexibility than above.any callable entity with a signature compatible
+		    is allowed,even an object or a member function in another class.
+
+		  < The classic strategy pattern
+		    in other words,make a new inheritance hierarchy of do-calculate-value functions.
+		    then let base class "has-a" worker object pointer.
+
+		    class A;
+		    class doCalculateValueFunction {
+		    public:
+		      virtual int doWork(const A &) const = 0;
+		      ...
+		    };
+		   
+		    class A {
+		    public:
+		      typedef doCalculateValueFunction * the_dcvf;
+		      explicit A(the_dcvf dcvf) : _dcvf(dcvf)
+		      {
+		        ...
+		      }
+		      int calculateValue() const
+		      {
+		        ...
+		        int res = _dcvf->doWork();
+		        ...
+		      }
+		    private:
+		      int Value;
+		      the_dcvf _dcvf;
+		    };
+
+		    class B : public A { ... };
+
+		    class new_worker : public doCalculateValueFunction {
+		    public:
+		      int doWorker(const A &) { return 13; }
+		      ...
+		    };
+
+		    new_worker n;
+		    B b(&n);   //  allows base class pointer points to derived class object
+
+		    a new inheritance hierarchy is helpful to maintenance and expandsion.but that required outer
+		    class have to know what function to call in the inner class object(_dcvf points to).
+
+
+		Summary :
+		  use the non-virtual interface idiom(NVI idiom),a form of the Template Method design pattern
+		  that wraps public non-virtual member functions around less accessible virtual functions.
+
+		  replace virtual functions with function pointer data members,a stripped-down manifestation
+		  of the strategy design pattern.
+
+		  replace virtual functions with std::function data members,thus allowing use of any callable
+		  entity with a signature compatible.
+
+		  replace virtual functions in one hierarchy with virtual functions in another hierarchy.this
+		  is the conventional implementation of the strategy design pattern.
+
+		!!  alternatives to virtual functions include the NVI idiom and various forms of Strategy design
+		    pattern.the NVI idiom is itself an example of the Template Method desgin pattern.  !!
+		!!  a disadvantage of moving functionality from a member function to a function outside the class
+		    is that the non-member function lacks access to the class's non-public members.  !!
+		!!  std::function objects act like generalized function pointers.such objects support all callable
+		    entities compatible with a given target signature.  !!
