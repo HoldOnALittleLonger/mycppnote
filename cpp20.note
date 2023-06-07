@@ -381,6 +381,9 @@ C++20>
 	 awaiter::await_ready -> awaiter::await_suspend -> awaiter::await_resume.
 	 after awaiter::resume() has been finished,initial_suspend() resumed.)
 
+	//  caller calls coroutine_handle<PromiseType>.resume() or coroutine_handle<PromiseType>()
+	//  will resume coroutine from initial_suspend(),if it returned std::suspend_always.
+
     when a coroutine reaches a suspension point :
       the return object obtained earlier(from get_return_object()) is returned to the caller/resumer,
       after implicit conversion to the return type of the coroutine,if necessary.
@@ -449,23 +452,29 @@ C++20>
 	  struct coroutine;
 	  struct promise;
 	  struct awaiter {
-	    std::coroutine_handle<promise> *_pPromise;
+	    std::coroutine_handle<> *_pPromise;
 	    ...
 	    void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
 	    ...
 	  };
 
-	  coroutine function(std::coroutine_handle<promise> *p)
+	  //  template<typename _PromiseType> struct coroutine_handle : coroutine_handel<>;
+
+	  coroutine function(std::coroutine_handle<> *p)
 	  {
 	    /*  co_await promise::initial_suspend(); */
-	    /*  awaiter::resume() executed,intial_suspend() resume  */
+	    /*  awaiter::resume() executed,the return value as expression value  */
+
+	    //  before encouter "co_await a;",coroutine should not return to caller,
+	    //  this ensure that caller has a way to access coroutine.(awaiter sets promise object for handle)
+	    //  so initial_suspend() have to returns std::suspend_never.
 	    awaiter a{p};
 	    co_await a;
 	  }
 
 	  void caller(void)
 	  {
-	    std::coroutine_handle<promise> outer_handle;
+	    std::coroutine_handle<> outer_handle;
 	    function(&outer_handle);
 	    outer_handle();
 	  }
@@ -528,6 +537,9 @@ C++20>
 	  coroutine::promise_type *await_resume() { return _pp; }
 	};
 
+	//  this awaiter let coroutine is able to access its own promise object in coroutine state
+	//  instance.
+
 	coroutine func()
 	{
 	  awaiter a;
@@ -545,6 +557,11 @@ C++20>
 	  promise.i;
 	  promise.destroy();  //  destroy
 	}
+
+	//  generally,outer of promise_type struct does not hold any data members that will be 
+	//  accessed in caller,except handle object.
+	//  a conventional method that is let promise_type holds such data members,and follow
+	//  the example code above to access them in caller.
 
 
     co_await :
@@ -683,6 +700,9 @@ C++20>
       suspend coroutine ->
       calls awaiter::await_suspend(handle) ->
       calls awaiter::await_resume() ->
+
+      return execution to caller ->
+      caller resume coroutine ->
 
       coroutine have been resumed from intial_suspend() ->
       execute coroutine body ->
