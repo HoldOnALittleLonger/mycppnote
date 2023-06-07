@@ -371,21 +371,24 @@ C++20>
 
 	when co_await promise.initial_suspend() resumes,starts executing the body of the coroutine.
 
-    when a coroutine reaches a suspension point,the return object obtained earlier is returned to the
-    caller/resumer,after implicit conversion to the return type of the coroutine,if necessary.
+    when a coroutine reaches a suspension point :
+      the return object obtained earlier(from get_return_object()) is returned to the caller/resumer,
+      after implicit conversion to the return type of the coroutine,if necessary.
 
-    when a coroutine reaches the co_return statement,it performs the following :
-      calls promise.return_void() for
-        co_return;
-	co_return <expr>; where expr has type void
-	falling off the end of the coroutine,the behavior is undefined if the promise type has no
-	promise::return_void() member function in this case.
+    when a coroutine reaches the co_return statement :
+      it performs the following :
+        calls promise.return_void() for
+          co_return;
+	  co_return <expr>; where expr has type void
+	  falling off the end of the coroutine,the behavior is undefined if the promise type has no
+	  promise::return_void() member function in this case.
 
-      or calls promise.return_value(<expr>) for "co_return <expr>;" where expr has non-void type.
+        or calls promise.return_value(<expr>) for "co_return <expr>;" where expr has non-void type.
       
-      destroys all variables with automatic storage duration in reverse order they were created.
+        destroys all variables with automatic storage duration in reverse order they were created.
       
-      calls promise.final_suspend() and co_awaits the result.
+        calls promise.final_suspend() and co_awaits the result.
+
 
     if coroutine state object is destroyed,then destructor of promise object will be called,also
     calls function parameters' destructor,and free memory used by coroutine state,transfers 
@@ -398,9 +401,87 @@ C++20>
      	  the lifetime of the coroutine state is strictly nested within the lifetime of the caller,and
 	  the size of coroutine frame is known at the call site.
 
+    coroutine handle :
+      a coroutine handle behaves a lot like a C pointer.it can be easily copied,but it does not have 
+      a destructor to free the memory associated with coroutine state.to avoid leaking memory,user must
+      generally destroy coroutine state by calling the coroutine_handle::destroy method.
+      if coroutine handle had been destroyed,it can not be use again.
+
     promise :
       the promise type is determined by the compiler from the return type of the coroutine using
       std::coroutine_traits.
+      coroutine library use the typename promise_type as an identifier for a promise,like this
+      CoroutineType::promise_type.
+
+      a promise object at least must has these members :
+
+        CoroutineType get_return_object();
+	  get_return_object() have to returns coroutine object instance.its result will saved
+	  in a local variable,and will be returned to coroutine caller when first suspend.
+	  this is the time to co_await the result of inital_suspend().
+	  this is why a coroutine definition has a return value is of type CoroutineType object.
+	  generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
+	  get the coroutine object instance.
+
+	Awaiter initial_suspend();
+	  initial_suspend() will be called once when the coroutine is start to executing.
+
+	Awaiter final_suspend();
+	  final_suspend() will be called when encouter "co_return" statement.
+
+	//  Awaiter == std::suspend_never || std::suspend_always || others
+
+	void return_void();
+	  for return void.
+
+	void unhandled_exception();
+	  for exception deal with.
+
+	//  Awaiter will be used when "co_await" statement is process.
+	//  promise object could has more data members.
+
+      if client wants to access promise_type,should use a handle "std::coroutine_handle<PromiseType>" 
+      instance,member method promise() will return a reference to promise_type object.
+
+      e.g.
+        struct coroutine {
+	  struct promise_type {
+	    int i;
+	    ...
+	  };
+	  std::coroutine_handle<promise_type> _ptch;
+	  operator std::coroutine_handle<promise_type>() const { return _ptch; }
+	};
+
+	struct awaiter {
+	  ...
+	  coroutine::promise_type *_pp;
+	  ...
+	  void await_suspend(std::coroutine_handle<coroutine::promise_type> h)
+	  {
+	    _pp = &h.promise();
+	  }
+	  coroutine::promise_type *await_resume() { return _pp; }
+	};
+
+	coroutine func()
+	{
+	  awaiter a;
+	  co_await a;  //  suspend coroutine,
+
+	  	       //  when first suspend(co_await intial_suspend()),
+		       //  the coroutine object returned by get_return_object()
+		       //  will return to caller.
+	}
+
+	void main1(void)
+	{
+	  std::coroutine_handle<coroutine::promise_type> chcp = func();  //  calls covert function
+	  coroutine::promise_type &promise = chcp.promise();
+	  promise.i;
+	  promise.destroy();  //  destroy
+	}
+
 
     co_await :
       the unary operator co_await suspends a coroutine and returns control to the caller.its operand
@@ -435,6 +516,11 @@ C++20>
       awaiter.await_ready() is called,if its result,contextually-converted to bool is false,then,
       the coroutine is suspended,awaiter.await_suspend(handle) is called.
 
+      awaiter.await_suspend(handle) is called,where handle is the coroutine handle representing the
+      current coroutine.inside that function,the suspended coroutine state is observable via that
+      handle,and it is this function's responsibility to schedule it to resume on some executor,
+      or to be destroyed.
+
       if await_suspend returns void,control is immediately returned to the caller/resumer of the
       current coroutine.
       if await_suspend returns bool,the value true returns control to the caller/resumer of the
@@ -447,6 +533,7 @@ C++20>
       expression.
       if the coroutine was suspended in the co_await expression,and is later resumed,the resume
       point is immediately before the call to awaiter.await_resume().
+
 
     co_yield :
       co_yield expression returns a value to the caller and suspends the current coroutine,it is the
@@ -461,7 +548,23 @@ C++20>
 	a typical generator's yield_value would store its argument into the generator object and return
 	std::supend_always,transferring control to the caller/resumer.
 
-    e.g.
+    co_return :
+      to signal the end of a coroutine,C++ adds a new co_return operator.there are three ways for a 
+      coroutine to signal that it is complete :
+        the coroutine can use "co_return e;" to return a final value e.
+	the coroutine can use "co_return;" with no value(or with a void expression) to end the coroutine
+	without a final value.
+	the coroutine can let execution fall off the end of the function which is similar to previous case.
+
+      if co_return returns void,then function "promise::return_void" will be called.
+      if co_return returns a value,then function "promise::return_value" will be called.
+
+      to find out if a coroutine is complete,user can call "coroutine_handle::done" on its coroutine_handle
+      instance.do not confuse coroutine_handle::done() with coroutine_handle::operator bool(),the latter
+      merely checks whether the coroutine hanlde contains a non-null pointer to coroutine memory,not 
+      whether execution is complete.
+
+    example:
       #include<coroutine>
       #include<iostream>
       
@@ -494,5 +597,53 @@ C++20>
 	h.destroy();
       }
 
+    coroutine process figure :
+      caller calls a coroutine ->
+      enter coroutine ->
+
+      allocate memory for coroutine state object ->
+      copy all parameter to coroutine state object ->
+
+      construct promise object ->
+      calls promise::get_return_object() ->
+      save result of get_return_object() in local storage(on heap) ->
+
+      calls promise::initial_suspend() ->
+      co_await the result of initial_suspend() ->
+      return execution and the result of get_return_object() to caller ->
+
+      caller calls a coroutine again ->
+
+      coroutine have been resumed from intial_suspend() ->
+      execute coroutine body ->
+
+      encouter co_await <expr> statement ->
+      try to covert expr to awaitible object(if necessary) ->
+
+      calls awaiter::await_ready() ->
+      await_ready() returned false ->
+      suspend coroutine -> 
+      calls awaiter::await_suspend(handle) ->
+      calls awaiter::await_resume() ->
+
+      return execution to caller(await_suspend() returns void or true) ->
+
+      caller re-call coroutine ->
+      coroutine resume,and execute next code ->
+
+      ...
+      ...
+
+      encouter end of coroutine ->
+      execute co_return or co_return v ->
+
+      calls promise::return_void() or promise::return_value() ->
+      free memory for local data(in reverse order) ->
+
+      calls promise::final_suspend() ->
+      co_await the result of final_suspend() ->
+
+      coroutine stop,and return to caller.
+      
       
       
