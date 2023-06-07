@@ -368,8 +368,18 @@ C++20>
 	calls promise.initial_suspend() and co_awaits its result,typical promise types either return a
 	std::suspend_always,for lazily-started coroutines,or std::suspend_never,for eagerly-started 
 	coroutines.
+	  std::suspend_always :
+	    empty class used to indicates that await awaiter always suspend coroutine and dont 
+	    produce value.
+	  std::suspend_never :
+	    empty class used to indicates that await awaiter never suspend coroutine and dont
+	    produce value.
 
 	when co_await promise.initial_suspend() resumes,starts executing the body of the coroutine.
+	(co_await promise::initial_suspend() means program will invokes three functions in the
+	 awaiter returned by initial_suspend().
+	 awaiter::await_ready -> awaiter::await_suspend -> awaiter::await_resume.
+	 after awaiter::resume() has been finished,initial_suspend() resumed.)
 
     when a coroutine reaches a suspension point :
       the return object obtained earlier(from get_return_object()) is returned to the caller/resumer,
@@ -406,6 +416,60 @@ C++20>
       a destructor to free the memory associated with coroutine state.to avoid leaking memory,user must
       generally destroy coroutine state by calling the coroutine_handle::destroy method.
       if coroutine handle had been destroyed,it can not be use again.
+      for access a coroutine from outer,have to existed a coroutine_handle which is refers to the coroutine.
+      there has three ways to do this :
+      >
+        defintion a struct which is inherited from std::coroutine_handle<PromiseType>,coroutine will returns
+	an object is type of this struct,caller could call handle.resume() or handle() to access coroutine.
+	e.g.
+	  struct promise;
+	  struct coroutine : std::coroutine_handle<promise> {
+	    using promise_type = promise;
+	    ...
+	  };
+      >
+        let the type CoroutineReturn contains promise_type,and represented a handle is type of 
+	std::coroutine_handle<PromiseType>.
+	define coversions covert CoroutineReturn to std::coroutine_handle<PromiseType> and std::coroutine_handle<>,
+	coroutine caller can easy to delcared a handle which is used to hold the coroutine_handle returned by 
+	coroutine.
+	e.g.
+	  struct coroutine {
+	    struct promise_type {
+	      ...
+	    };
+	    std::coroutine_handle<promise_type> handle;
+	    operator std::coroutine_handle<promise_type>() const { return handle; }
+	    operator std::coroutine_handle<>() const { return handle; }
+	  };
+      > define awaiter that hold a std::coroutine_handle pointer object,and assign it with the coroutine handle
+        in await_suspend().this is require coroutine receive a std::coroutine_handle pointer as the argument
+	of awaiter's constrouctor.
+	e.g.
+	  struct coroutine;
+	  struct promise;
+	  struct awaiter {
+	    std::coroutine_handle<promise> *_pPromise;
+	    ...
+	    void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
+	    ...
+	  };
+
+	  coroutine function(std::coroutine_handle<promise> *p)
+	  {
+	    /*  co_await promise::initial_suspend(); */
+	    /*  awaiter::resume() executed,intial_suspend() resume  */
+	    awaiter a{p};
+	    co_await a;
+	  }
+
+	  void caller(void)
+	  {
+	    std::coroutine_handle<promise> outer_handle;
+	    function(&outer_handle);
+	    outer_handle();
+	  }
+
 
     promise :
       the promise type is determined by the compiler from the return type of the coroutine using
@@ -498,6 +562,7 @@ C++20>
 	in a default argument,or in the initializer of a block-scope variable with static or thread
 	storage duration.
 
+      <first>
       expr is converted to an awaitable as follows :
         if expr is produced by an initial suspend point,a final suspend point,or a yield expression,
 	the awaitable is expr,as-is.
@@ -513,9 +578,11 @@ C++20>
 	otherwise,if overload resolution finds no operator co_await,the awaiter is awaitable,as-is.
 	otherwise,if overload resolution is ambiguous,the program is ill-formed.
 
+      <second>
       awaiter.await_ready() is called,if its result,contextually-converted to bool is false,then,
       the coroutine is suspended,awaiter.await_suspend(handle) is called.
 
+      <third>
       awaiter.await_suspend(handle) is called,where handle is the coroutine handle representing the
       current coroutine.inside that function,the suspended coroutine state is observable via that
       handle,and it is this function's responsibility to schedule it to resume on some executor,
@@ -529,8 +596,9 @@ C++20>
       if await_suspend throws an exception,the exception is caught,the coroutine is resumed,and
       the exception is immediately re-thrown.
 
-      awaiter.await_resume() is called,and its result is the result of the whole "co_await <expr>;" 
-      expression.
+      <finally>
+      awaiter.await_resume() is called(whether the coroutine was suspended),and its result is the
+      result of the whole "co_await <expr>;" expression.
       if the coroutine was suspended in the co_await expression,and is later resumed,the resume
       point is immediately before the call to awaiter.await_resume().
 
@@ -610,9 +678,11 @@ C++20>
 
       calls promise::initial_suspend() ->
       co_await the result of initial_suspend() ->
-      return execution and the result of get_return_object() to caller ->
-
-      caller calls a coroutine again ->
+      calls awaiter::await_ready() ->
+      awaiter::await_ready() returned false ->
+      suspend coroutine ->
+      calls awaiter::await_suspend(handle) ->
+      calls awaiter::await_resume() ->
 
       coroutine have been resumed from intial_suspend() ->
       execute coroutine body ->
