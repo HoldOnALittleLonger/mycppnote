@@ -2305,6 +2305,21 @@ Chapter6> Inheritance and Object-Oriented Design
 		    (it is not strictly private virtual function,it also could be protected,because derived class
 		     can directly access protected member)
 
+		     //  how to redefine virtual function in base class private zone ?
+		     //  just do this :
+		           class Derived : public Base {
+			     ...
+			   private:
+			     virtual <ReturnType> virtual_function(<arg-list>)
+			     {
+			       ...
+			     }
+			   };
+
+			 //  of course,definition of that virtual function could outside to
+			 //  class definition.
+
+
 		  < The strategy pattern via function pointers
 		    callback function.
 
@@ -2444,3 +2459,47 @@ Chapter6> Inheritance and Object-Oriented Design
 		    is that the non-member function lacks access to the class's non-public members.  !!
 		!!  std::function objects act like generalized function pointers.such objects support all callable
 		    entities compatible with a given target signature.  !!
+
+
+	 Item36 : Never redefine an inherited non-virtual function
+	 	redefine non-virtual function in derived class inherited from bace class will cause 
+		base::non-virtual function was hidden by derived::non-virtual function.
+		e.g.
+		  struct A {
+		    void func(void) {}
+		  };
+
+		  struct B : public A {
+		    void func(void) {}
+		  };
+
+		  A *pA = new B;
+		  pA->func();		//  calls A::func
+
+		  B *pB = new B;
+		  pB->func();		//  class B::func
+
+		  //  because,if function is not virtual,it will be statically bound.
+		  //  if function is virtual,it will be dynamically bound.
+
+		  statically bound :
+		    when use base class pointer points to derived class,call member function via this poiner always
+		    calls the member function in the type of pointer of.
+
+		  dynamically bound :
+		    when use base class pointer points to derived class,call member function via this pointer always
+		    calls the member function in the type of the object this pointer points to.
+
+		  //  reference has same behavior.
+
+		redefine an inherited non-virtual function had been violated "is-a" fundamental.
+		in "is-a",a non-virtual function means :
+		  everything that applies to base class object also applies to derived class object,
+		  because "is-a".
+		  derived class must inherit both the interface and the implementation of non-virtual
+		  function of base class.(Item34, for invariant over specialization)
+
+		!!  never redefine an inherited non-virtual function.  !!
+
+
+
