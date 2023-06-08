@@ -484,14 +484,14 @@ C++20>
       the promise type is determined by the compiler from the return type of the coroutine using
       std::coroutine_traits.
       coroutine library use the typename promise_type as an identifier for a promise,like this
-      CoroutineType::promise_type.
+      CoroutineType::promise_type.(CoroutineType have to be an object type and nested promise_type)
 
       a promise object at least must has these members :
 
         CoroutineType get_return_object();
 	  get_return_object() have to returns coroutine object instance.its result will saved
 	  in a local variable,and will be returned to coroutine caller when first suspend.
-	  this is the time to co_await the result of inital_suspend().
+	  that is the time to co_await the result of inital_suspend().
 	  this is why a coroutine definition has a return value is of type CoroutineType object.
 	  generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
 	  get the coroutine object instance.
@@ -736,4 +736,231 @@ C++20>
       coroutine stop,and return to caller.
       
       
+> modules(C++20)
+    most C++ projects use multiple translation units,and so they need to share declarations and
+    definitions across those units.the usage of header is prominent for this purpose,an example
+    being the standard library whose declarations can be provided by including the corresponding
+    header.
+    modules are a language feature to share declarations and definitions across translation units.
+    they are an alternative to some use cases of headers.
+    modules are orthogonal to namespaces.
+
+    syntax :
+      export(optional) module <module-name> <module-partition>(optional) <attr>(optional);
+      export <declaration>
+      export { <declaration-seq>(optional) }
+      export(optional) import <module-name> <attr>(optional);
+      export(optional) import <module-partition> <attr>(optional);
+      export(optional) import <header-name> <attr>(optional);
+      module;
+      module : private;
+
+      1>  module declaration,declares that the current translation unit is a module unit.
+      2,3>  export declaration,export all namespace-scope declarations in declaration or
+      	    declaration-seq.
+      4,5,6>  import declaration,import a module unit/module partition/header unit.
+      7>  starts a global module fragment.
+      8>  starts a private module fragment.
+
+    module declarations :
+      a translation unit may have a module declaration,in which case it is cosidered a module
+      unit.(all content in this translation unit)
+      module declaration must be the first declaration of the translation unit,if provided.
+      (except the global module fragment)
+      each module unit is associated to a module name.a named module is the collection of
+      module units with the same module name.
+
+      module interface unit : module unit whose declaration has the keyword 'export' are termed
+      	     	       	      module interface unit.
+      module implementation unit : other module units than module interface unit are termed
+      	     		    	   module implementation unit.
+      primary module interface unit : every named module.there must be exactly one module interface
+      	      	     	       	      unit that specifies no module partition,this module unit is
+				      termed the primary module interface unit.
+				      its exported content will be available when importing the
+				      corresponding named module.
+
+      export module hello_world;      //  primary module interface unit.
+      module hello_world;	      //  module implementation unit.
+      export module A, B, C, D.E;     //  several primary module interface units.
+      module A;	       	     	      //  module implementation unit.
+      module B;
+      module C;
+      module D.E;
+
+    exporting declarations and definitions :
+      module interface units can export declarations,definitions,which can be imported by
+      other translation units.
+      to export a declaration,either prefix it with the 'export' or else place it inside
+      an 'export' block.
+
+      export int a = 3;
+      export { int func(void){} void func2(int c){} }
+
+    importing modules and headers :
+      modules are imported via an import declaration.
+
+      export(optional) import <module-name> <attr>(optional);
+
+      all declarations and definitions exported in the module interface units of the given named
+      module will be avaiable in the translation unit using the import declaration.
+      import declarations can be exported in a module interface unit.that is,if module A export-imports
+      B,then importing A will also make visible all export from B.
+
+      in module units,all import declarations must be grouped after the module declaration and before
+      all other declarations.
+
+      e.g.
+        export module A;	//  primary module interface unit
+	export int a = 3;	//  export definition
+
+	export module B;	//  primary module interface unit
+	export import A;	//  export-import A
+
+	export module C;	//  primary module interface unit
+	import B;     		//  import B
+
+	int b = a;		//  because B export-imports A.
+
+	#include<iostream>
+	  ...
+
+      #include should not be used in a module unit(outside the global module fragment),because all
+      included declartions and definitions would be considered part of the module.
+
+      export(optional) import <header-name> <attr>(optional);
+
+      importing a header will make accessible all its definitions and declarations.
+      preprocessor macros are also accessible,but preprocessing macros defined in the translation
+      unit will not affect the processing of the header.global module fragment can resolve this
+      problem.
+
+      e.g.
+        export module A;
+	import <vector>;
+	export import <iostream>;
+
+	#ifdef definitions or other processor macros in <vector> or <iostream> is not effect the header.
+
+    global module fragment :
+      module units can be prefixed by a global module fragment,which can be used to include headers when
+      importing the headers is not possible.
+
+      module;
+      <preprocessing-directives>(optional)
+      <module-declaration>
+
+      if a module-unit has a global module fragment,then its first declaration must be 'module;'.
+      a standard module declaration makrs the end of the global module fragment.
+
+      e.g.
+        module;		  //  global module fragment prefix
+	
+	#ifdef DEBUG
+	...
+	#endif
+
+	#include<iostream>  //  #include can be used in global module fragment.
+
+	export module A;  //  A marks global module fragment end
+
+	...
+
+    private module fragment :
+      primary module interface unit can be suffixed by a private module fragment,which allows
+      a module to be represented as a single translation unit without making all of the contents
+      of the module reachable to importers.(alike static declaration)
+
+      module : private;
+      <declaration-seq>(optional)
+
+      e.g.
+        export module A;
+	import <iostream>;
+	
+	export int a = 3;
+
+	module : private;
+	
+	void function(void) {}	//  function is not reachable from importers of A.
       
+      private module fragment ends the portion of the module interface unit that can affect the behavior
+      of other translation units.if a module unit contains a private module fragment,it will be the only
+      module unit of its module.
+
+    module partitions :
+      a module can have module partition units.they are module units whose module declarations include
+      a module partition,which starts with a colon ':' and is placed after the module name.
+      a module partition represents exactly one module unit,they are visible only from inside the named
+      module.
+      a module partition can be imported by module units of the same named module.other translation unit
+      can import module partition directly.
+
+      module <module-name>:<module-partition>;
+      export module <module-name>:<module-partition>;
+      export(optional) import <module-partition> <attr>(optional);
+
+      e.g.
+        export module A:B;	//  file1	partition module interface unit :B
+
+	module A:C;   		//  file2	module parition unit :C
+
+	export module A;	//  file3	primary module interface unit
+	import :C;
+	export import :B;	//  export-import module partition unit(also a interface)
+
+      all definitions and declarations in a module partition are visible by the importing module unit,
+      whether exported or not.
+      a module parition unit prefix 'export' also a module interface unit.they must be export-imported
+      by the primary module interface unit,and their exported statements will be visible when the module
+      is imported.
+
+    module ownership :
+      in general,if a declaration appears after the module declaration in a module unit,it is attached to that
+      module.
+      if a declaration of an entity is attached to a named module,that entity can only be defined in that module.
+      all declarations of such an entity must be attached to the same module.
+      if a declaration is attached to a named module,and it is not exported,the declared named has module
+      linkage.
+
+      //  have to prevent ambiguity.
+
+      module ownership modle :
+        in the weak module ownership model,such declarations are considered to declare the same entity.
+        in the strong module ownership model,they are considered to declare different entities.
+
+	e.g.
+	  file1 :
+	    export module A;
+	    export void func(void) {}
+
+	  file2 :
+	    export module B;
+	    export void func(void) {}
+
+	  file3 :
+	    import A;
+	    import B;
+
+	    //  void func(void){} now is visible in file3.
+	    //  weak :
+	    	  A::func and B::func are considered to declare the same entity,
+		  linker may pick either
+		strong :
+		  A::func and B::func are different entities.
+
+      //  e.g.
+            export module A;
+
+	    namespace dd {		    //  namespace definitions with external linkage.
+	      export extern "C++" int f();  //  declarations within a language linkage specification.
+	      export extern "C++" int g();
+	      export int h();
+	    }
+
+	    //  f and g are not attached to A.
+	    //  h is attached to A.
+	    //  dd::h must be defined in A,dd::f and dd::g can be defined in somewhere outside A.
+
+
+	    
