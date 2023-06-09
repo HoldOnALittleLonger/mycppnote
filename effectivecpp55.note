@@ -2502,4 +2502,29 @@ Chapter6> Inheritance and Object-Oriented Design
 		!!  never redefine an inherited non-virtual function.  !!
 
 
+         Item37 : Never redefine a function's inherited default parameter value
+	 	because Item36 had been introduced why never redefine an inherited non-virtual function,so
+		just discuss virtual function at there.
+
+		virtual function is dynamic binding,but default value is static binding.
+		(late binding and early binding)
+
+		if base class declared a virtual function with a default value,and derived class overrided
+		it with a different value,that will casue problem.
+		user want to use base class pointer points to a derive class object,and invoke virtual function
+		via this pointer and expect overrided version.
+		then the overrided version will be called,but the default value will from base class,because
+		default value is static binding.
+		this may be bring some serious error.
+
+		but if keep same declaration in derived class with same default value,that will cause code
+		duplication.if the default parameter value(may be a enum) is changed in base class,all derived
+		classes that repeat it must also be changed.
+
+		for solve this problem,should use virtual function alternative,for example,use NVI.
+
+		!!  never redefine an inherited default parameter value,because default parameter values are 
+		    statically bound,while virtual functions - the only functions you should be redefining -
+		    are dynamically bound.  !!
+
 
