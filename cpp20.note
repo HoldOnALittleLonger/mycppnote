@@ -963,4 +963,178 @@ C++20>
 	    //  dd::h must be defined in A,dd::f and dd::g can be defined in somewhere outside A.
 
 
-	    
+> constraints and concepts
+    class templates,function templates,and non-template functions(typically members of class templates)
+    may be associated with a constraint,which specifies the requirements on template arguments,which
+    can be used to select the most appropriate function overloads and template specializations.
+    the named sets of such requirements are called concepts.
+
+    concept is predicate,evaluated at compiling time,and becomes a part of the interface of a template
+    where it is used as a constraint.
+
+    concept is made for model semantic categories rather than syntactic restrictions.
+
+    concept :
+      a concept is a named set of requirements,the definition of a concept must appear at 
+      namespace scope.
+
+      syntax :
+        template<template-parameter-list>
+	concept <concept-name> <attr>(optional) = <constraint-expression>;
+
+      concept can be a part in id-expression.
+      concept can be named in a type-constraint,as part of type template parameter declaration,
+      placeholder type specifier,compound requirement.
+
+      attention :
+        concept is not allowed to recursive.
+	concept is not allowed to explicit instantiation,explicit specialization,partial specialization.
+	(the meaning of the original definition of a constraint cant be changed)
+
+	in a type-constraint,a concept takes one less template argument than its parameter list demands,
+	because the contextually deduced type is implicitly used as the first argument of the concept.
+	e.g.
+	  template<class T, class U>
+	  concept C = std::is_base_of<U, T>::value;
+
+	  template<C<Base> T>  //  T as the first argument.
+	  void func(void) {}
+
+    constraints :
+      a constraint is a sequence of logical operations and operands that specifies requirements on 
+      template arguments.they can appear within require expressions or directly as bodies of 
+      concepts.
+
+      the constraint associated with a declaration are determined by normalizing a logical AND
+      expression whose operands are in the following order :
+        >  the constraint expression introduced for each constrained type template parameter or
+	   non-type template parameter declared with a constained placeholder type,in order of
+	   appearance.
+	>  the constraint expression in the requires clause after the template parameter list.
+	>  the constraint expression introduced for each parameter with constrained placeholer type
+	   in an abbreviated function template declaration.
+	>  the constraint expression in the trailing requires clause.
+
+	e.g.
+	  template<class T>
+	  concept C = requires (T a) {
+	    typename a::value; 	  //  a must has type value.
+	    ++a;     		  //  a must supports ++a operation.
+	  };
+
+	  template<class X>
+	  void function(void) requires C<X> {}
+
+	  template<class Y>
+	  requires C<Y>
+	  void g(void) {}
+
+	  template<C Y>
+	  void h(void) {}
+
+      constraint is allows to redeclare but have to using the same syntactic form.
+      e.g.
+        template<C Y>
+	void g(void) {}
+	
+	template<class Y>
+	requires C<Y>		//  logically-equivalent-but-syntactically-different
+	void g(void) {}		//  ill-form
+
+	
+      
+
+      three type of constraints :
+        conjunctions >
+	  the conjunction of two constraints is formed by using the && operator in the 
+	  constraint expression.
+
+	disjunctions >
+	  the disjunction of two constraints is formed by using the || operator in the
+	  constraint expression.
+
+	atomic constraints >
+	  an atomic constraint consists of an expression E and a mapping from the template
+	  parameters that appear within E to template arguments involving the template
+	  parameters of the constrained entity,called its parameter mapping.
+	
+	  atomic constraints are formed during constraint normalization.E is never a logical
+	  AND or logical OR expression.
+
+	  atomic constraints checking have to do parameter mapping,use template arguments
+	  do substitution for template parameter which appears in E.if E is not an valid
+	  type or expression,checking will failure,otherwise,do lvalue-to-rvalue conversion,
+	  shall be a prvalue constant expression of type bool.if result is true,satisfied,
+	  if result is false,satisfy failed.
+
+      constraint normalization :
+        constraint normalization is the process that transforms a constraint expression into
+	a sequence of a conjunctions and disjunctions of atomic constraints.
+
+      partial ordering of constraints :
+        before any further analysis,constraints are normalized by substituting the body of
+	every named concept and every requires expression until what is left is sequence of
+	conjunctions and disjunctions on atomic constraints.
+
+	a constraint P is said to subsume constraint Q if it can be proven that P implies
+	Q up to the identify of atomic constraints in P and Q.
+
+	(N > 0 does not subsume N >= 0)
+
+      requires expression :
+        yields a prvalue expression of type bool that describes the constraints.
+
+	syntax :
+	  requires { <requirement-seq> }
+	  requires (<parameter-list>(optional) { <requirement-seq> }
+
+	  requirement-seq : sequence of requirements,each requirements is one of the following
+	  		      simple requirement
+			      type requirements
+			      compound requirements
+			      nested requirements
+
+        simple requirements :
+	  a simple requirement is an arbitrary expression statement that does not start with the
+	  keyword requires.it asserts that the expression is valid.the expression is an unevaluated
+	  operand;only language correctness is checked.
+
+	  e.g.
+	    template<class T>
+	    concept C = requires(T a) {
+	      typename a::tag;
+	      ++a;
+	    };
+
+	type requirements :
+	  a type requirements is the keyword typename followed by a type name,optionally qualified.
+	  the requirement is that the named type is valid :
+	    this can be used to verify that a certain named nested type exists,or that a class
+	    template specialization names a type,or that an alias template specialization names
+	    a type.
+
+	  a type requirement naming a class template specialization does not require the type to
+	  be complete.
+
+        compound requirements :
+	  a compound requirement has the form :
+	    { <expression> } noexcept(optional) <return-type-requirement>(optional);
+
+	    return-type-requirement : -> <type-constraint>
+
+	    if return-type-requirement is present,then :
+	      template arguments are substituted into the return-type-requirement,
+	      decltype((expression)) must satisfy the constraint imposed by the 
+	      type-constraint.other wise,the enclosing requires-expression is false.
+
+        nested requirements :
+	  a nested requirement has the form :
+	    requires <constraint-expression>;
+
+	  it can be used to specify additional constraints in terms of local parameters.
+	  the constraint-expression must be satisfied by the subsiituted template arguments,
+	  if any.
+
+	  
+	  
+
