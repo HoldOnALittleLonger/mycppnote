@@ -2528,3 +2528,63 @@ Chapter6> Inheritance and Object-Oriented Design
 		    are dynamically bound.  !!
 
 
+         Item38 : Model "has-a" or "is-simplemented-in-terms-of" through composition
+	 	composition has a lot of synonyms : 
+		  layering, containment, aggregation, embedding.
+
+		when composition occurs between objects in the application domain,it expresses a
+		has-a relationship.
+		when composition occurs in the implementation domain,it expresses an is-implemented-
+		-in-terms-of relationship.
+
+		e.g.
+		  struct A {};
+		  struct B {
+		    A _objectA;    //  B "has-a" A.
+		  };
+
+		  struct A {
+		    int _value;
+		    int value(void) const { return _value; }
+		  };
+		  struct B {
+		    A _objectA;	   //  B "has-a" A.
+		    int value(void) const { return _objectA.value(); }
+		    //  B::value is-implemented-in-terms-of A::value.
+		  };
+
+		  different between "is-a" and "has-a" :
+		    if A "is-a" B,then everything true of B is also true of A.
+		    if A "has-a" B,then B as one representing of A,B is composition of A.
+
+		 e.g.
+		   template<class T>
+		   class my_set : public std::list<T> {
+		     ...
+		   };
+
+		   this is a bad idea,because,if my_set is-a list,then everything true of list must
+		   be also true of my_set.but list allows duplicate and set does not.
+		   it is possible to override list's interfaces to correct behavior for my_set,but
+		   that interface must be virtual function.anyway,this is a bad idea.
+
+		   template<class T>
+		   class my_set {
+		   public:
+		     bool is_a_member(const T &item) const
+		     {
+		       return std::find(inner_list.begin(), inner_list.end(), item) != inner_list.end();
+		       //  my_set::is_a_member is-implemented-in-terms-of list.
+		     }
+		     ...
+		   private:
+		     std::list<T> inner_list;    //  my_set has-a list.
+		   };
+
+		   the right way is "has-a" relationshio.
+		   //  dont forget design interfaces that are easy to use correctly and hard to use
+		   //  incorrectly(STL container conventions)
+
+		!!  composition has meanings completely different from that of public inheritance.  !!
+		!!  in the application domain,composition means has-a.in the implementation domain,it
+		    means is-implemented-in-terms-of.  !!

@@ -1136,5 +1136,32 @@ C++20>
 	  if any.
 
 	  
-	  
+> abbreviated function template
+    when placeholder types (either auto or Concept auto) appear in the parameter list of a function
+    declaration or of a function template declaration,the declaration declares a function template,
+    and one invented template parameter for each placeholder is appended to the template parameter
+    list.
+
+    e.g.
+
+    void func(auto c) {};
+
+    func(3);  =>
+    	        template<class T>
+		void func(T c) {}  =>  T = unsigned
+
+    void function(const C3 auto *, C4 auto &);  =>  template<C3 T, C4 U>
+    	 		   	      	   	    void function(const T *, U &);
+    //  at there, C3 and C4 is concepts.
+
+    #  abbreviated function templates can be specialized like all function templates.
+       e.g.
+         void h(auto k) {}
+
+	 template<>
+	 void h<double>(double k) {}
+
+
+> array new can deduce array size
+    	  
 
