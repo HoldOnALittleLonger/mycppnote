@@ -2588,3 +2588,83 @@ Chapter6> Inheritance and Object-Oriented Design
 		!!  composition has meanings completely different from that of public inheritance.  !!
 		!!  in the application domain,composition means has-a.in the implementation domain,it
 		    means is-implemented-in-terms-of.  !!
+
+
+	 Item39 : Use private inheritance judiciously
+	 	a class inherit from another privately does not mean "is-a",public inheritance means "is-a".
+		if A private inherit from B,then public members of A will becomes private members of B,other
+		zones no changes.
+
+		so private inheritance do not inherit interface,that is,private inheritance is inherit
+		implementation only.this is "is-implemented-in-terms-of",alike composition.but private inherit
+		allows to redefines virtual function for derived class itself.
+		e.g.
+		  class A {
+		  public:
+		    virtual void func(void) {}
+		  };
+
+		  class B : private A {
+		  private:
+		    virtual void func(void)
+		    {
+		      //  do somethings
+		      A::func();
+		      //  do somethings
+		    }
+		  };
+
+		!  private inheritance means nothing during software design,only during software implementation.
+		!  attention : derived class of B could redefines A::func whatever it is public inherit or private 
+		   	       inherit.
+
+		of course,"has-a" composition has a way to redefines virtual function for outer.
+		e.g.
+		  class B {
+		  private:
+		    class inner_A : private A {
+		    private:
+		      virtual void func(void)
+		      {
+		         ...
+		      }
+		    };
+
+		    inner_A _object_inner_A;
+		  ...
+		  };
+
+		!  there,derived class of B dont have a way to redefines A::func,because,they can not access to it.
+
+
+		as comparison,private inheritance is more clearer than composition.
+		but have to follow this convention :
+		  use composition whenever you can,and use private inheritance whenever you must.
+		  what is the case must use private?
+		  that is primarily when protected members and/or virtual functions enter the picture,or space
+		  is a point have to consider.
+
+                private inheritance will needs compile dependency when compile time,have to use "#include" to
+		include definition of A where definition of B is.
+		composition could use pointer points to implementation to prevent this.
+
+		EBO,empty base optimization :
+		  empty object,that is the object has no non-static members and no virtual functions.
+		  composition will declare a object,that will take place even it is null.because C++ decreeing
+		  that freestanding objects must have non-zero size.
+		  even composition is empty,its object at least has 1B size,C++'s edicat against zero-size
+		  freestanding objects is typically satisfied by the silent insertion of a char into "empty"
+		  objects.but structure have to has padding if necessary,so maybe need more size.
+		  EBO means empty base class dont take any space.this is the advantage of private inheritance
+		  to composition.(library developer have to attent this)
+
+		  !  EBO only affect single inheriting hierarchy.
+
+		!!  private inheritance means is-implemented-in-terms-of.it is usually inferior to composition,
+		    but it makes sens when a derived class needs access to protected base class members or needs
+		    to redefine inherited virtual functions.  !!
+		!!  unlike composition,private inheritance can enable the empty base optimization.this can be 
+		    important for library developers who strive to minimize object sizes.  !!
+
+
+		
