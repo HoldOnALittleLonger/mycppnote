@@ -2667,4 +2667,95 @@ Chapter6> Inheritance and Object-Oriented Design
 		    important for library developers who strive to minimize object sizes.  !!
 
 
+	 Item40 : Use multiple inheritance judiciously
+	 	two perspectives between single inheritance and multiple inheritance.
+		1>
+		  if single inheritance is good,multiple inheritance must be better.
+		2>
+		  single inheritance is good,but multiple inheritance is not worth the trouble.
+		  
+		MI may brings ambiguity,because when it enters inheritance,that means the object inherits
+		the same name from more than one base class.(function, typedef, etc.)
+
+		#  C++ rule : before seeing whether a function is accessible,C++ first identifies the
+		       	      function that is the best match for the call.
+
+		Multiple inheritance just means inheriting from more than one base class,but it is not uncommon
+		for MI to be found in hierarchies that have higher-level base classes,too.
+		(deadly MI diamond)
+		                  A
+		         B                 C
+			          D
+
+	        data replicate in MI :
+		     class A;
+		     class B : public A;
+		     class C : public A;
+		     class D : public B, public C;
+
+		     A::data_member;
+
+		     then the field data_member in A will be replicated in D.
+
+		     C++ default perform the replication,but if user want replication,the base classes B and C
+		     have to virtual inherits from their base class A.
+
+		     class A;
+		     class B : virtual public A;
+		     class C : virtual public A;
+		     class D : public B, public C;
+
+		     then,there will only one base class object between B and C.
+
+
+		     ! anytime you use public inheritance,use virtual public inheritance.
+		     this can prevent replication.
+		     ! but,virtual public is larger than without virtual.
+
+		the rules governing the initialization of virtual base classes are more complicated and less intuitive
+		than are those for non-virtual bases.
+		  the responsibility for initializing a virtual base is borne by the most derived class in the hierarchy.
+		  implications of this rule includes :
+		    classes derived from virtual bases that require initialization must be aware of their virtual bases,
+		    no matter how far distant the bases are.
+		    when a new derived class is added to the hierarchy,it must assume initialization responsibilities for
+		    its virtual bases.
+
+		virtual inheritance advices :
+		  do not use virtual bases unless you need to,by default,use non-virtual inheritance.
+		  if you must use virtual base classes,try to avoid putting data in them.
+
 		
+		if you have got an SI design that is more or less equivalent to an MI design,the SI design is almost
+		certainly preferable.
+		if the only design you come up with involves MI,you should think a little harder -- there is almost
+		certainly some way to make SI work,at the same time,MI is sometimes the cleares,most maintainable,most
+		reasonable way to get the job done,then use it.
+
+		initialization of MI :
+		  derived class of MI do not allows send initializing info to the top base class via middle class.
+		  e.g.
+		    class A;
+		    class B : virtual public A;
+		    class C : virtual public B;
+		    B::B() : A() {}
+		    C::C() : A() {}
+
+		    class D : public B, public C;
+		    D::D() : B(), C() {}       //  error
+		    	     	      	       //  there,want to initalize A via B and C.
+					       //  initialize top base class via middle classes.
+
+		    D::D() : A(), B(), C() {}  //  OK.
+		    	     	       	       //  member-initialize-list has order
+					       //  in this case,when initialize B and C via their constructor,A
+					       //  will not be constructed by the constructors,it only be constructed
+					       //  via its constructor in the member-initialize-list of D().
+
+
+		!!  multiple inheritance is more complex than single inheritance.it can lead to new ambiguity issues and
+		    to the need for virtual inheritance.  !!
+		!!  virtual inheritance imposes costs in size,speed,and complexity of initialization and assignment.
+		    it is most practical when virtual base classes have no data.  !!
+		!!  multiple inheritance does have legitimate uses.one scenario involves combining public inheritance
+		    from an Interface class with private inheritance from a class that helps with implementation.  !!
