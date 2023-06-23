@@ -123,7 +123,7 @@
 		a x;
 	};
 
-# static member of clas
+# static member of class
 	for initialize static member of a class,must initialize it out of definition of the class.
 	<namespace>::<class name>::static_member_ = value;
 

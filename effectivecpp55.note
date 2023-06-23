@@ -2759,3 +2759,93 @@ Chapter6> Inheritance and Object-Oriented Design
 		    it is most practical when virtual base classes have no data.  !!
 		!!  multiple inheritance does have legitimate uses.one scenario involves combining public inheritance
 		    from an Interface class with private inheritance from a class that helps with implementation.  !!
+
+
+chapter7> Templates and Generic Programming
+
+	 Item41 : Understand implicit interfaces and compile-time polymorphism
+	 	explicit interfaces :
+		  one explicitly visible in the source code.
+		runtime polymorphism :
+		  which function to call is determined at runtime based on object's dynamic type.
+
+		implicit interfaces :
+		  the set of expressions that must be valid in order for the template to compile is
+		  the implicit interface that T type must support.
+
+		compile-time polymorphism :
+		  instantiating function templates with different template parameters leads to different
+		  functions being called,this is known as compile-time polymorphism.
+
+		an explicit interface typically consists of function signatures,i.e.,function names,
+		parameter types,return types,etc.
+		if the object does not offer such function,explicit interface cant use the code that is
+		not existed.this is the limit imposed on class object by explicit interface.
+
+		the implicit interfaces imposed on a template's parameters are just as real as the explicit
+		interfaces imposed on a class's objects,and both are checked during compilation.
+
+		explicit interface example :
+		  struct A {
+		    std::size_t size(void) const {}
+		    void displayMessage(void) const {}
+		    int returnRandomValue(void) const {}
+		  };
+
+		  void func(A &a)
+		  {
+		    /*  explicit interface  */
+		    auto n(A.size());
+		    auto k(A.returnRandomValue());
+		    A.displayMessage();
+
+		    //  undefined function,does not exist code
+		    A.printValue(n + k);	//  ERROR
+		  }
+
+		  //  because func() take argument is type of reference of A,so even A contains virtual function,
+		  //  it should works fine.
+
+		  //  object of type A must has member function :
+		  //    size(), returnRandomValue(), displayMessage()
+
+		implicit interface example :
+		  template<class _Tp>
+		  void func(_Tp &x)
+		  {
+		    auto a(x.size());
+		    _Tp b(x);
+		    ++b;
+		    if (b > 30 && makeup<_Tp>(a, a.randomValue()) != b)
+		      a + b;
+		  }
+
+		  //  the set of expressions contains :
+		  //    the object of type _Tp must has size(),then do "a(x.size())"
+		  //	and must has copy-constructor		    "_Tp(_Tp &)"
+		  //	must has member function randomValue()
+		  //	have to supports prefix increment	    "_Tp &operator++(_Tp &)"
+		  //	have to supports operator>		    "bool &operator>(_Tp &, int)"
+		  //	have to supports operator!=		    "bool &operator!=(_Tp &, _Tp &)"
+		  //    have to supports operator+		    "_Tp &operator+(_Tp &, _Tp&)"
+
+		  //    these could have overload version,which version is to call that determined
+		  //	at compilation-time based on what expression is.
+		  //	   e.g.  
+		  //	     "a + 3", then operator+(_Tp &, int) have to supports,otherwise,
+		  //	     _Tp(int) have to supports.	   	 
+
+		  //	operator> is possible dont return bool,if can return type of _Tp,there _Tp
+		  //	must has convert function "bool operator bool(_Tp &)"
+		  //	operator!= is same as operator>
+
+		!!  both classes and templates support interfaces and polymorphism.  !!
+		!!  for classes,interfaces are explicit and centered on function signatures.
+		    polymorphism occurs at runtime through virtual functions.  !!
+		!!  for template parameters,interfaces are implicit and based on valid expressions.
+		    polymorphism occurs during compilation through template instantiation and function
+		    overloading resolution.  !!
+
+
+
+
