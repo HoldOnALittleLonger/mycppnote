@@ -2897,5 +2897,72 @@ chapter7> Templates and Generic Programming
 		    or as a base class identifier in a member initialization list.  !!
 
 
+	 Item43 : Know how to access names in templatized base classes
+	 	C++'s policy is to prefer early diagnoses,so it assume that it does not know about
+		the contents of base classes when those classes are instantiated from templates.
+		Maybe the base class template specialization dont offer such interface is used in
+		derived class.
+		e.g.
+		  struct A { ... };
+		  template<class C>
+		  struct derived {
+		    void func(int x)
+		    {
+		      C c;
+		      C.theFunc(x);
+		    }
+		  };
 
+		  template<>
+		  struct derived<K> {
+		    void specialFunc(int y)
+		    {
+		      K k;
+		      k.theFunc(y + 2);
+		    }
+		    //  dont offer interface void func(int)
+		    //  it offers interface void specialFunc(int)
+		  };
+
+		  template<class C>
+		  struct derived_from : public derived<C> {
+		    void newFunc(void)
+		    {
+		      func(16);		//  won't compile.
+		      			//  C++ compiler will do not look at the base class derived<C>.
+					//  because the specialization of derived<K> dont offer such interface.
+		    }		  
+		  };
+
+		  the problem is that when compilers encounter the definition for the class template derived_from,
+		  they dont know what class it inherits from.
+		  Without knowing what 'C' is,there is no way to know what the class derived<C> looks like.
+		  in particular,there is no way to know if it has a func() function.
+
+		when cross from Object-Oriented C++ to Template C++,inheritance stops working.
+		there has three methods to resolve this issue :
+		  1>
+		    use "this->" to call function.
+		    "this->func(16);"
+		    
+		    this promise compiler that all instance has such function named "void func(int)".
+
+		  2>
+		    use "using" declaration.
+		    "using derived<C>::func;"
+
+		    it seems like prevent hiding base class's interfaces(Item33)
+		    there it means,tell compilers should go to look base class scope as well.
+
+		  3>
+		    use explicit calling to instead name only calling.
+		    "derived<C>::func(16);"
+
+		    tell compiler user want to call function named "void func(int)" in the scope of 
+		    derived<C>.
+		    and explicit qualification turns off the virtual binding behavior,have to take an
+		    attention.
+
+		!!  in derived class templates,refer to names in base class templates via a "this->" prefix,via
+		    using declarations,or via an explicit base class qualification.  !!
 
