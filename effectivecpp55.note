@@ -2966,3 +2966,129 @@ chapter7> Templates and Generic Programming
 		!!  in derived class templates,refer to names in base class templates via a "this->" prefix,via
 		    using declarations,or via an explicit base class qualification.  !!
 
+
+	 Item44 : Factor parameter-independent code out of templates
+	 	template is wonderful way to save time and avoid code replication.
+		but if it is not careful,the result can be code or data replicated,or both.
+
+		commonality and variability analysis :
+		  for example,then func1 and func2 has common parts,for prevent replication,should move the 
+		  common parts into another new function,and keep the varying parts in the original functions.
+		  similarly,class use same method and inheritance to avoid replication.
+		  this is commonality and variability analysis.
+
+		template should use commonality and variability analysis :
+		  template can do same way,but there is a twist.
+		  that is :
+		    in non-template code,replication is explicit,you can see than there is duplication between
+		    two functions or two classes.
+		    in template code,replication is implicit,there is only one copy of the template source code,
+		    so you have to train yourself to sense the replication that may take place when a template
+		    is instantiated multiple times.
+
+		the situation of code bloat :
+		  e.g.
+		    template<typename T, std::size_t n>
+		    struct A {
+		      T x;
+		      void func() {}
+		    };
+
+		    A<int, 5> a1;
+		    A<double, 2> a2;
+
+		    a1.func();	 //  call to A<int, 5>::func
+		    a2.func();	 //  call to A<double, 2>::func
+		    		 
+		    C++ member function of class template only be instantiated when used.
+		    there,two func() has same code,same behavior,but every object holds a func() instance.
+		    replication of code has came.
+
+		    the way to prevent this >
+
+		    template<typename T>
+		    class baseA {
+		      protected:
+		        void func(std::size_t n) {}
+		    };
+
+		    template<typename T, std::size_t n>
+		    class A : private baseA<T> {
+		      public:
+		        void func() { func(n); }
+	              private:
+		        using baseA<T>::func;
+			T x;
+		    };
+
+		    baseA is size-independent,and all object of A<T> share single copy is type of baseA<T>.
+		    notice that,baseA is private inherited by A,the fact reflects that the reason for the
+		    base class is only to facilitate the derived classes' implementations,not to express a
+		    conceptual "is-a" relationshio between baseA and A.
+
+		    but how does baseA to know what data to operate on?
+		    only derived class knows what data is.
+		    Attention :
+		      func() is not the only function in A that can be written in a size-independent manner
+		      and moved into baseA.
+
+		    template<typename T>
+		    class baseA {
+		      protected:
+		        A(T *dptr = nullptr) : operand(dptr) {}
+		        void func(std::size_t n) {}
+			void setDataPtr(T *dptr) { operand = dptr; }
+		    //	void func(T *dptr, std::size_t n) {}
+		      private:
+		        T *operand;
+		    };
+
+		    template<typename T, std::size_t n>
+		    class A : private baseA<T> {
+		      public:
+		        A() : x(new T[n]) {}
+		    //	explicit A(T *dptr) : baseA(dptr), x(dptr) {]
+		        void func() { setDataPtr(x); func(n); }
+		      private:
+		        T *x;
+			using baseA<T>::func, baseA<T>::setDataPtr;
+		    };
+
+		    1>  let baseA holds data pointer in private zone,and send data pointer from A to baseA.
+		    2>  baseA holds no data pointer,but send data pointer via function calling.
+		    3>  let baseA holds data pointer object in protected zone,derived class can free to
+		    	access it,but this will lost encapsulation.and if the memory either dynamically
+			allocated or physically stored inside the derived class object,there is difficult
+			to determined whether the data has been destoryed.
+
+		non-type template parameter and function parameter :
+		  the non-type template parameter will be deal with at compile-time.
+		  the function parameter will be deal with at run-time.
+		  because non-type template parameter will be treat as a constant.
+		  at the above example,sizes hardwired into them are likely to generate better code than
+		  the shared version where the size is passed as function parameter.
+		  but for preven replication,shared version is necessary.
+
+		Attention :
+		  many environment treat long and int as same thing,it the case,baseA<long> and baseA<int>
+		  representative same thing.
+		  but maybe an environement has no such behavior,then they are different,this will cause
+		  code bloat.
+		  almost all environment treat pointer as same thing,all pointer types have the same binary
+		  representation,so template holding pointer types should often be able to use a single
+		  underlying implementation for each member function.(i.e.,T *pointer)
+		  some implementations of the standard C++ library do this for templates like vector,list...
+
+		  inline will copy code,that maybe cause code bloat!
+
+		!!  templates generate multiple classes and multiple functions,so any template code not
+		    dependent on a template parameter causes bloat.  !!
+		!!  bloat due to non-type template parameters can often be eliminated by replacing template
+		    parameters with function parameters or class data members.  !!
+		!!  bloat due to type parameters can be reduced by sharing implementations for instantiation
+		    types with identical binary representations.  !!
+
+
+
+
+		  
