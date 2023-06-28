@@ -3089,6 +3089,84 @@ chapter7> Templates and Generic Programming
 		    types with identical binary representations.  !!
 
 
+	 Item45 : Use member function templates to accept "all compatible types"
+	 	a member function template for a template class :
+		  template<class T>
+		  class A {
+		  public:
+		    template<class U>
+		    void func(void) {}
+		  ...
+		  };
 
+		  this means,every U to every T has a different member instance.
+		  e.g.
+		    A<T>::func<int>();
+		    A<T>::func<double>();
+		    ...
+
+		generalized copy constructor :
+		  there is a inheritance >
+		    class Top { ... };
+		    class Middle : public Top { ... };
+		    class Bottom : public Middle { ... };
+
+		  allowed implicit conversion :
+		    Bottom -> Middle -> Top
+
+		  and there is a smart pointer :
+		    template<class T>
+		    class SmartPointer {
+		    public:
+		      explicit SmartPointer(T *ptr) : realPtr(ptr) {}
+		      SmartPointe(const T &x) { ... }
+		      ...
+		    private:
+		      T *realPtr;
+		    };  
+
+		    use it :
+		      SmartPointer<Top> sp(new Top);  //  OK
+		      SmartPointer<Middle> sp1(new Middle);  //  OK
+		      SmartPointer<Top> sp2(sp1);  //  calls copy-constructor.
+		      				   //  but T == Top,and argument is type of SmartPointer<Middle>
+						   //  ERROR,won't compile,event implicit conversion from Middle to Top
+						   //  is allowed.(implicit conversion SmartPointer<Middle> to
+						   //  SmartPointer<Top> is not allowed)
+
+		    the generalized copy constructor >
+		      in principle,member template can accept all compatible types.
+		      template<class T>
+		      class SmartPointer {
+		      public:
+		        explicit SmartPointer(T *ptr) : realPtr(ptr) {}    //  constructor
+			template<class U>
+			SmartPointer(const SmartPointer<U> &x) { ... }     //  generalized copy-constructor
+			SmartPointer(const T &x) { ... }                   //  normal copy-constructor
+		      private:
+		        T *realPtr;
+		      };
+
+		      SmartPointer<T>::SmartPointer(const SmartPointer<U> &) is the generalized copy constructor.
+		      every U to every T has different member function instance.
+
+		      notice that,constructor is explicit declared but generalized copy-constructor is not,
+		      that means,implicit conversion from one type of SmartPointer to another is allowed,but 
+		      implicit conversion from a built-in pointer or other smart pointer type is not permitted.
+
+		      !  overload of the generalized assignment operator have to add into class,because smart pointer
+		      	 supports "=" operator.
+		      !  generalized copy-constructor does not keep compilers from generating their own copy-constructor,
+		      	 so,if you want to control all aspects of copy construction,must declare both a generalized 
+			 copy-constructor and "normal" copy-constructor.
+
+		compatible types that means one type maybe another type,and implicit conversion is allowed between
+		them in a certain direction.  (i.e. Middle->Top, Bottom->Middle, long->int)
+		     	  	  	      (double->int can not be implicit converted!)
+
+		!!  use member function templates to generate function that accept all compatible types.  !!
+		!!  if you declare member templates for generalized copy construction or generalized assignment,
+		    you shall still need to declare the normal copy constructor and copy assignment operator,too.  !!
+		    
 
 		  
