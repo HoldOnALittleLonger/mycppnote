@@ -3169,4 +3169,59 @@ chapter7> Templates and Generic Programming
 		    you shall still need to declare the normal copy constructor and copy assignment operator,too.  !!
 		    
 
-		  
+
+         Item46 : Define non-member functions inside templates when type conversions are desired
+	 	implicit type conversion is never considered by functions during template argument deduction.
+		class templates don't depend on template argument deduction,that process applies only to function
+		templates,so the type T of class template always known at the time the class template is instantiated.
+		(non-member-template function dont know what is T)
+
+		inside a class template,the name of the template can be used as shorthand for the template and its
+		parameters.
+
+		mix-mode :
+		  for apply implicit conversion to all arguments,the function should be a non-member function.
+		  but if the class is a class template,then such function have to be friend of the class template.
+
+		  e.g.
+		    template<typename T>
+		    class A {
+		    public:
+		      ...
+		      friend A operator*(const A &a, const A &b)
+		      {
+		        ...
+		      }
+
+		      //  function declared in class template will becomes member-template.
+		    };
+
+		    the reason of friend function inside class template is that,if it is friend function but definition
+		    is outside of A,then linker won't link it.because in such case,the friend function just declared
+		    inside class template,but it is not defined in it.
+		    (definitions inside class will be inline,no function calling produced,so it will be linked)
+
+		    take an attention,inline functions should as shorter as they can.if more work have to don in such
+		    function,should use function helper.
+		    e.g.
+		      template<typename T>
+		      class A {
+		      public:
+		        ...
+			friend A operator*(const A &a, const A &b)
+			{
+			  return theHelper(a, b);
+			}
+		      ...
+		      };
+
+		      template<class T>
+		      T theHelper(const T &a, const T &b)
+		      {
+		        ...
+		      }
+
+		      //  in normally,the helper for a template also should is a template function.
+
+		!!  when writing a class template that offers functions related to the template that support implicit
+		    type conversions on all parameters,define those functions as friends inside the class template.  !!
