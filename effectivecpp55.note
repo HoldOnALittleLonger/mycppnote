@@ -3225,3 +3225,114 @@ chapter7> Templates and Generic Programming
 
 		!!  when writing a class template that offers functions related to the template that support implicit
 		    type conversions on all parameters,define those functions as friends inside the class template.  !!
+
+
+	 Item47 : Use traits classes for information about types
+	 	STL iterator categories >
+		  Input iterator - move forward,one step,read only,read only once
+		  Output iterator - move forward,one step,write only,write only once
+		  Forward iterator - Input iterator + Output iterator, RDWR more
+		  Bidirectional iterator - Forward iterator,move backward
+		  Random access iterator - Bidirectional iterator,iterator arithmetic
+
+		C++ has a tag struct in the standard library that serves to identify each of these iterators.
+		  struct input_iterator_tag {};
+		  struct output_iterator_tag {};
+		  struct forward_iterator_tag : public input_iterator_tag {};
+		  struct bidirectional_iterator_tag : public forward_iterator_tag {};
+		  struct random_access_iterator_tag : public bidirectional_iterator_tag {};
+
+		  "is-a" relationship
+
+		lowest-common-denominator strategy :
+		  15 = 5 x 3
+		  18 = 6 x 3
+		  21 = 7 x 3
+		  72 = 8 x 9 = 24 x 3
+		  
+		  lowest-common-denominator > 3
+
+		traits :
+		  allow user to get information about a type during compilation.
+		  traits are not a keyword or a predefined construct int C++,they are a technique and a convention
+		  followed by C++ programmers.
+		  traits has to work as well for built-in types as it does for user-defined types,this means that some types
+		  won't inside nesting information,there is no way to nest information.
+		  inside pointers.
+		  the traits information for a type,then,must be external to the type,the standard technique is to put it
+		  into a template and one or more specilizations of that template.
+
+		standard library iterator_traits :
+		  template<typename IterT>
+		  struct iterator_traits;
+
+		  //  By convention,traits are always implemented as structs,because this will dont make up
+		  //  traits classes.
+
+		  for each type IterT,a typedef named iterator_category is declared in the struct iterator_traits<IterT>.
+
+		  iterator_traits implementation :
+		    template<typename IterT>
+		    struct iterator_traits {
+		      typedef typename IterT::iterator_category iterator_category;
+		      ...
+		    };
+
+
+		    1>
+		      any user-defined iterator type must contain a nested typedef named iterator_category that identifies
+		      the appropriate tag struct.
+		      e.g.
+		        template<typename ItemType>
+			class list {
+			public:
+			  class list_iterator {
+			  public:
+			    typedef forward_iterator_tag iterator_category;
+			    ...
+			  };
+			...
+			};
+
+		     2>
+		       implementation of iterator_traits handles iterators that are pointers.
+		       e.g.
+		         template<typename T>
+			 struct iterator_traits<T *> {
+			   typedef random_access_iterator_tag iterator_category;
+			   ...
+			 };  //  partial template specialization for built-in pointer types.
+
+	        makeup traits class :
+		  identify some information about types you would like to make available.
+		  choose a named to identify that information.
+		  provide a template and set of specializations that contain the information for the types you want to
+		  support.
+
+		RTTI :
+		  run-time type identify.
+		  header <typeinfo>
+		  function : typeid(type)
+		    usage :
+		      if (typeid(T1) == typeid(T2))
+
+		Summary of usage of traits information :
+		  >  create a set of overloaded "worker" functions of function templates that differ in a traits parameter.
+		     implement each function in accord with the traits information passed.
+		  >  create a "master" function or function template that calls the workers,passing information provided by 
+		     a traits class.
+
+		!!  traits classes make information about types available during compilation,they are implemented using
+		    templates and template specializations.  !!
+		!!  in conjunction with overloading,traits classes make it possible to perform compile-time if...else tests
+		    on types.  !!
+
+		  
+
+		       
+
+			
+
+		  
+		  
+		  
