@@ -3316,6 +3316,10 @@ chapter7> Templates and Generic Programming
 		    usage :
 		      if (typeid(T1) == typeid(T2))
 
+		    #  RTTI will lesser runtime efficiency,the point to resolve this problem is that,we need conditional
+		       construct for a type during compilation.
+		       C++ provided the method that is function overload.
+
 		Summary of usage of traits information :
 		  >  create a set of overloaded "worker" functions of function templates that differ in a traits parameter.
 		     implement each function in accord with the traits information passed.
@@ -3327,9 +3331,79 @@ chapter7> Templates and Generic Programming
 		!!  in conjunction with overloading,traits classes make it possible to perform compile-time if...else tests
 		    on types.  !!
 
-		  
 
-		       
+	 Item48 : Be aware of template metaprogramming
+	 	template metaprogramming (TMP) is the process of writing template-based C++ programs that execute during
+		compilation.this is,a template metaprogramming is a program written in C++ that executes inside the C++
+		compiler.
+		when a TMP program finishes running,its output -- pieces of C++ source code instantiated from templates
+		-- is then compiled as usual.
+
+		two strengths of TMP :
+		>  it makes some things easy that would otherwise be hard or impossible.
+		>  because TMP execute during C++ compilation,they can shift work from runtime to compile-time.
+
+		#  some errors are usually dectected at runtime can be found during compilation.
+		#  smaller executables,shorter runtimes,lesser memory requirements.
+		!  compile TMP will take longer than non-TMP counterpart.
+
+		TMP has no real looping construct,so the effect of loops is accomplished via recursion.but for TMP,
+		the recursion is function recursion,it is recursive template instantiations.
+		e.g.
+		  template<unsigned int n>
+		  struct factorial {
+		    enum {value = n * factorial<n - 1>::value};
+		  };
+
+		  template<>
+		  struct factorial<0> {
+		    enum {value = 1};
+		  }
+
+		  struct factorial<10> x;
+		  x::value;  //  value = 10 * factorial<9>::value
+		  	     //	       	      value = 9 * factorial<8>::value
+			     //		      ...
+			     //               value = 1 * factorial<0>::value
+
+	        What TMP can accomplish :
+		  1>  ensuring dimensional unit correctness.
+		      Distance = Time * Velocity
+		      T = D / V
+		      V = D / T	     
+		  
+		      and this use of TMP can supports exponent.
+		      e.g.
+		        template<unsigned t>
+			struct Time {
+			  auto time = t;
+			};
+			template<unsigned d>
+			struct Distance {
+			  auto distance = d;
+			};
+
+			template<unsigned t, unsigned d>
+			struct Velocity {
+			  auto velocity = Distance<d> / Time<t>;
+			};
+
+			Velocity<5, 125> v;
+			v::velocity;  //  velocity = 125 / 5 = 25
+
+	          2>  optimizing matrix operations.
+		      Using an advanced template technology related to TMP called expression templates.
+
+		  3>  generating custom design pattern implementations.
+		      Using a TMP-based technology called policy-based desgin,it is possible to create templates
+		      representing independent design choices that can be combined in arbitrary ways to yield
+		      pattern implementations with custom behavior.
+		      this is a basis for what is known as generative programming. 
+
+		!!  template metaprogramming can shift work from runtime to compile-time,thus enabling earlier error detection
+		    and higher runtime performance.  !!
+		!!  TMP can be used to generate custom code based on combinations of policy choices,and it can also be used to
+		    avoid generating code inappropriate for particular types.  !!
 
 			
 
