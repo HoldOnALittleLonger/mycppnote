@@ -3406,7 +3406,120 @@ chapter7> Templates and Generic Programming
 		    avoid generating code inappropriate for particular types.  !!
 
 			
+chapter8> Customizing new and delete
 
+	 Item49 : Understand the behavior of the new-handler
+	 	if operator new can not satisfy the request of memory allocation,it calls a client-specifiable
+		error-handling function,that called new-handler.
+
+		to specify the out-of-memory-handling function,client have to calls set_new_handler,a standard
+		library function declared in <new>.
+
+		  typedef void(*new_handler)();
+		  new_handler set_new_handler(new_handler p) noexcept;
+
+		a well-designed new-handler function must do one of the following :
+		  > Make more memory available.
+		      this may allow the next memory allocation attempt inside operator new to succeed.
+		      try to allocate a large memory block at the time program is start up,then release it.
+		      system dont recycle the memory resource if the process is still running.
+
+		  > Install a different new-handler.
+		      if a new-handler cant allocate memory for client request,but it knows of a different
+		      new-handler that can satisfy,then call set_new_handler() to set it as new-handler for
+		      next memory allocation.
+		      and the old one can set some flags to changes the behavior of the new one.
+
+		  > Deinstall the new-handler.
+		      pass a NULL pointer to set_new_handler(),then operator new will throw an exception when
+		      memory allocation is unsuccessful.
+
+		  > Throw an exception.
+		      throw an exception of type bad_alloc or some type derived from bad_alloc.
+		      operator new will not catch such exception,and it propagate to the caller.
+
+		  > Not return.
+		      typically by calling abort or exit.
+		
+		class-specify operator new and new_handler :
+		  a class could overload operator new,this new method will be apply when try to allocate an object
+		  which is type of the class.
+
+		  class A {
+		  public:
+		    ...
+		    static std::new_handler set_new_handler(std::new_handler p) noexcept;
+		    static void *operator new(std::size_t size) noexcept(false);
+		  private:
+		    static std::new_handler currentHandler;
+		  };
+		  //  these functions have to be static.
+
+		  A *pA = new A;  //  if allocate fails,then calls A::function{currentHandler();}
+
+		  A::set_new_handler() saves p in class object and returns prior new_handler.
+		  currentHandler saves current new_handler.
+		  A::operator new() have to do these :
+		    1>  calls the standard set_new_handler with A's error-handling function.
+		    2>  calls std::new to allocate memory.if it is failed,then calls global new_handler,it had been
+		    	replaced with the A's error_handling.(std::new calls global new_handler)
+			if A::new failed in finally,have to propagate std::bad_alloc,and it must restore the global new_handler.
+			for prevent memory leaks,use RAII to accomplish this purpose.
+		    3>  if A::new succeed,then it returns a void pointer,and RAII object restores the global new_handler.
+
+		  RAII object :
+		    class NewHandlerHolder {
+		    public:
+		      explicit NewHandlerHolder(std::new_handler nh) : handler(nh) {}
+		      ~NewHandlerHolder() { std::set_new_handler(handler); }
+		    private:
+		      std::new_handler handler;
+		    };
+		    //  this class have to disable copy.
+
+		  move set_new_handler and operator new and currentHandler to a template class,can make an abstraction that is
+		  regardless of the class.let it becomes a base class,that allows derived class class set_new_handler and
+		  operator new.
+		  e.g.
+		    template<class T>
+		    class NewHandlerHolderSupport {
+		    public:
+		      static std:new_handler set_new_handler(std::new_handler nh)
+		      {
+		        std::new_handler old = currentHandler;
+			currentHandler = nh;
+			return old;
+		      }
+		      static void *operator new(std::size_t size) noexcept(false);
+		      {
+		        NewHandlerHolder h(std::set_new_handler(currentHandler));	//  RAII
+			return ::operator new(size);
+		      }
+		    private:
+		      static std::new_handler currentHandler;
+		    };
+
+		    class A : public NewHandlerHolderSupport<A>;  //  mixin-style inheritance
+
+		    template class is nowhere used T,just use it as a symbol to distinguish derived class.
+		    every derived class has a copy to currentHandler to save older one.
+
+		    As for A inheriting from a templatized base class that takes A as a type parameter,this is known
+		    as curiously recurring template pattern(CRTP).(Do it for me. XD)
+
+		new nothrow :
+		  new standardization requires operator new returns NULL pointer if failed to allocate.
+		  this is "failure-yields-null" behavior.but "test-for-null" code base is still work,
+		  so some new forms is created and provides failure-yields-null behavior,they are called
+		  "nothrow".(defined in <new>).
+		  e.g.
+		    int *x = new (std::nothrow) int;  //  return nullptr,if allocate failed.
+		    	     	 		      //  noexcept(true),but object's constructor might.
 		  
-		  
+		  new_handler will be called whatever version of operator new.
+
+		!!  set_new_handler allows to specify a function to be called when memory allocation requests cannot be
+		    satisfied.  !!
+		!!  nothrow new is of limited utility,because it applies only to memory allocation;associated constructor
+		    calls may still throw exceptions.  !!
 		  
