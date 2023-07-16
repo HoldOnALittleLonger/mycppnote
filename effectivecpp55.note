@@ -3522,4 +3522,60 @@ chapter8> Customizing new and delete
 		    satisfied.  !!
 		!!  nothrow new is of limited utility,because it applies only to memory allocation;associated constructor
 		    calls may still throw exceptions.  !!
-		  
+		
+
+	 Item50 : Understand when it makes sense to replace new and delete
+	 	the reasons to replace new and delete :
+		  1>  to detect usage errors
+		      especialy that overrun or underrun occurred in the life of the allocated memory block.
+
+		  2>  to improve efficiency
+		      the default version of new and delete is made up for generic purpose.it have to work 
+		      fine on the long-running programs but also on the short-running programs.
+		      it have to take care about heap fragmentation.
+
+		  3>  to collect usage statistics
+		      custom new and delete can collect program information of memory usage and take a suit
+		      optimization for it.
+
+		alignment may lost or improve performance of a program,when writing a custom new and delete,
+		there is a point have to consider that is what allocator to use.a lot of alloctor is existed
+		on this world,for understand some details,overlook on a open source allocator is a good idea.
+		the memory manager have to take care about portability,alignment,thread safety,etc.
+		(the Pool libray of Boost is a good selection)
+
+		Summary of placement new and delete :
+		  1>  to detect usage erros
+
+		  2>  to collect statistics about the use of dynamically allocated memory
+
+		  3>  to increase the speed of allocation and deallocation
+		      the default version is for generic purpose,a particular type or class-specific
+		      allocator is more faster than default version.
+		      but have to remember,if speed is not bottleneck then dont take this way. 
+
+		  4>  to reduce the space overhead of default memory management
+		      the default version often incur some overhead for each allocated block.
+		      allocators tuned for small objects(such as Boost's Pool library) essentially
+		      eliminate such overhead.
+
+		  5>  to compensate for suboptimal alignment in the default allocators
+		      for example,the double type object in Intel-x86,if it is on an address aligned
+		      eight-byte,then the accessing is more faster.
+		      but default version might not provides eight-byte alignment.
+
+		  6>  to cluster related objects near one another
+		      if the program used a lot of particular data structures,then cluster together
+		      can prevent page faults when working on the data.
+
+		  7>  to obtain unconventional behaviors
+		      maybe program is a single thread program,default version is thread-safe so it will
+		      slower than thread-unsafe version for the program.custom new and delete could
+		      dont care about thread-safe for this program,so they are faster.
+		      and maybe for data security,deallocation should set or deallocated memory to zero,
+		      this feature is not provided by default version.
+
+		!!  there are many valid reasons for writing custom versions of new and delete,including improving
+		    performance,debugging heap usage errors(record log),and collecting heap usage information.  !!
+
+
