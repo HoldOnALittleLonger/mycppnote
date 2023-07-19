@@ -3579,3 +3579,49 @@ chapter8> Customizing new and delete
 		    performance,debugging heap usage errors(record log),and collecting heap usage information.  !!
 
 
+	 Item51 : Adhere to convention when writing new and delete
+	 	operator new :
+		  1>  if the request memory is available,return a pointer points to it,
+		      otherwise,return NULL pointer or throw bad_alloc exception,of course,new handler have to
+		      be called when allocate failure.
+		  2>  if client require 0 byte memory to be allocated,new have to return a legitimate pointer.
+		      the point is have to deal with zero byte requirement,treat 0 byte as if 1 byte,or treat 0
+		      byte as if allocate failure.
+		  3>  operator new contains an infinite loop,and the only way out of the loop is for memory
+		      to be successfully allocated or for the new-handling function to do one of the things:
+		      make memory available,install a different new-handler,deinstall the new-handler,
+		      throw an exception of or derived from bad_alloc,fail to return
+		  4>  In inheritance,operator new will be inherited by derived class,in the case,implementation
+		      have to guarantees the operator new can works on base and derived,and it treat base class
+		      with a special way,treat derived class with normal way.
+		      (use size checking,if size is not equal to sizeof(base),then call ::operator new)
+		  5>  operator new[] also known as array new.
+		      when writing a operator new[],have to follows above conventions,but in an inheritance,
+		      there is some different.
+		      first,can not use size checking to distinguish the type of objects.because array new will
+		      allocate a chunk memory but no class objects existed by the time.
+		      second,there is no way to know how many objects will in it,(required size) / sizeof(base)
+		      is a wrong way.and it might allocate memory more than required size.(maybe save number of
+		      elements in these memory units)
+
+		operator delete :
+		  1>  operator delete have to guarantees that delete NULL pointer is safe.
+		  2>  operator delete have to corresponding with operator new.
+		      in an inheritance,if operator new is called by derived class,then operator delete have to
+		      calls ::operator delete to deal with derived class object.if operator new did base class
+		      special behavior,operator delete have to corresponds the base class special behavior.
+		      (use size checking)
+		      a except case,that is,the size_t value C++ passes to operator delete may be incorrect if
+		      the object being deleted was derived from a base class lacking a virtual destructor.
+		  3>  operator delete[] also known as array delete.
+		      operator delete[] have to corresponds with operator new[] .
+
+		!!  operator new should contain an infinite loop trying to allocate memory,should call the
+		    new-handler if it can not satisfy a memory request,and should handle requests for zero
+		    bytes.class-specific versions should handle requests for larger blocks than expected.  !!
+		!!  operator delete should do nothing is passed a pointer that is null.class-specific versions
+		    should handle blocks that are larger than expected.  !!
+
+		      
+
+
