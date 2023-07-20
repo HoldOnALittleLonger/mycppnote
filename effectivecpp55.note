@@ -3622,6 +3622,99 @@ chapter8> Customizing new and delete
 		!!  operator delete should do nothing is passed a pointer that is null.class-specific versions
 		    should handle blocks that are larger than expected.  !!
 
+
+	 Item52 : Write placement delete if you write placement new
+	 	placement version of operator new :
+		  the operator new takes another parameters than size_t size.
+		  header <new> contains a standard placement version operator new,
+		  it is "void *operator new(std::size_t, void *pMemory);"
+		  it is also the original placement new.it could be overloaded.
+		  so placement new that is any version of new taking extra arguments.
+		  
+		  usage example :
+		    char buffer[1024];
+		    int a = new (buffer) int;  //  allocate memory from buffer via
+		    	    		       //  placement new.
+
+		placement version of operator delete :
+		  it is the corresponding version to placement new.
+		  it is used to undo all did by placement new.
+		  if class-specify placement new is called,but constructor of such class has been thrown
+		  an exception,then C++ runtime system have to undo all things that placement new did.
+		  so it calls to placement delete.
+		  generally,C++ match placement delete requires it takes the same number and types of extra
+		  arguments as operator new,that is :
+		    void *operator new(std::size_t size, void *pMemory) noexcept(false);
+		    void operator delete(void *release, void *pMemory) noexcept;
+		    //  void *pMemory is the extra parameter of placement new.
+
+		!!
+		if an operator new with extra parameters is not matched by an operator delete with the same
+		extra parameters,no operator delete will be called if a memory allocation by the new needs to
+		be undone.
+
+		applying delete to a pointer never yields a call to a placement version of delete.
+		!!
+
+		class-scope new and delete will hides global new and delete.that is,if there only a 
+		placement new is declared and a placement delete corresponds to it,then the normal
+		form of new is unavailable.
+		e.g.
+		  struct A {
+		    static void *operator new(std::size_t, void *) noexcept(false);
+		    static void operator delete(void *, void *) noexcept;
+		  };
+
+		  A *a = new (buff) A;  //  OK
+		  A *a = new A;         //  ERROR,no such function is matched.
+
+		so when declares an overload of operator new,have to declares all versions and all correspondings.
+		otherwise,the normal forms provided by C++ is unavailable.
+		and have to pay attention that is derived class declared an overload of operator new and an overload of 
+		operator delete,then the base class versions will be hidden.
+
+		a good way to resolve this problem :
+		  class OperatorNewDelete {
+		  public:
+		    static void *operator new(std::size_t size) noexcept(false)
+		    {
+		      return ::operator new(size);
+		    }
+		    static void *operator new(std::size_t size, void *pMemory) noexcept(false)
+		    {
+		      return ::operator new(size, pMemory);
+		    }
+		    ...
+
+		  };
+
+		  class MyClass : public OperatorNewDelete {
+		  public:
+		    using OperatorNewDelete::operator new;
+		    using OperatorNewDelete::operator delete;
+		    static void *operator new(std::size_t, std::ostream &);
+		    static void operator delete(void *, std::ostream &);
+		    ...
+		  };
+
+		  use a class to contains some wrappers for standard new and delete,then let the new class
+		  inherited from it.
+
+		!!  when you write a placement version of operator new,be sure to write the corresponding placement
+		    version of operator delete.if you don't,your program may experience subtle,intermittent memory
+		    leaks.  !!
+		!!  when you declare placement versions of new and delete,be usre not to unintentionally hide the
+		    normal versions of those functions.  !!
+
+		
+
+
+
+
+
+
+
+
 		      
 
 
