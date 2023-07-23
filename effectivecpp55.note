@@ -3707,14 +3707,112 @@ chapter8> Customizing new and delete
 		    normal versions of those functions.  !!
 
 		
+chapter9> Miscellany
+	 
+	 Item53 : Pay attention to compiler warnings
+	 	this is important.
+		for example :
+		  size_t a = 2000;
+		  ssize_t b = 2001;
+
+		  if (b < a)
+		    exit();
+
+		  //  there is unsigned number compare with a signed number.
+		  //  generally,ssize_t is type of signed long.
+		  //  if b overflow,then it will becomes a negative number,
+		  //  it is less than a.
+
+		compiler warning is try to tell programmer what is going on.
+
+		!!  take compiler warnings seriously,and strive to compile warning-free at the maximum
+		    warning level supported by your compilers.  !!
+		!!  dont become dependent on compiler warnings,because different compilers warn about different things.
+		    porting to a new compiler may eliminate warning messages you have come to rely on.  !!
 
 
+	 Item54 : Familiarize yourself with the standard library,including TR1
+	 	The standard template library(STL) :
+		  including containers,iterators,algorithms,function objects,etc.
 
+		Iostreams :
+		  I/O supporting.
 
+		Support for internationalization :
+		  support to different character code.
 
+		Support for numeric processing :
+		  templates for complex numbers and array of pure values.
 
+		An exception hierarchy :
+		  C++ exception supporting.
 
+		C89's standard library :
+		  everyting in the 1989 C standard library is also in C++.
 
-		      
+		TR1 components(14) : 
+		  smart pointers
+		  tr1::function
+		  tr1::bind
+		      /*  now is std::bind.
+		       *  it is used to bind function and its argument in a std::function object.
+		       *  it receive two parameters,one is a function,another is the parameter,
+		       *  returns std::function object.
+		       */
+		  hash tables
+		  regular expressions
+		  tuples
+		  tr1::array
+		  tr1::mem_fn
+		      /*  a syntactically uniform way of adapting member function pointers.  */
+		  tr1::reference_wrapper
+		  random number generation
+		  mathematical special functions
+		  C99 compatibility extenstions
+		  type traits
+		  tr1::result_of
+		      /*  a template to deduce the return types of function calls.
+		       *  when writing template,it is often important to be able to
+		       *  refer to the type of object returned from a call to a function(template),
+		       *  but the return type can depend on the function's parameter types in
+		       *  complex ways.tr1::result_of makes referering to function return types easy.
+		       */
+		  
+		!!  the primary standard C++ library functionality consists of the STL,iostreams,and locales.
+		    the C89 standard library is also included.  !!
+		!!  TR1 adds support for smart pointers,generalized function pointers,hash-based containers,
+		    regular expressions,and 10 other components.  !!
+		!!  TR1 itself is only a specification.to take advantage of TR1,you need an implementation.
+		    one source for implementations of TR1 components is Boost.  !!
 
+   
+	 Item55 : Familiarize yourself with Boost
+	 	Boost is the real C++ standard library.  :)
+		its web site is http://boost.org
+		a lot of C++ standard libraray implementations is from Boost.
+		become a Boost developer is allow you contribute a library to Boost.
+		when develop a library for Boost,have to consider these questions :
+		  > how good are the design and implementation?
+		  > is the code portable across compilers and operating systems?
+		  > is the library likely to be of use to its target audience,i.e.,
+		    people working in the domain the library addresses?
+		  > is the documentation clear,complete,and accurate?
 
+		Boost topics categories :
+		  string and text processing
+		  containers
+		  function objects and higher-order programming
+		  generic programming
+		  template metaprogramming
+		  math and numberics
+		  correctness and tesing
+		  data structures
+		  inter-language support
+		      /*  including a library to allow seamless interoperability between C++ and Python.  */
+		  memory
+		  miscellaneous
+		      /*  CRC checking,date and time manipulations,and travering file systems.  */
+
+		!!  Boost is a community and web site for the development of free,open source,peer reviewed C++
+		    libraries.Boost plays and influential role in C++ standardization.  !!
+		!!  Boost offers implementations of many TR1 components,but it also offers many other libraries,too.  !!
