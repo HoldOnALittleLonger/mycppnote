@@ -1,0 +1,27 @@
+Chapter Basics >
+
+  Item 1 : Distinguish between pointers and references
+         Pointers use * or -> to indirectly access object
+	 References use . to indirectly access object
+
+	 Differences between reference and pointer :
+	   1>  reference can not be a NULL reference
+	   2>  pointer can be NULL pointer
+	   3>  if design does not allow NULL object,then prefer reference,otherwise
+	       use pointer.
+	       ERROR e.g.
+	         char *x = 0;  //  NULL pointer
+		 char &y = *x;  //  refer to NULL object
+           4>  C++ requires reference must be initialized when declare.
+	   5>  no need to test reference if valid before use it.         
+	       mut test pointer if valid before use it.
+	   6>  pointer is allowed to reassignment,but reference is not allowed.
+
+       !!  you should use a pointer whenever you need to take into account the possibility that
+	   there is nothing to refer to or whenever you need to be able to refer to different
+	   things at different times.  !!
+       !!  you should use a reference whenever you know there will always be an object to refer to
+	   and you also know that once you are referring to that object,you will never want to 
+	   refer to anything else.
+	   you should use a reference when implementing operators whose syntactic requirements make
+	   the use of pointers undesirable.in all other cases,stick with pointers.  !!
