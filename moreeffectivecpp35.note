@@ -25,3 +25,56 @@ Chapter Basics >
 	   refer to anything else.
 	   you should use a reference when implementing operators whose syntactic requirements make
 	   the use of pointers undesirable.in all other cases,stick with pointers.  !!
+
+
+  Item 2 : Prefer C++ style casts
+         the traditional C-style casts'problems :
+	   1>  C-style is designed for C,not C++,so that,
+	       cast a pointer-to-const-object into a pointer-to-non-const-object and
+	       a cast that changes a pointer-to-base-class-object into a pointer-to-derived-class-object
+	       is no difference for C-style cast.
+	   2>  tranditional C-style cast syntactically consist of little more than a pair of parentheses
+	       and an identifier.
+	       it belike this :
+	         int a = 0;
+		 float b = (float)a;
+		 float c = float(a);
+	       but everywhere in C++ might be parentheses are existed.
+	       so there is a question,"Are any casts used in this program?"
+
+	 Use C++-style casts to instead C-style casts :
+	   static_cast<type>(expression)
+	   dynamic_cast<type>(expression)
+	   const_cast<type>(expression)
+	   reinterpret_cast<type>(expression)
+
+
+	   const_cast is used to remove constness of an object,but it is not realy remove it,just
+	   make a copy from object and that is constless.
+	   const_cast is used to remove volatileness of an object.
+	   const_cast is only used for these two purposes.
+
+	   reinterpret_cast is to cast between function pointer types.
+	   example :
+	     using funcPtr = void (*)();
+	     funcPtr funcPtrArray[10];
+	     int func1();
+	     funcPtrArray[0] = func1;  //  ERROR,func1 has wrong type which is returns int.
+	     funcPtrArray[1] = reinterpret_cast<funcPtr>(func1);
+				       //  OK.
+	   cast for function pointers is not portable!
+
+	 following C++-style casts but compiler is not support :
+	   template<typename _Type, typename _EType>
+	   _Type static_cast(_EType expression)
+	   {
+	     return (_Type)(expression);
+	   }
+
+	   #define static_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
+	   #define dynamic_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
+
+	   //  but these functions would not report cast fails.
+
+	 !!  prefer C++ style casts,even they are hard to type or ugly,because that style will improve
+	     code readability,and designed for C++ programming.  !!
