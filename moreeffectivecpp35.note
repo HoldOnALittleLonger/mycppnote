@@ -78,3 +78,73 @@ Chapter Basics >
 
 	 !!  prefer C++ style casts,even they are hard to type or ugly,because that style will improve
 	     code readability,and designed for C++ programming.  !!
+
+
+  Item 3 : Never treat arrays polymorphically
+       	 dont mix polymorphism and pointer arithmetic.
+	 e.g.
+	   void printC(ostream &output, const TheClass Array[], int numElements)
+	   {
+	     for (unsigned i(0); i < numElements; ++i) {
+	       output<<Array[i];
+	     }
+	   }
+
+	   TheClass Array[10];  //  initialized by default constructor
+	   printC(std::cout, Array, 10);  //  there is no polymorphism and pointer arithmetic mixing
+
+	   DerivedTheClass DArray[10];  //  initialized by default constructor
+	   printC(std::cout, DArray, 10);  //  there is polymorphism and pointer arithmetic mixing
+
+	   //
+
+	   Array and DArray are arrays one of type TheClass another of type DerivedTheClass.
+	   every elements in array is an object,not a object pointer.
+	   in the loop which print class contents,for each Array[i],compiler will generates
+	   generic code which has form like this :
+	     output<<*(Array + i);
+		 
+	     this form is no problem for TheClass Array,but it is not suit DerivedTheClass array.
+	     DerivedTheClass is inherit from TheClass,so its size is greater than TheClass.
+	     function printC() receives an array which type is TheClass,so compiler knows the displacement
+	     for each elements in the array.
+	     if pass an array type of DerivedTheClass,displacement between DerivedTheClass objects is not
+	     same as displacement between TheClass objects.
+	     this is problem!
+
+	   not only loop would raise such problem,and "delete[] @array" will also bring the problem.
+	   for delete an array contains class object,C++ have to calls every element's destructor,
+	   that is a loop alike above.
+
+	   the true way to use polymorphism in array :
+	     TheClass *pArray[10];  //  initialize every pointer point to a DerivedTheClass object.
+
+	     pointer point to TheClass is no difference with pointer point to DerivedTheClass.
+	     be there,pointer arithmetic will do "*(pArray + i * sizeof(void *))",on x86,pointer
+	     has length 8 bytes.
+
+	     there is not real class object in the array,just pointer objects.
+	     
+	     note : 
+	       if object is not from new,then can not delete it.
+	       at above,the class object only destructed when program exit.
+	       at above,if the class object is from new and assign address to the element in array,
+	       have to manually delete every allocated memory where the class object be.
+
+	     another discussion :
+	       TheClass **pArray(new TheClass*[10]);
+	       pArray[0] = new TheClass;
+	       ...
+	       pArray[9] = new TheClass;
+
+	       delete[] pArray;  //  what happens ?
+	       			 //  every element in pArray is a pointer point to TheClass object.
+				 //  delete[] pArray,recycle all resources this pointer array occupied.
+				 //  for delete pArray,have to delete every element in array at first.
+				 //  delete pArray[0] will cause a call to TheClass::~TheClass() .
+				 //  delete pArray[i] will cause a call to (*(pArray[i])).TheClass::~TheClass() .
+
+
+           !!  do not mix polymorphism with pointer arithmetic.that would not bring
+	       expected behaviors.  !!
+
