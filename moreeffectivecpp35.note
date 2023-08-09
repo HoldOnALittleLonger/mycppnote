@@ -148,3 +148,106 @@ Chapter Basics >
            !!  do not mix polymorphism with pointer arithmetic.that would not bring
 	       expected behaviors.  !!
 
+
+  Item 4 : Avoid gratuitous default constructors
+         a default constructor is the C++ way of saying you can get something for nothing.
+	 a class lack a default constructor,its use may be problematic in three contexts :
+	   1>  creation of arrays.
+	       when create an array of type is such class which is lack default constructor,
+	       that will failed.
+	       e.g.
+	         A array[10];  //  ERROR,every element has to be initialized by default constructor
+		 A *pA = new A[10];  //  ERROR
+
+	       there are three ways to get around this restriction :
+	         >  declare and initialize.
+		    e.g.
+		      A array[2] = {A(3), A(4)};
+		    but this way is not apply to heap array.
+		 >  use an array of pointers instead of an array of objects.
+		    this is apply to head array.
+		    e.g.
+		      A *pArray[10];
+		      for (int i(0); i < 10; ++ i)
+		        pArray[i] = new A(i);
+
+	            but there are two disadvantages to this approach.
+		    first :
+		      have to remember to delete all the objects pointed to by the array.
+		    second :
+		      the total amount of memory increases,memory amount = pointers + objects.
+
+		 >  to privent the space penalty,use the raw memory for the array :
+
+		      void *pArray = operator new[] (10 * sizeof(A));  //  allocate object memory space(raw memory)
+		      A *pA = static_cast<A*>(pArray);
+		      for (int i(0); i < 10; ++i)
+		        new (pA + i) A(i);      //  placement new.
+
+		      there is no need to save pointers in an array.
+
+		 this technique allows to create arrays of objects when a class lacks a default constructor;
+		 it does not show how to bypass required constructor arguments.
+
+		 for method 2,have to delete pointer manually.
+		 for method 3,have to call destructor on each object in memory units at first,then delete raw memory.
+		 !  do not call "delete[] pA;" for method 3,because pointer pA is not from new.(undefined behavior)
+
+	   2>  ineligible for use with many template-based container classes.
+	       that is because it is a common requirement for such templates that the type
+	       used to instantiate the template provide a default constructor.
+	       this requirement almost always grows out of the fact that inside the template,
+	       an array of the template parameter type is being created.
+	       e.g.
+	         template<typename T>
+		 class A {
+		 public:
+		   A(int size)
+		   {
+		     Data = new T[size];  //  if T is lack default constructor,this is an ERROR
+		   }
+		 private:
+		   T *Data;
+		 };
+
+	       !  careful template design can eliminate the need for a default constructor,for example,
+	       	  std::vector has no requirement that its type parameter have a default constructor.
+		  but not all containers alike vector.
+
+         virtual base classes lacking default constructors are a pain to work with :
+	   the arguments for virtual base class constructors must be provided by the most derived class
+	   of the object being constructed.
+	   as a result,a virtual base class lacking a default constructor requires that all classes derived
+	   from that class - no matter how far removed - must know about,understand the meaning of,and provide
+	   for the virtual base class's constructors' arguments.
+
+	   e.g.
+	     class A {
+	     public:
+	       A(int x);
+	     };
+
+	     class B : virtual public A {
+	     public:
+	       B(int x, int y) : A(y)
+	       {
+	         ...
+	       }
+	     };
+
+	     class C : public B {
+	     public:
+	       C(int x, int y, int z) : B(x, y), A(z)  //  C have to know and understand A's constructors' argument.
+	       {
+	         ...
+	       }
+	     }
+
+	 !!  some people belive all classes should have default constructor even it does not have enough information to
+	     fully initialize objects of that class.but inclusion of meaningless default constructors affects the 
+	     efficiency of classes,too.code have to test to see if fields have truly been initialized,and have to handles
+	     the case where the tests fail.of course,these bring code bloat.  !!
+	 !!  default value to constructor could get behavior like default constructor.but the default value maybe still
+	     meaningless,because the information used to create a class should from outside.
+	     this method also confuse to other member functions.  !!
+
