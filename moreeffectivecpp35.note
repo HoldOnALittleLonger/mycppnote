@@ -112,7 +112,7 @@ Chapter Basics >
 	     same as displacement between TheClass objects.
 	     this is problem!
 
-	   not only loop would raise such problem,and "delete[] @array" will also bring the problem.
+	   not only loop would arise such problem,and "delete[] @array" will also bring the problem.
 	   for delete an array contains class object,C++ have to calls every element's destructor,
 	   that is a loop alike above.
 
@@ -251,3 +251,130 @@ Chapter Basics >
 	     meaningless,because the information used to create a class should from outside.
 	     this method also confuse to other member functions.  !!
 
+
+Chapter Operators >
+
+  Item 5 : Be wary of user-defined conversion functions
+       	 C allows implicit type conversions such char -> int or short -> double.
+	 but covert a type double to short will lose information,etc.
+	 C++ inherited C' attribute,so such conversions are included in C++.
+	 (implicit type conversion,compiler does not report)
+
+	 Two kinds of functions allow compilers to perform such conversions :
+	   single-argument constructors
+	   implicit type conversion operators
+
+	   A single-argument constructor is a constructor that may be called with only one argument,
+	   that is,the constructor is declared receives one argument,or more than one argument but
+	   the argument after the first has a default value.
+	   e.g.
+	     struct A {
+	       A(int x);		//  allows int -> A
+	       A(float x, int y = 0);	//  allows float -> A
+	     };
+
+	   An implicit type conversion operator is simply a member function with a strange-looking name :
+	   the word operator followed by a type specification.and can not specify a type for the function's
+	   return value.
+	   e.g.
+	     struct A {
+	       operator int();
+	     };
+
+	 the fundamental problem is that such functions often end up being called when neither want nor expect them to be.
+	 e.g.
+	   struct A {
+	     operator int() const;
+	   };
+
+	   A a;
+	   cout<<a;
+
+	   //  there is no suit operator<< function to be called,so that should fails.
+	   //  but compiler seen no suit operator<< function,then try to implicit type conversion to make
+	   //  the invocation success.
+	   //  so compiler convert a to int,because "operator int()" is defined.
+	   //  but this is not a expected behavior.
+
+	 so,these functions,their presence can lead to wrong function being called.
+
+	 solution :
+	   replace the operators with equivalent functions that do not have the syntactically magic names.
+	   e.g.
+	     struct A {
+	       int asInt() const;  //  replace operator int()
+	     };
+
+	   this would insist explicit calling to do type conversion.
+
+	   in most cases,the inconvenience of having to call conversion functions explicitly is more than
+	   compensated for by the fact that unintended functions can no longer be silently invoked.
+
+         another problem is single-argument constructors will be used as type conversion functions implicitly.
+	 solutions :
+	   1>  use "explicit" keyword.
+	       e.g.
+	         struct A {
+		   explicit A(int x);
+		   A operator+(const A &lhs, const A &rhs);
+		 };
+
+		 forbit compiler calls the function implicitly,just allows programer calls it explicitly.
+
+		 A a(10);  //  OK
+		 A b = a + 3;  //  ERROR,no suit operator+ and impilicit type conversion from int to A had been
+		       	       //  forbidden.
+
+		 //  A b = a + static_cast<Array<int> >(3); is still valid.
+		 
+		 !  expiclit keyword apply to a copy-constructor will forbids pass class object as function parameter or
+		    return by value from function.
+
+	   2>  use proxy class.
+	       e.g.
+	         template<typename T>
+		 class Array {
+		 public:
+		   class ArraySize {
+		   public:
+		     ArraySize(int numElements) : theSize(numElements) {}
+		     int size() const { return theSize; }
+		   private:
+		     int theSize;
+		   };
+
+		   Array(int lowBound, int highBound);
+		   Array(ArraySize size);
+		   ...
+		 };
+
+		 there is a rule followed by compiler when compiler try type conversion,that is :
+		   a sequence of functions to be called for type conversion can only has one user-defined function.
+		 
+		 design class with the rule is able to disable implicit type conversion,like above.
+
+		 Array<int> a(10);  //  Array<int> takes an ArraySize object as argument to construct object.
+		 	    	    //  compiler found there is a way to construct ArraySize object via int value,
+				    //  then it does this calling: Array<int>::ArraySize(10);
+				    //  and use the ArraySize object to construct Array object.
+				    //  OK
+
+		 Array<int> b(10);  // OK
+
+		 a == b[3];  //  ERROR
+		      	     //  b[3] returns a value of int or a reference to int object.
+			     //  for calls operator== ,there needs two Array objects,so compiler try to covert
+			     //  int to Array.
+			     //  the sequence is : calls Array<int>::ArraySize(10),returns tempArraySize,
+			     //                    calls Array<int>(tempArraySize),returns tempArray.
+			     //  but this sequence contains two user-defined functions,so it is violate the rule.
+
+	       proxy class actually a specific instance of a more generial technique.
+	       the proxy class ArraySize just used for conjure Array object up,each ArraySize object stands for
+	       a Array object.
+
+
+	 !!  proxy objects can give you control over aspects of your software's behavior,at above,it is 
+	     implicit type conversion.  !!
+	 !!  granting compilers license to perform implicit type conversions usually leads to more harm than godd,
+	     so do not provide conversion functions unless you are sure you want them.  !!
