@@ -378,3 +378,63 @@ Chapter Operators >
 	     implicit type conversion.  !!
 	 !!  granting compilers license to perform implicit type conversions usually leads to more harm than godd,
 	     so do not provide conversion functions unless you are sure you want them.  !!
+
+
+  Item 6 : Distinguish between prefix and postfix forms of increment and decrement operators
+       	 In C,prefix form of the increment operator is sometimes called "increment and fetch",
+	 postfix form is often known as "fetch and increment".
+
+	 C++ allows overload prefix/postfix increment/decrement.
+	 for distinguish prefix from postfix,when write a postfix overload function,it takes a int parameter but
+	 no real name,this can prevent compiler issue a warning that unused variable.
+	 e.g.
+	   struct A {
+	     int x;
+	     A &operator++()  //  prefix
+	     {
+	       ++x;
+	       return *this;
+	     }
+	     const A operator++(int)  //  postfix
+	     {
+	       A tempA = *this;
+	       ++(*this);
+	       return tempA;
+	     }
+	   };
+
+	 the reasons that prefix returns reference and postfix returns const object :
+	   prefix is "increment / decrement and fetch",this means function have to increment/decrement *this at first,then
+	   return it.
+	   but why postfix returns const object?
+	   if it returns reference as same as prefix,then there is
+	     A a;
+	     a++++;  //  this is conflict to built-in type.
+	     	     //  int x; x++++;  is ERROR
+           and postfix is "fetch and do something",that means retrive object at first then do something on original object.
+	   
+	   if it returns object but no const,then there is
+	     A a;
+	     a++++;  //  built-in type did not allow such form.
+	     	     //  and it would not do something expected by client.
+		     //  it would not increase a twice,
+		     //  first,increase *this,
+		     //  second,increase tempA.
+           const object could prevent such calling,because tempA is const,can not increase it.
+
+	   !  A good rule to follow then designing classes is when in doubt,do as the intS do,and the intS most certainly
+	      do not allow double application of postfix increment.
+
+         at above,the implementation of postfix is depends on prefix.because,at most times,postfix is behave alike prefix,
+	 except the return type.thus,let postfix depends on prefix,that allow programmer just maintain prefix as well,postfix
+	 depends on prefix.
+
+	 !!  prefix operators has different semantics to postfix operators.for distinguish the form of prefix to postfix,the postfix
+	     should take a no name parameter.  !!
+	 !!  prevent double application of postfix operators on a object.that would not get expected behavior.  !!
+	 !!  when dealing with user-defined types,prefix operators should be used whenever possible,because it is inherently more
+	     efficient.  !!
+	 !!  let postfix operators depend on prefix operators,that allows programmer just maintain prefix version as well,postfix
+	     will automatically behave in a consistent fashion.(except return type).  !!
+
+	 
