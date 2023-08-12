@@ -437,4 +437,56 @@ Chapter Operators >
 	 !!  let postfix operators depend on prefix operators,that allows programmer just maintain prefix version as well,postfix
 	     will automatically behave in a consistent fashion.(except return type).  !!
 
+
+  Item 7 : Never overload &&, ||, or , .
+         C and C++ employs short-circuit evaluation of boolean expressions.
+	 this means that once the truth or falsehood of an expression has been determined,evaluation of the expression
+	 ceases,even if some parts of the expression have not yet been examined.
+	 e.g.
+	   char *p;
+	   ...
+	   if (p != 0 && strlen(p) > 10)
+	   ...
+
+	   //  if p == nullptr,then,this short-circuit evaluation has value false,
+	   //  strlen(p) would not be evaluated.of course,pass a nullptr to strlen() is wrong.
+
+	 if overload && and || ,then the example is look like this :
+	   if (operator&&(p != 0, strlen(p) > 10))  //  operator&& as global overload
+	   ...
+
+	 it becomes a function call,but function call semantics differ from short-circuit semantics in
+	 two crucial ways.
+	   first>  when a function call is made,all parameters must be evaluated,so when calling the functions
+	   	   operator&& and operator||,both parameters are evaluated.
+		   that is,there is no short-circuit.
+	   second> the language specification leaves undefined the order of evaluation of parameters to a function call,
+	   	   so there is no way of knowing whether expression1 or expression2 will be evaluated first.
+
+	 as result,if overload && or ||,there is no way to offer programmers the behavior they both expect and have come
+	 to depend on.
+
+	 comma operator :
+	   int a = 0, b = 3;
+	   b = 3, a = a + 1 + b;
+
+	   just as there are rules in C++ defining how && and || behave for built-in types,there are rules defining how
+	   the comma operator behaves for such types.
+	   an expression containing a comma is evaluated by first evaluating the part of the expression to the left of 
+	   the comma,then evaluating the expression to the right of the comma;the result of the overall comma expression
+	   is the value of the expression on the right.
+
+	 if write operator, as a non-member function,you will never be able to guarantee that the left-hand expression is
+	 evaluated before the right-hand expression.(it becomes a function call)
+	 if write operator, as a member function,even here,it is can not rely on the left-hand operand to the comma
+	 operator being evaluated first,because compilers are not constrained to do things that way.
+
+	 as result,do not overload comma operator.
+
+	 !!  overload operator the purpose is to make programs easier to read,write,and understand.
+	     if you do not have a good reason for overloading an operator,do not overload it.
+	     in the case of &&, ||, and , ,it is difficult to have a good reason,because no matter how hard
+	     you try,you can not make them behave the way they are supposed to.  !!
+
+
 	 
