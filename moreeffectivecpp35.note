@@ -489,4 +489,79 @@ Chapter Operators >
 	     you try,you can not make them behave the way they are supposed to.  !!
 
 
-	 
+  Item 8 : Understand the different meanings of new and delete
+       	 new behave like this two fold :
+	   >  allocates enough memory to hold an object of the type requested.
+	   >  calls a constructor to initialize an object in the memory that was allocated.
+
+	 programmer can not changes its behavior,just only be able to determine how the memory for an object is
+	 allocated.
+
+	 when programmer calls new to create heap-based object :
+	   std::string *str = new std::string("test");
+
+	   compiler probably creates such code :
+	     void *tempP = operator new(sizeof(std::string));
+	     calls std::string's constructor on tempP.
+	     std::string *str = static_cast<std::string *>(tempP);
+
+	   notice that the second step above involves calling a constructor,something you,a mere programmer,
+	   are prohibited from doing.
+	   programmer can not directly call the constructor necessary to initialize the object.(for heap-based object)
+
+         if you holds some raw heap memory,and want to construct an object in the memory,could use palcement new :
+	   #include <new>
+
+	   void *tempP = operator new(sizeof(std::string));
+	   std::string *str = new (tempP) std::string("test");
+
+	   //  it looks like this :
+	   void *operator new(size_t, void *location)
+	   {
+	     return location;
+	   }
+
+	 if you want to allocate memory and call constructor on it,use "new" statement.
+	 if you just want to allocate memory only,use "operator new" statement.
+	 if you want to construct an object in memory you have already got a pointer to,use "placement new" statement.
+	 operator new and placement new could be overloaded.
+
+	 deletion and memory deallocation :
+	   the function operator delete is to the built-in delete operator as operator new is to the new operator.
+	   when programmer delete an object,compiler mighe generate such code :
+
+	     std::string *str = new std::string;
+
+	     delete str; {
+	       str->~std::string();   //  call destructor at first,
+	       operator delete(str);  //  call operator delete function at second.
+	     }
+
+	   if you want to deal only with raw memory,you should bypass the new and delete operators entirely.
+	   e.g.
+	     void *buffer = operator new (sizeof(char) * 30);
+	     operator delete(buffer);
+
+	   do not call delete on a pointer which is returned by placement new,because nobody knows where the pointer
+	   from.just undo the effect of the constructor by explicitly calling the object's destructor.	 
+	   e.g.
+	     std::string *str = new (buffer) std::string("test");
+	     str->~std::string();
+
+	 Arrays :
+	   when create an array contains some objects,operator new[] would be called.(array new)
+	   of course,operator new[] also could be overloaded.(if compiler does not support operator new[],then all
+	   memory allocation is through operator new,in the case,do not overload operator new as well)
+
+	   the new operator,for arrays,a constructor must be called for each object in the array,when the delete operator
+	   is used on an array,it calls a destructor for each array element and then calls operator delete[] to deallocate
+	   the memory.
+	   e.g.
+	     std::string *strArray = new std::string[10];
+	     delete[] strArray;
+
+	   operator delete [] is also could be overloaded,just like operator new [].(has some restrictions)
+
+	 !!  when you think about customizing the behavior of the new and delete operators,remember that,you can not really
+	     do it.you can modify how they do what they do,but what they do is fixed by the lanaguage.  !!  
+	 !!  must pair new and delete,new[] and delete[].do not mix them.  !!
