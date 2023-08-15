@@ -565,3 +565,164 @@ Chapter Operators >
 	 !!  when you think about customizing the behavior of the new and delete operators,remember that,you can not really
 	     do it.you can modify how they do what they do,but what they do is fixed by the lanaguage.  !!  
 	 !!  must pair new and delete,new[] and delete[].do not mix them.  !!
+
+
+Chapter Exceptions >
+
+  Item 9 : Use destructors top prevent resource leaks
+       	 C++ from C,and of course,it supports error code returning.
+	 but the difference between error code and exception,that is,exception can not be ignored.
+	 when an exception was thrown,then program have to catch it,if it not,the default action is stop program.
+	 where the exception is thrown,the statements after would be skipped,then resouce leaks risk is come in.
+	 e.g.
+	   void do_something(void)
+	   {
+	     for (int i = 0; i < 10; ++i) {
+	       int *intPointer = createInt(i);
+	       delete intPointer;
+	     }
+	   }
+
+	   if function createInt() throw an exception,then the statements after call point would be skipped,
+	   because do_something() does not catch the exception,so it will propagates to its caller.
+	   statement "delete intPointer;" will be skipped,resouce leaks happens.
+
+	   a good resolution is use smart pointer,follow RAII rule.
+	   destructor always be called if the object's lifetime is end,be there,that is leave the loop scope.
+
+	   void do_something(void)
+	   {
+	     for (int i = 0; i < 10; ++i) {
+	       std::unique_ptr<int> intPointer(createInt(i));
+	     }
+	   }
+
+	   //  destructor of std::unique_ptr will be called if intPointer encountered death.
+
+	 C++ exception cause stack unwinding.this is behavior that C programmers can approach only by using setjmp
+	 and longjmp,but longjmp exhibits a serious deficiency when used with C++ :
+	   it fails to call destructors for local objects when it adjusts the stack.
+
+	 !!  for prevent resource leak,should follow RAII rule,use smart pointer to instead raw pointer.  !!
+
+
+  Item 10 : Prevent resource leaks in constructors
+       	  what would happens if exception is thrown in constructor?
+	  example :
+	    struct A {
+	      int *a;
+	      int *b;
+	      A()
+	      {
+	        a = createInt(10);  //  maybe throw
+		b = createInt(11);  //  maybe throw
+	      }
+
+	      ~A()
+	      {
+	        delete a;
+		delete b;
+	      }
+	    };
+
+	    if a had been assigned,and exception is thrown when create b,then resouce leaks happen.
+
+	  C++ refuse to call destructor on a not fully constructed object.an object is fully constructed if its constructor
+	  had been completed.
+	  e.g.
+	    int main(void)
+	    {
+	      A testa;
+	      return 0;
+	    }
+	    //  if exception is propagated from A::A(),then it is not fully constructed,its destructor would never be called.
+	    //  the resource of A::a points to will leak forever.
+
+	  to solve such problem,should do some clean up manully before exception propagates,that is :
+	    A()
+	    {
+	      try {
+	        a = createInt(10);
+		b = createInt(11);
+	      } catch(...) {
+	      	delete a;  //  clean a
+		delete b;  //  clean b
+		throw;
+	      }
+	    }
+
+	    C++ allows delete a nullptr.
+	    because destructor does something as cleanup code,so there could prevent code duplication.
+	      void A::private::cleanup()
+	      {
+	        delete a;
+		delete b;
+	      }
+
+	      void A::~A()
+	      {
+	        cleanup();
+	      }
+
+	  there is another problem occur when pointer is const :
+	    struct A {
+	      ...
+	      int const *a;
+	      int const *b;
+	    };
+
+	    such pointer is able to be initialized only in member-initialize list.
+	      A() : a(new int), b(new int) { ... }
+
+	    but member-initialize list only allows expressions,can not place try-catch block be there.
+
+	    as above,propagates an exception before cleanup executing,but cleanup have to be executed in try-catch block,
+	    so place calling where in a help function,then let the expression invoke them.
+	    e.g.
+	      int *A::creatA(void)
+	      {
+	        int *x(new int);
+		return (x) ? x : 0;
+	      }
+
+	      int *A::creatB(void)  //  because b is initialized after a has been initialized,so place try-catch in it.
+	      {
+	        int *x(nullptr);
+		try {
+		  x = new int(&x);
+		} catch(...) {
+		  delete a;
+		  throw;
+		}
+		return x;
+	      }
+
+	      A() : a(creatA), b(creatB) { }
+
+	      !  this method could deal with such problem,but it will reduce readability of code.so do not recommend.
+	      !  creatA and creatB as a part of construcotr but separated.
+
+	    a more useful method is use smart pointer.
+	    e.g.
+	      struct A {
+	        const std::unique_ptr<int> a;
+		const std::unique_ptr<int> b;
+		A() : a(creatInt()), b(creatInt()) { ... }
+		...
+	      };
+
+	      if exception is throw out when initializing A::a,then no resouce have to be destroyed.
+	      if exception is throw out when initializing A::b,then resource of A::a have to be destroyed,but by the time,
+	      A::a had been constructed completly,so the destructor of std::unique_ptr<int> would be called,it is fully
+	      constructed object.
+
+	  !!  as summary,the best way to prevent resouce leaks in constructor is use C++ smart pointer,follow RAII rule.  !!
+	  !!  C++ refuses call destructor on a non-fully constructed object,because delete a nullptr is no sence.  !!
+	      
+
+
+	    
+
+
+
+	    
