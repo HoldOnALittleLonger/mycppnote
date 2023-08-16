@@ -720,7 +720,45 @@ Chapter Exceptions >
 	  !!  C++ refuses call destructor on a non-fully constructed object,because delete a nullptr is no sence.  !!
 	      
 
+  Item 11 : Prevent exceptions from leaving destructors
+       	  There are two situations in which a destructor is called.
+	    1>  when an object is destroyed under "normal" conditions.
+	    2>  when an object is destroyed by the exception-handling mechanism during the stack-unwinding part of
+	    	exception propagation.
 
+          an exception may or may not be active then a destructor is invoked,but there is no way to distinguish these in
+	  destructor.
+	  so should always assume that an exception is active,because if control leaves a destructor due to an exception
+	  while another exception is active,C++ calls the terminate function.
+
+	  the second reason why it is bad practice to allow exceptions to propagate out of destructors :
+	    if an exception is thrown from a destructor and is not caught there,that destructor won't run to completion.
+	    if the destructor doesn't run to completion,it won't do everything it is supposed to do.
+
+	  e.g.
+	    struct A {
+	      A()
+	      {
+	        dosomething();
+	      }
+
+	      ~A()
+	      {
+	        try {
+		  doSomething();
+		} catch(...) {}
+	      }
+	    };
+
+	    //  if A::~A() was called because stack unwinding,and if might doSomething() throw an exception,
+	    //  for prevent two exceptions is alive,have to prevent the exception leave A::~A().
+	    //  there is just catch it but do nothing,all purpose is that do not let exception throw by doSomething()
+	    //  leave A::~A().
+
+	  !!  there are two good reasons for keeping exceptions from propagating out of destructors :
+	        >  it prevents terminate from being called during the stack-unwinding part of exception propagation.
+		>  it helps ensure that destructors always accomplish everything they are supposed to accomplish.
+          !!
 	    
 
 
