@@ -759,6 +759,113 @@ Chapter Exceptions >
 	        >  it prevents terminate from being called during the stack-unwinding part of exception propagation.
 		>  it helps ensure that destructors always accomplish everything they are supposed to accomplish.
           !!
+
+
+  Item 12 : Understand how throwing an exception differs from passing a parameter or calling a virtual function
+          you can pass both function parameters and exceptions by value,by reference,or by pointer,however,there is
+	  quite different.
+	  e.g.
+	    f(arg);
+	    f(arg *);
+	    f(arg &);
+
+	    catch(arg);
+	    catch(arg *);
+	    catch(arg &);
+
+	  when pass a parameter to function do a function invocation,the control would eventually returns to the call site.
+	  but throw an exception,control will not return to throw site.
+	  while catch an exception,regardless of whether it is passed by value or by reference,a copy will be made and pass
+	  to catch clause.
+	  e.g.
+	    struct A {}
+	    void func(A &x);
+	    void func2()
+	    {
+	      A localA;
+	      func(localA);
+	      throw localA;  //  a copy of localA would be made.
+	    } 	    	     //  when control leaves func2(),localA would be destructed,so copy is necessary.
+
+	  C++ specifies that an object thrown as an exception is copied.
+	  the copying occurs even if the object being thrown is not in danger of bing destroyed.
+	  e.g.
+	    void func2()
+	    {
+	      static A localA;
+	      func(localA);
+	      throw localA;  //  still a copy would be made.
+	    }
+
+	    //  even the exception is caught by reference,it can not modify the original object.
+
+	  the mandatory copying of exception objects helps explain another difference between parameter passing and throwing an
+	  exception: the latter is typically much slower than the former.
+	  //  calls copy constructor to made copy.
+
+	  attention :
+	    the copy constructor in the class would be called is corresponding to the object's static type,not its dynamic type.
+	    (inheritence will bring dynamic type)
+	    //  in C++,copying is always based on an object's static type.
+
+	  propagate an exception from catch block has two formats :
+	  e.g.
+	    {
+	      throw derivedClass{};
+	    }
+
+	    catch (baseClass &w) {
+	      ...
+	      throw;
+	    }  //  no copy made,even it is caught by a baseClass reference.
+	    catch (baseClass &w) {
+	      ...
+	      throw w;
+	    }  //  has copy made,a new exception is thrown,its type always be baseClass,because w's static type is baseClass.
+
+	    first catch block just rethrow the exception but dont care about what its type is.(more efficient)
+	    second catch block throw a new exception.
+
+	 ! passing a temporary object to a non-const reference parameter is not allowed for function calls,but it is for exceptions.	  
+	 ! if throw exception by value,then two copying would be made,one is temporary object,another is the parameter in catch clause.
+	   (throw exception by value will always one more copying be made than pass value to function parameter)
+
+	 exception is thrown by-pointer :
+	   when throw an exception by-pointer,a copy of the pointer would be made,it as same as pass pointer to function.
+	   so,dont let the pointer point to a local object(in the case throw an exception by-pointer)
+
+	 no type conversions are applied to exception.
+	 catch block specify the type of exception which expect to catch.so an exception is type of int,would not be caught by a
+	 catch block which expect catch an exception is type of double.then the exception would propagated to next.
+	 //  exception by-pointer only be caught by catch block which expect an exception by-pointer.
+
+	 but there is some special cases :
+	   1>  inheritance-based conversions.(baseClass->derivedClass)
+	   2>  from a typed to an untyped pointer.(char *->void *)
+
+	 the final difference between passing a parameter and propagating an exception is that catch clauses are always tried 
+	 in the order of their appearance :
+	   try {
+	     ...
+	   } catch (baseClass &x) { }
+	     catch (derivedClass &x) { }
+
+	   the first catch block catch an exception is type of baseClass reference,will catches all derivecClass exceptions,even
+	   a catch block which expect such derivedClass exception and associated with a same try block!
+
+	   //  this strategy is differ to virtual function invocation.
+	   //  virtual function call strategy : best fit
+	   //  exception handling strategy : first fit
+
+	 !!  never put a catch clause for a base class before a catch clause for a derived class.  !!
+	 !!  there are three primary ways in which passing an object to a function or using that object to invoke a virtual
+	     function differs from throwing the object as an exception >
+	       first : exception objects are always copied.(by-value,twice copied)
+	       second : objects thrown as exceptions are subject to fewer forms of type conversion than are objects passed
+	       	      	to functions.
+	       three : catch clauses are examined in the order in which they appear in the source code,and the first one
+	       	       that can succeed is selected for execution.
+         !!
 	    
 
 
