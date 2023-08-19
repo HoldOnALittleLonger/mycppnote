@@ -866,8 +866,148 @@ Chapter Exceptions >
 	       three : catch clauses are examined in the order in which they appear in the source code,and the first one
 	       	       that can succeed is selected for execution.
          !!
-	    
 
 
+  Item 13 : Catch exceptions by reference
+       	  there are three types for catch exceptions(has been discussed in Item12).
+	  by-pointer,by-value,by-reference.
+
+	  the problems caused by-pointer :
+	    1>  the pointer points to a local object,which will be destructed when the control
+	    	leaves throw site.(danging pointer)
+            2>  for prevent problem1,have to allocate exception object on heap,
+	    	but programmers how to determine where catch clause should delete the pointer it
+		received.if the pointer is from a global object or a static object,delete the pointer
+		is wrong.
+
+          the problems caused by-value :
+	    1>  slicing off.
+	    	e.g.
+		  class the_exception : public std::exception {
+		    ...  //  some redefined virtual function.
+		  };
+
+		  try {
+		    throw the_exception{};
+		  } catch (std::exception ex) {
+		    //  call to the virtual function redefined in the_exception.
+		  }
+
+		the problem is that,in the class hierarchy,the_exception is inherited from exception,
+		when convert the_exception object to an exception object,slicing off would happen.
+		then the data member in the_exception would be lost.
+		so the call to virtual function redefined in the_exception would always point to
+		the same function in exception,this is not expected behavior.
+
+          by-reference :
+	    solved problems for by-pointer.even catch by-reference,copy is still progress.
+	    programmer do not need to determine if delete the pointer.(reference can not be deleted)
+
+	    solved problem for by-value,because a reference to a base class could refer to a derived
+	    class,when call virtual function,the called entity is determined dynamically by type of the object
+	    this reference refers to.
+
+	  !  C++ allows reference cast in inheriting hierarchy,but entity cast is forbid.
+	     if A is the derived class of baseA.
+	     then :
+	       A a;
+	       static_cast<baseA>(a);  //  force cast
+	               		       //  the object coverted now lost data members defined in A
+	       baseA ba;
+	       static_cast<A>(ba);     //  force cast
+	                	       //  the object coverted has no data members defined in A
+
+	  !!  if you catch by reference,you side-step questions about object deletion that leave you damned if you do
+	      and damned if you dont;
+	      you avoid slicing exception objects;
+	      you retain the ability to catch standard exceptions;
+	      you limit the number of times exception objects need to be copied.
+	  !!
+
+					
+  Item 14 : Use exception specifications judiciously
+       	  if the exceptions the function would throw is not in exception specifications,this fault will be
+	  detected at runtime,and the special function unexpected is automatically invoked.
+	  the default behavior for unexpected is to call terminate!(terminate default call abort())
+
+	  //  abort immediately stop program and do nothing for cleanup.
+	  
+	  if there is a function which might throw any kind of exception,and another function which might throw int exception,
+	  then,there is :
+	    void f1();
+	    void f2() throw(int) { f1(); }
+
+	    //  if f1() throw an exception is type of double out,but f2() did not catch it,then that exception will propagating.
+	    //  the different exception had been throw out from f2(),it is unexpected,program will stop.
+
+	  solve :
+	    <first>
+	    it is important to write yout software in such a way that these kinds of inconsistencies are minimized.
+	    a good way to start is to avoid putting exception specifications on templates that take type arguments.
+	    that is,templates and exception specifications do not mix.
+
+	    template<class T>
+	    void func();  //  no exception specifications there.
+
+	    <second>
+	    for avoid calls to unexpected is to omit exception specifications on functions making calls to functions that
+	    themselves lack exception specifications.
+	    e.g.
+	      func1() throw() {}
+	      func2() throw() { func1(); }  //  it's ok.
+
+	      typedef (*funcPtr)(int);	 
+	      funcPtr fptr = x;
+	      func3(funcPtr f) throw() { f(); } //  ERROR,do not know if the entity pointer f points to is no throw.
+
+	      typedef (*funcPtr2)(int) throw();
+	      funcPtr2 fptr2 = y;
+	      func3(funcPtr2 f) throw() { f(); }  //  OK
+
+	      func4() {}
+	      func5() { func4(); }  //  OK
+
+	    the examples had been reveal that,match exception specifications for every function in the calling sequence.
+
+	    <third>
+	    handle exceptions "the system" may throw.
+	    C++ allows replace unexpected exception with another exceptions of a different type.
+	    unexpected has a default behavior,so there is a default function will be invoked when unexpected exception is
+	    thrown,C++ allows replace the unexpected exception default function.
+
+	    set_unexpected(void (*unexpected_func)());
+
+	    class UnexpectedException {};
+	    void coverUnexpected() { throw UnexpectedException(); }
+	    set_unexpected(coverUnexpected);
+
+	    then all function should not provides any exception specification.
+
+	    another way to translate unexpected exceptions into a well known type is to rely on the fact that if the
+	    unexpected function's replacement rethrows the current exception,that exception will be replaced by a 
+	    new exception of the standard type "bad_exception".
+	    e.g.
+	      void coverUnexpected() { throw; }
+	      set_unexpected(coverUnexpected);
+
+	    then all catch clause receives a std::exception reference will catch the exception had been thrown out.
+
+	  
+	  maybe such case will happen,that is unexpected being invoked even when a higher-level caller is prepared to cope with
+	  the exception that is arisen.
+	  e.g.
+	    func1() { try { func2(); } catch (...) {} }
+	    func2() throw() { try { func3(); } catch (int x) {} }
+	    func3() throw(double) { throw 3.2; }
+
+	    //  func2() try-catch catch an exception is type of int,but func3() throw double.
+	    //  then the exception will propagate,func2() was fail to catch it.
+	    //  but func2() has an exception specification that no throw.
+	    //  in this case,unexpected will be called,even func1() is ready to cope any type of exception.
+
+	  !!  exception specifications are a tool to be applied judiciously.before adding them,consider whether the 
+	      behavior they impart to your software is really the behavior you want.  !!
+	  !!  C++11 has been supported "noexcept" keyword,now,no longer need to specify what kind of exception will
+	      be thrown out by function.function is default "noexcept(false)".  !!
 
 	    
