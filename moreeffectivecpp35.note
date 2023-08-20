@@ -1010,4 +1010,33 @@ Chapter Exceptions >
 	  !!  C++11 has been supported "noexcept" keyword,now,no longer need to specify what kind of exception will
 	      be thrown out by function.function is default "noexcept(false)".  !!
 
+
+  Item 15 : Understand the costs of exception handling
+       	  exception handling has costs,and you pay at least some of then even if you never use the keywords 
+	  try,throw,or catch.
+	    >  you pay for the space used by the data structures needed to keep track of which objects are
+	       fully constructed.
+	    >  you pay for the time needed to keep theses data structures up to date.
+	    >  whenever you use try block,you have to pay.different compilers implement try blocks in different
+	       ways,so the cost varies from compiler to compiler.
+	       (code size and runtime inc 5%-10% even no thrown)<from experience>
+	    >  compilers tend to generate code for exception specifications much as they do for try blocks.
+	    >  throw an exception to return from a function may be as much as three orders of magnitude slower.
+	       (copy exception-> destruct objects-> propagate exception)
+
+	    these costs are typically quite modest.
+	    so if a program compiled without exception is more faster and smaller,but exception is a part of
+	    C++.
+	    
+	  some compiler is selective to exception supporting,if all object files(include anything) does not
+	  use exception feature,then compile program without exception is a way to optimize program.
+
+	  !!  to minimize your exception-related costs :
+	        compile without support for exceptions when that is feasible;
+		limit yout use of try blocks and exception specifications to those locations where you
+		honestly need them;
+		throw exceptions only under conditions that are truly exceptional.
+          !!
+	  !!  different compiler vendor use different ways to implement exception supporting,so switch to
+	      another compiler maybe reduce costs.  !!
 	    
