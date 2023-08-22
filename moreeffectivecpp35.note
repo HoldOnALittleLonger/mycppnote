@@ -1040,3 +1040,32 @@ Chapter Exceptions >
 	  !!  different compiler vendor use different ways to implement exception supporting,so switch to
 	      another compiler maybe reduce costs.  !!
 	    
+
+  Item 16 : Remember the 80-20 rule
+          the 80-20 rule state that 80 percent of a program's resources are used by about 20 percent of the code :
+	    80 percent of the runtime is spend in approximately 20 percent of the code;
+	    80 percent of the memory is used by some 20 percent of the code;
+	    80 percent of disk accesses are performed for about 20 percent of the code;
+	    80 percent of the maintenance effort is devoted to around 20 percent of the code.
+
+	  the fundamental point is :
+	    the overall performance of your software is almost always determined by a small part of its constituent code.
+
+	  if your software is not so efficient,then you have to locate the code that are causing the problem,and have to
+	  find ways to increase their performance dramatically.
+	  there are two fundamentally different ways to approach the matter :
+	    the way most people do it (empirical,intuitive)
+	    and
+	    the right way (program profiler)
+
+	  a profiler can only tell you how a program behaved on a particular run,so if you profile a program using input
+	  data that is unrepresentative,you are going to get back a profile that is equally unrepresentative.
+	  that,in turn,is likely to lead to you to optimize your software's behavior for uncommon uses,and the overall
+	  impact on common uses may even be negative.
+
+	  !!  performance efficiency problem can be found in two ways :
+	        the way most people do it;
+		the right way;
+          !!
+
+	    
