@@ -1069,3 +1069,114 @@ Chapter Exceptions >
           !!
 
 	    
+  Item 17 : Consider using lazy evaluation
+       	  the best computations are those you never perform at all.
+	  lazy evaluation is applicable in an enormous variety of application areas : 
+	    Reference Counting :
+	      e.g.
+	        string s1 = "hello";
+		string s2 = s1;
+
+	      if do not need a copy of s1,then should not write s2 copy value of s1.
+	      instead,let s2 share the value of s1,there just need a bookkeeping to trace who is sharing now.
+
+	      but in the case,s2 would be modified,then there just one object(s2) should be changed.
+	      e.g.
+	        s2.modify();
+
+	      s2 is sharing the value of s1,but modify() will modify the data,so have to make a copy for s2
+	      as its private data and then modify it.
+	      (we can be lazy no longer)
+
+	      it is seem like what fork() did.
+
+	      if want to recycle s1,have to keep a share counting,until the value becomes zero,the resource
+	      is could to recycle safely.
+	       
+	    Distinguishing Reads from Writes :
+	      e.g.
+	        string s1 = "hello";
+		cout<<s1[3];  //  Reading
+		s1[3] = 'x';  //  Writing
+
+	      we had like to be able to distinguish the read call from the write,because reading a reference-counted
+	      string is cheap,but writing to such a string may require splitting off a new copy of the string's value
+	      prior to the write.
+
+	      there must have a way to distinguish Reading and Writing in operator[],in fact,but there is no way.
+
+	      use lazy evaluation and proxy class could to defer what action it should take,
+	      if reading is correct or writing is correct.
+
+	    Lazy Fetching :
+	      if there have to restore data from disk or database(local host or network host),then do not retrive
+	      the data if it is the time which is not needed.
+	      e.g.
+	        class table_first {
+		public:
+		  table_first();
+		  const table_first &field1() const;
+		  const table_first &field2() const;
+		  ...
+		private:
+		  mutable string *field1;
+		  mutable string *field2;
+		  ...
+		};
+
+		table_first::table_first() : field1(nullptr), field2(nullptr), ... {}
+		const table_first &table_first::field1() const 
+		{
+		  if (field1 == nullptr)
+		    field1 = new string;
+		  retriveData(FIELD1, field1);
+		}
+
+	      when accessing to the field,have to check if it is nullptr first,if it is,then retrive data(have to allocate memory).
+	      there is not needed to restore all field when construct object.
+
+	      "mutable" is tell to compiler "i know what i am doing.",this allows programmer to modify data member while const this
+	      is passed to member function.
+
+	      //  if compiler do not support the keyword there is another way :
+	      	    >  fake this pointer :
+		         table_first * const fake_this = const_cast<table_first * const>(this);  //  C++ style
+			 OR
+			 table_first * const fake_this = (table_first * const)this;  //  C style
+
+	      every fields have to be zero-initialized,and have to be checked before accessing.it is tedious and error-prone,
+	      use smart pointer could prevent these work,and if use smart pointer,"mutable" is also not need.
+
+            Lazy Expression Evaluation :
+	      lazy expression evaluation is that only evaluate a part of the computation.
+	      for example,use matrix computation.
+	      e.g.
+	        Matrix m1(100, 100);
+		Matrix m2(100, 100);
+		Matrix m3 = m1 + m2;
+		Matrix m4(100, 100);
+		m1 = m4;
+
+	      if m3 will be used immediately and all information is needed,lazy expression evaluation will not only slow computation,
+	      it is also cost more memory.
+
+	      if program only use a part of m3,then should not evaluate all of m3.
+	      e.g.
+	        m3(3, 2);  //  retrive value at position [3, 2] inside m3.
+
+	      then lazy expression evaluation should only evaluate what is the result in m3(3, 2) from add m1 to m2.
+
+	      for implement lazy expression evaluation,could let m3 hold a data struct that saves the copy of operands of the computation
+	      and the operation of the computation.
+	      (copy is also can be deferred,but have to make a promise even operands changed,the result of the operation is same as former)
+	      any execute the operation when the result is needed.
+
+	      as above example,if m3 is unused,then should not write such code to evaluate m3.
+
+	    !!  C++ implemented with eager evaluation,but program is able to implement lazy expression evaluation via encapsulation.  !!
+	    !!  should use lazy strategy judiciously,only use it when it necessary.  !!
+		
+
+
+
+	      
