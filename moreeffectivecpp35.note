@@ -1173,10 +1173,77 @@ Chapter Exceptions >
 
 	      as above example,if m3 is unused,then should not write such code to evaluate m3.
 
-	    !!  C++ implemented with eager evaluation,but program is able to implement lazy expression evaluation via encapsulation.  !!
-	    !!  should use lazy strategy judiciously,only use it when it necessary.  !!
+	  !!  C++ implemented with eager evaluation,but program is able to implement lazy expression evaluation via encapsulation.  !!
+	  !!  should use lazy strategy judiciously,only use it when it necessary.  !!
 		
 
+  Item 18 : Amortize the cost of expected computations
+       	  over-eager evaluation :
+	    doing things before you are asked to do them.
 
+	  the idea behind over-eager evaluation is that if you expect a computation to be requested frequently,you can lower the average
+	  cost per request by designing your data structures to handle the requests especially efficiency.
 
-	      
+	  amortize the cost :
+	    cache
+	    prefetching
+
+	  eager-evaluation is do the work everytime.
+	  lazy-evaluation is do the work only it is demanded.
+	  over-evaluation is do the work before it been asked.
+
+	  cache :
+	    cache is an over-eager-evaluation strategy,it is always be used in database,operating system,reading from disk...
+	    for example,Linux high speed page caching.
+
+	    e.g.
+	      std::map<string, string> &cacheRead(const string &key)
+	      {
+	        static std::map<string, string> keyword_cache;
+		auto value(read_db(key));
+		keyword_cache[key] = value;
+		return keyword_cache;
+	      }
+
+	      string findValue(const string &key, auto cache)
+	      {
+	        decltype(cache)::iterator it = cache.find(key);
+		if (it == cache.end()) {
+		  cacheRead(key);
+		  return cache.find(key);
+		}
+
+		return (*it).second;
+	      }
+
+	      auto cache_handle = cacheRead("C++");
+	      return findValue("C++", cache_handle);
+
+	  prefetching :
+	    prefetching is an over-eager-evaluation strategy,it is alike cache.
+	    CPU often cache more than one lines instructions from memory,this is prefetching.
+	    so often combined cache and prefetching to improve performance for a software.
+
+	    e.g.  //  container template
+	      template<class T>
+	      class {
+	        T &operator[](int index)
+		{
+		  if (index < 0)
+		    std::abort();
+		  else if (index > _current_size) {
+		    "allocate more memory than index."
+		    "new size = index - _current_size + index"
+		  }
+
+		  return "the indexth element of the container";
+		}
+		...
+	      };
+
+	    "prefetching" more memory from operating system,the next time call to operator[] maybe need not to allocating.
+
+	  !!  Computer Science : you can often trade space for time.
+	      however,using larget objects means fewer fit on a virtual memory or cache page.in rare cases,making objects
+	      bigger reduces the performance of software,because paging activity increases,cache hit rate decreases,or both.  !!
+	  !!  use over-eager-evaluation strategy judiciously.  !!
