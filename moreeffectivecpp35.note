@@ -1247,3 +1247,51 @@ Chapter Exceptions >
 	      however,using larget objects means fewer fit on a virtual memory or cache page.in rare cases,making objects
 	      bigger reduces the performance of software,because paging activity increases,cache hit rate decreases,or both.  !!
 	  !!  use over-eager-evaluation strategy judiciously.  !!
+
+
+  Item 19 : Understand the origin of temporary objects
+       	  True temporary objects in C++ are invisible--they do not appear in source code.
+	  they arise whenever a non-heap object is created but not named.
+	  such unnamed objects usually arise in one of two situations :
+	    1>  when implicit type conversions are applied to make function calls succeed.
+	    2>  when functions return objects.
+
+	  example 1>
+	    int func(string &s) { return s.length(); }
+	    int func1(const string &s) { return s.length(); }
+	    
+	    char buffer[] = "hello world.";
+
+	    func(buffer);  //  ERROR
+	    func1(buffer);  //  OK
+
+	    @buffer is an object stored in stack.
+
+	    when pass @buffer to func(),because parameter type is mismatch,C++ will implicit convert @buffer to string &.
+	    there,a temporary object @unnamed will be make up and it is type of string,then @s bind to @unnamed.
+	    but @unnamed is a temporary object,so if programmer expects modify actual argument in func() will be wrong.
+	    ! so C++ prohibits the generation of temporaries for non-const reference parameters.
+
+	    when pass @buffer to func1(),it as same as func(),but @s is const-reference,so C++ allows the generation of
+	    temporary object for const-reference parameter.@unnamed will be made up and then bind to @s.
+
+	  example 2>
+	    template<typename _Type>
+	    const _Type operator+(const _Type &arg1, const _Type &arg2)
+	    {
+	      ...
+	      return result;
+	    }
+
+	    class intType x = 3 + 2;
+
+	    @result will as return value for operator+,and why it is const that is because overload operator should not
+	    change its behavior.
+	    there the return value is unnamed,for return @result,first have to make up @unnamed,then assign @result to
+	    @unnamed,because @result is local variable,it will be destroyed when control leave operator+.
+	    so the costs have to pay for construct @unnamed and destruct it.
+	    as above,after @x had been assigned to @unnamed,@unnamed will be destructed.
+
+	  !!  Anytime you see a reference-to-const parameter,the possibility exists that a temporary will be created to
+	      bind to that parameter.  !!
+	  !!  Anytime you see a function returning an object,a temporary will be created(and later destroyed).  !!
