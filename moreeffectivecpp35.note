@@ -1295,3 +1295,41 @@ Chapter Exceptions >
 	  !!  Anytime you see a reference-to-const parameter,the possibility exists that a temporary will be created to
 	      bind to that parameter.  !!
 	  !!  Anytime you see a function returning an object,a temporary will be created(and later destroyed).  !!
+
+
+  Item 20 : Faciliate the return value optimization
+       	  the by-value return,including the constructor and destructor calls it implies,can not be eliminated.
+	  a function either has to return an object in order to offer correct behavior or it does not.
+	  some functions just have to return objects,That is the way it is.
+
+	  because can not eliminated constructor and destructor for by-value return,the optimzation should focus
+	  on how to reduce the cost of returned objects.
+	  e.g.
+	    const Type operator*(const Type &lhs, const Type &rhs)
+	    {
+	      //  Type temp(lhs.first() * rhs.first(), lhs.second() * rhs.second());
+	      //  return temp;
+
+	      return Type(lhs.first() * rhs.first(), lhs.second() * rhs.second());
+	    }
+
+	    the trick is to return constructor arguments instead of objects.
+	    if create @temp and then return it,there will be twice constructs and destructs,
+	    the first for @temp,the second for return value.
+
+	    but if return arguments,there only once construct and destruct.
+
+	    Type a, b;
+	    Type c = a * b;
+
+	    if compiler supports return value optimization,it might use the return value to instead the outside
+	    object which is allocated in stack frame.then call to operator* will be zero cost.
+
+	    furthermore,you can not do any better than this,because @c is a named object,and named objects can not
+	    be eliminated.you can,however,eliminate the overhead of the call to operator* by declaring that function
+	    inline!(code bloat)
+
+	  !!  this particular optimization -- eliminating a local temporary by using a function's return location(
+	      and possibly replacing that with an object at the function's call site) -- is both well-known and
+	      commonly implemented.it even has a name : the return value optimization.  !!
+
