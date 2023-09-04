@@ -1333,3 +1333,43 @@ Chapter Exceptions >
 	      and possibly replacing that with an object at the function's call site) -- is both well-known and
 	      commonly implemented.it even has a name : the return value optimization.  !!
 
+
+  Item 21 : Overload to avoid implicit type conversions
+       	  when a class has a type-conversion function,compiler will try to create an object which is type of the class
+	  from the argument it is not type of the class.
+	  e.g.
+	    struct A {
+	      A(int x);		//  type conversion (only one parameter received constructor)
+	      A(double y);
+	      ...
+	    };
+
+	    const A operator+(const A &a, const A &b);
+
+	    A a1;
+	    A a2 = a1 + 10;		//  temporary object created
+	    A a3 = 10.1 + a2;		//  temporary object created
+
+	  how the overloading is to avoid type conversion ?
+	  > C++ will processes type conversion when the function is calling and parameter has different type to argument.
+	    if the parameter and the argument have same type,such conversion will not happen.
+	    function overloading allows programmer to create several functions each has different parameter set.
+
+	  e.g.
+	    const A operator+(const A &a, double x);
+	    const A operator+(const A &a, int x);
+	    const A operator+(double x, const A &a);
+	    const A operator+(int x, const A &a);
+
+	    //  now call to operator+ with int and A object is no longer need type conversion,double as same.
+	    //  no temporary will be created,if parameters are const-reference type.
+
+	    const A operator+(int x, int y);	//  ERROR
+
+	    this is because C++ required overloaded function at least receives one parameter is type of user-defined class.
+	    if no this rule,that means programmer could to modify behavior and means to the language basic semantic.
+
+	  !!  only use overloading when it is needed.(might it will improve efficiency of program or not)  !!
+	  !!  overloading requires different parameter set,not return type.
+	      the member function in base class which return the base class type is allowed to return derived class
+	      type when redefined it inside derived class.  !!
