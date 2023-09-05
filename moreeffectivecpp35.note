@@ -1373,3 +1373,57 @@ Chapter Exceptions >
 	  !!  overloading requires different parameter set,not return type.
 	      the member function in base class which return the base class type is allowed to return derived class
 	      type when redefined it inside derived class.  !!
+
+
+  Item 22 : Consider using op= instead of stand-alone op
+          op=  -->  += , -= , *= ...   (assignment version)
+	  op   -->  + , - , * ...      (stand-alone version)
+
+	  op could be implemented by op=.
+	  e.g.
+	    class OP {
+	    public:
+	      OP &operator+=(const OP &);
+	      OP &operator-=(const OP &);
+	      ...
+	    };
+
+	    const OP operator+(const OP &a, const OP &b)
+	    {
+	      return OP(a) += b;
+	    }
+	    const OP operator-(const OP &a, const OP &b)
+	    {
+	      return OP(a) -= b;	//  temporary object will be created
+	    }
+	    //  these two functions are eligible to return value optimization.
+	    //  and they are implemented via += and -=,then just maintain assignment versions as well.
+	    //  there is no longer need friend operator overloading,because += and -= always has a 
+	    //  have known object to its left-hand.
+
+	  normally,there is no relationship between operator+, operator-, and operator+=, so programmer
+	  can freely implement them.it is like above.
+
+	  three aspects of efficiency are worth noting here :
+	    first>
+	      in general,assignment versions of operators are more efficient than stand-alone versions,
+	      because they have not to return value(just a reference).
+	    second>
+	      allow the difficult trade-off between efficiency and convenience.
+	      e.g.
+	        OP a, b, c, d, result;
+		//  result = a + b + c + d;  //  three temporary objects
+		result = a;
+		result += b;
+		result += c;
+		result += d;		     //  no temporary object
+
+	      by implementing the stand-alones in terms of the assignment versions,you ensure that when
+	      clients switch from one to the other,the semantics of the operations remain constant.
+	    third>
+	      the example at above used unnamed object,if compiler supports to return value optimization,
+	      there just once construct and once destruct,because no named object is exists.
+
+	  !!  as a library designer,you should offer both,and as an application developer,you should consider
+	      using assignment versions of operators instead of stand-alone versions whenever performance is
+	      at a premium.  !!
