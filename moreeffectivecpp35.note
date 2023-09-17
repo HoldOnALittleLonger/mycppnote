@@ -1427,3 +1427,18 @@ Chapter Exceptions >
 	  !!  as a library designer,you should offer both,and as an application developer,you should consider
 	      using assignment versions of operators instead of stand-alone versions whenever performance is
 	      at a premium.  !!
+
+
+  Item 23 : Consider alternative libraries
+       	  Library design is an exercise in compromise.
+	  libraries optimized for size and speed are typically not portable;
+	  libraries with rich functionality are rarely intuitive;
+	  bug-free libraries are limited in scope;
+	  int the real world,you can not have everything;something always has to give.
+       	  
+	  for example,stdio is more faster and smaller than iostream,but any efficiency advantages of stdio
+	  are highly implementation-dependent.
+
+	  !!  the main point is that different libraries offering similar functionality often feature different
+	      performance trade-offs,so once you have identified the bottlenecks in your software,you should see
+	      if it is possible to remove those bottlenecks by replacing one library with another.  !!
