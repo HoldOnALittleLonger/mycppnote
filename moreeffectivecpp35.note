@@ -1442,3 +1442,85 @@ Chapter Exceptions >
 	  !!  the main point is that different libraries offering similar functionality often feature different
 	      performance trade-offs,so once you have identified the bottlenecks in your software,you should see
 	      if it is possible to remove those bottlenecks by replacing one library with another.  !!
+
+
+  Item 24 : Understand the costs of virtual functions,multiple inheritance,virtual base classes,and RTTI1
+       	  Virtual functions :
+	    most implementations use virtual tables and virtual table pointers.
+	    virtual tables and virtual table pointers are commonly referred to as vtbls and vptrs,respectively.
+
+	    vtbls is usually an array of function pointers(or link-table of function pointers).
+	    each class will has its own vtbls and vptrs,if it had been declared virtual functions or inherited
+	    virtual functions.
+
+            vptr will as hidden data member in the class it has been declared virtual functions.(compiler adds it)
+
+	    costs :
+	      you have to set aside space for a virtual table for each class that contains virtual functions.
+	      one virtual table per class.
+
+	      compiler have to determines where the vtbls to be stored,there are two strategies.
+	        1>  generate a copy of the vtbl in each object file that might need it,
+		    and linker then strips out duplicate copies,leaving only a single instance of each vtbl in
+		    the final executable or library.
+
+		2>  a class's vtbl is generated in the object file containing the definition of the first non-inline
+		    non-pure virtual function in that class.
+		    but if all virtual functions are inline,then heuristic will fails,then compiler will use strategy1
+		    to instead.
+		    the way to prevent such problem is that do not declare virtual functions inline.
+		    (compiler maybe ignore inline is because this)
+
+	      you have to pay for an extra pointer inside each object that is of a class containing virtual functions.
+
+	      compiler have to generate code to invoke the corresponding virtual function.
+	      e.g.
+	        void call(A *p)
+		{
+		  p->func();
+		}
+
+		-->
+
+		void call(A *p)
+		{
+		  (*p->vptr[INDEX_OF_FUNC])(p);  //  p is this pointer
+		}
+
+		the cost of calling a virtual function is thus basically the same as that of calling a function through
+		a function pointer.
+
+		the third cost of virtual functions :
+		  you effectively give up inlining.(virtual means wait until runtime to see which function is called)
+
+            multiple-inheritance :
+	      offset calculations to find vptrs within objects become more complicated,there are multiple vptrs within a
+	      single object,and special vtbls must be generated for base classes in addition to the stand-alone vtbls.
+	      (virtual base class part pointer)
+
+	      as a result,both the per-class and the per-object space overhead for virtual functions increases,and the 
+	      runtime invocation cost grows slightly,too.
+
+	      virtual base classes may incur a cost of their own,because implementations of virtual base classes often
+	      use pointers to virtual base class parts as the means for avoiding the replication,and one or more of 
+	      those pointers may be stored inside objects.(middle classes maybe share vptr)
+
+          RTTI runtime type identification :
+	    RTTI lets us discover information about objects and classes at runtime,so there has to be a place to store
+	    the information we're allowed to query.
+	    that information is stored in an object of type type_info,operator typeid can access the object.
+
+	    there only needs to be a single copy of the RTTI information for each class,but there must be a way to get to
+	    that information for any object.(sound like a virtual function table)
+	    the language specification states that we are guaranteed accurate information on an object's dynamic type
+	    only if that type has at least one virtual function.
+	    RTTI was designed to be implementable in terms of a class's vtbl.
+
+	    maybe index 0 of vtbl contains the type_info object,so an additional entry in each class vtbl plus the cost
+	    of the storage for the type_info object for each class.
+
+          !!  it is equally important to understand that if you need the functionality these features offer,
+	      you will pay for it,one way or another.  !!
+	  !!  you are unlinkely to do better than the compiler-generated implementations by coding these
+	      features yourself.  !!
+
