@@ -1524,3 +1524,74 @@ Chapter Exceptions >
 	  !!  you are unlinkely to do better than the compiler-generated implementations by coding these
 	      features yourself.  !!
 
+
+Chapter Techniques >
+
+  Item 25 : Virtualizing constructors and non-member functions
+       	  a virtual constructor is a function that creates different types of objects depending on the input it is given.
+	  e.g.
+	    static <ReturnType> constructObject(input_stream_t istr)
+	    {
+	      //  read data from stream
+	      //  construct data structure
+	      //  put the data structure to the object.
+	      ...
+	    }
+
+	    //  static function will be saved outside to the class space.
+	    //  and all class objects will share the copy.
+
+	  a virtual copy constructor returns a pointer to a new copy of the object invoking the function.
+	  e.g.
+	    virtual <ClassType> *copySelf() const
+	    {
+	      return new <ClassType>(*this);
+	    }
+
+	    //  we can let base class holds a pure virtual copy constructor,and redefine it in derived classes.
+
+	  Making Non-Member Functions Act Virtual :
+	    it is similar to virtual copy constructor.
+	    for example,the operator<< would be overloaded in class,and it is used to print class's info.
+	    e.g.
+	      class A {};
+	      class B : public A {
+	        ostream &operator<<(ostream &) const;
+	      };
+	      class C : public A {
+	        ostream &operator<<(ostream &) const;
+              };
+
+	      if these operator<< overload version are not friend function,they are member-function,then the syntax
+	      is like this :
+	        B b;
+		b<<cout;
+		C c;
+		c<<cout;  //  BAD
+
+              making non-member functions act virtual,the important point is that let the non-member function becomes
+	      proxy function,which will calls classes' virtual functions.
+
+	      e.g.
+	        ostream &operator<<(ostream &c, const BaseClass *pB)
+		{
+		  return pB->print(c);  //  BaseClass pointer points to a derived class.
+		}
+
+		virtual ostream &A::print(ostream &) const =0;
+		virtual ostream &B::print(ostream &c) const
+		{
+		  ...
+		}
+		virtual ostream &C::print(ostream &c) const
+		{
+		  ...
+		  //  c<<member_a_;
+		  //  c<<member_b_;
+		  //  return c;
+		}
+
+          !!  virtualizing constructors and non-member functions maybe unlikely be used in practice,but if encountered
+	      such situations,they are useful.  !!
+	  !!  virtual behavior is determined by what the type the object is,this requires the object had been existed.
+	      but virtualizing constructors and non-member functions can skip such requiring.  !!
