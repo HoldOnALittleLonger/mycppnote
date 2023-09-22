@@ -1595,3 +1595,82 @@ Chapter Techniques >
 	      such situations,they are useful.  !!
 	  !!  virtual behavior is determined by what the type the object is,this requires the object had been existed.
 	      but virtualizing constructors and non-member functions can skip such requiring.  !!
+
+
+  Item 26 : Limiting the number of objects of a class
+       	  Allowing Zero or One Objects >
+	    the easiest way to prevent objects of a particular class from being created is to declare the constructors
+	    of that class private.
+	    e.g.
+	      class A {
+	      private:
+	        A() {}
+		A(const A &) {}
+              };
+
+	      then no one could create such object.
+	      can not to instantiate it.
+
+	    but if want there is only one object is exist,then could use such design :
+	    e.g.
+	      class OnlyOne {
+	      public:
+	        friend OnlyOne &getOnlyOne(void);
+	      private:
+	        OnlyOne() {}
+		OnlyOne(const OnlyOne &x) {}
+	      };
+
+	      OnlyOne &getOnlyOne(void)
+	      {
+	        static OnlyOne o;
+		return o;
+	      }
+
+	      friend is able to access the private member,
+	      static restrication can limit only one object is exist,
+	      the constructors in private zone that prevent another one is able to create such object.
+
+	      !! of course,static member function is able to implement the design.
+	      class OnlyOne {
+	      public:
+	        static OnlyOne &getOnlyOne(void);
+	      private:
+	        OnlyOne() {}
+		OnlyOne(const OnlyOne &x) {}
+	      };
+
+	      OnlyOne &OnlyOne::getOnlyOne(void)
+	      {
+	        static OnlyOne o;
+		return o;
+	      }  //  static object in a function not in a class,
+	      	 //  you should not pay for things you do not use.
+
+              why the functions are not inlining?
+	      : functions with internal linkage may be duplicated within a program!
+	      	so do not create inline non-member functions that contain local static data!
+
+	      !! a different way to limit number of objects,that is use object counter.
+	      class OnlyOne {
+	      public:
+	        OnlyOne()
+		{
+		  if (_numberObjects == 1)
+		    throw IS_BEEN_EXISTED;
+		  ++_numberObjects;
+		}
+		~OnlyOne()
+		{
+		  --_numberObjects;
+		}
+              private:
+	        OnlyOne(const OnlyOne &x) {}  //  disable copying
+		static unsigned short _numberObjects;
+	      };
+
+	      OnlyOne::_numberObjects = 0;
+
+	      this way is attractive for a couple of reasons :
+	        1>  everybody should be able to understand what is going on.
+		2>  it is easy to generalize so that the maximum number of objects is some number other than one.
