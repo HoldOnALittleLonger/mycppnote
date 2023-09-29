@@ -1444,7 +1444,7 @@ Chapter Exceptions >
 	      if it is possible to remove those bottlenecks by replacing one library with another.  !!
 
 
-  Item 24 : Understand the costs of virtual functions,multiple inheritance,virtual base classes,and RTTI1
+  Item 24 : Understand the costs of virtual functions,multiple inheritance,virtual base classes,and RTTI
        	  Virtual functions :
 	    most implementations use virtual tables and virtual table pointers.
 	    virtual tables and virtual table pointers are commonly referred to as vtbls and vptrs,respectively.
@@ -1674,3 +1674,42 @@ Chapter Techniques >
 	      this way is attractive for a couple of reasons :
 	        1>  everybody should be able to understand what is going on.
 		2>  it is easy to generalize so that the maximum number of objects is some number other than one.
+
+          Contexts for Object Construction >
+	    suppose :
+	      OnlyOne is inherited by another class,and it also inside to another class.
+	      e.g.
+	        class B : public OnlyOne {};
+		class C { private: OnlyOne _o; };
+
+		now the class OnlyOne objects can exist in three different contexts:
+		  1>  _numberObjects()
+		  2>  the part of OnlyOne in B
+		  3>  the composition is OnlyOne in C
+
+		but OnlyOne just permit one object is existed,so the exception IS_BEEN_EXISTED will be thrown.
+
+            the Fact :
+	    if the class has private constructors(in the absence of friend declarations),then it can not be the base class;
+	    it also can not as composition inside another class.
+
+	    suppose,the situation is that,there should has a class which is can not be derived and the number of 
+	    instances is unlimited :
+	    e.g.
+	      (C++11)
+	      class noDerived final {};
+
+	      (C++99)
+	      class noDerived {
+	      public:
+	        static noDerived *proxyCreate();  //  pseudo-constructor
+	      private:
+	        noDerived() {}
+	      };
+
+	      noDerived *noDerived::proxyCreate()
+	      {
+	        return new noDerived();
+	      }
+	      //  the caller who wish to have a instance of noDerived must call delete on it later.
+	      //  smart pointer is useful for this problem.
