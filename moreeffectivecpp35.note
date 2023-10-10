@@ -1713,3 +1713,105 @@ Chapter Techniques >
 	      }
 	      //  the caller who wish to have a instance of noDerived must call delete on it later.
 	      //  smart pointer is useful for this problem.
+
+          Allowing Objects to Come and Go >
+	    if the class is required to be designed like this :
+	      create object p1;
+	      use p1;
+	      destory p1;
+
+	      create object p2;
+	      use p2;
+	      destory p2;
+
+	    the method above can not satisfy the request.because,the class only allows one object is exist at a time.
+	    but there is a way to achieve it :
+	      <combine object-counting and pseudo-constructor>
+	      class noDerived {
+	      public:
+	        static noDerived *proxyCreate();
+		...
+              private:
+	        static const size_t _maxNumber;
+		static size_t _current;
+		noDerived()
+		{
+		  if (_current >= _maxNumber)
+		    throw TOO_MANY_OBJECT;
+		  ++_current;
+		}
+
+		~noDerived()
+		{
+		  --_current;
+		}
+
+		noDerived(const noDerived &);
+	      };
+
+	      const size_t noDerived::_maxNumber = 10;
+	      size_t noDerived::_current = 0;
+
+	      //  now the class allows maximum 10 objects are existed at a time.
+
+          An Object-Counting Base Class >
+	    not only the functions to manipulate the instance count,but also the instance count itself.
+	    such way take an advantage,hidden counting and limiting from clients except class author.
+	    this is means there will be a class which manages counting and limiting.
+	    e.g.
+	      template<class BeingCounted>
+	      class Counted {
+	      public:
+	        class TooManyObjects {};  //  exception
+		static size_t objectCount() { return _numObjects; }
+
+              protected:
+	        Counted() { init(); }
+		Counted(const Counted<BeingCounted> &rhs) { init(); }
+		~Counted() { --_numObjects; }
+
+              private:
+	        static size_t _numObjects;
+		static const size_t _maxObjects;
+		void init() noexcept(false)		//  pseudo-constructor
+		{
+		  if (_numObjects >= _maxObjects)
+		    throw TooManyObjects();
+		  ++_numObjects;
+		}
+	      };  //  the managing class
+
+	      template<class BeingCounted>
+	      size_t Counted<BeingCounted>::_numObjects;      //  put it in the file which
+	      	     					      //  contains the implementation of Printer.
+							      //  static variable default initialized to zero.
+
+              /*  OR
+	       *  class CountedClass;
+	       *  template<>
+	       *  size_t Counted<CountedClass>::_numObjects = 20;  
+	       *  this syntax is also satisfy static const member initializing.
+	       *  this is specializing syntax.
+	       */
+              template<class BeingCounted>
+	      const size_t Counted<BeingCounted>::_maxObjects = <value>;  //  constant
+	      //  the author which used template Counted have to determine the size of _maxObjects.
+	      //  and put it in the class implementation file.
+
+	      class Printer : private Counted<Printer> {
+	      public:
+	        using Counted<Printer>::objectCount;	 //  interface for client which require to check counter
+		using Counted<Printer>::TooManyObjects;  //  exception for catch
+		...
+
+	      };
+
+	      //  composition do not require virtual destructor.
+	      //  base class will initialize at first.
+	      /*  the template parameter @BeingCounted as template trait,so different template has different
+	       *  static member object(@_numObjects and @_maxObjects).
+	       */
+
+          !!  this chapter had been introduced several methods to limiting the number of objects of a class,
+	      in different case,pick up one to use or more than one and combine them could satisfy program design.  !!
+
