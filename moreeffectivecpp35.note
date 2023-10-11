@@ -1815,3 +1815,42 @@ Chapter Techniques >
           !!  this chapter had been introduced several methods to limiting the number of objects of a class,
 	      in different case,pick up one to use or more than one and combine them could satisfy program design.  !!
 
+  
+  Item 27 : Requiring or prohibiting heap-based objects
+       	  heap-based means the object is allocated on heap,and could delete it later.
+	  there must no memory leak.
+
+	  requiring heap-based objects >
+	    for prevent clients from creating objects other than by calling new,should make
+	    constructions and destructions illegal.
+
+	    method1 :
+	      make the destructor private and the constructors public.
+	      define a proxy destructor to accessing the real destructor for delete object.
+
+	    method2 :
+	      it is also make the constructors private,but this require the class's author to remember
+	      make all the constructors private.
+	      then use proxy creation function to construct object.
+	      so the better way is method1.
+
+	    !  private destructor will forbid inheritance and comtainment,for solve this problem,
+	       declare destructor protected.the class contains a object is requiring heap-based object,
+	       should contains its pointer to instead object.
+
+	    e.g.
+	      class HeapBased {
+	      public:
+	        HeapBased();
+	      protected:
+	        ~HeapBased();  //  if this class is used in "is-a" inheritance,must declare virtual destructor.
+	      ...
+	      };
+
+	      class A {
+	      ...
+	      private:
+	        HeapBased *pHB;
+	      };
+
+
