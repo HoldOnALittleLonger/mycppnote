@@ -1853,4 +1853,67 @@ Chapter Techniques >
 	        HeapBased *pHB;
 	      };
 
+	  determining whether an object is on the heap >
+	    there are some tricks(ideas) to determine whether an object is on the heap,but they are not
+	    work fine.
+	      >  operator new calling indicator
+	         e.g.
+		   class A {
+		     A()
+		     {
+		       if (!new_called)
+		         throw EXCEPTION;
+		       new_called = false;
+		     }
+		     void *operator new(size_t size)
+		     {
+		       new_called = true;
+		       return ::operator new(size);
+		     }
+		   ...
+		   private:
+		     static bool new_called;
+		   };
+
+		 problems :
+		   1 - if operator new[] was called,then operator new will not be called.
+		       (of course,operator new[] could have a calling indicator)
+		       operator new[] just be called once,then compiler calls constructors
+		       on the memory units,the total of invocations is equal to @size.
+		       the constructos will throw EXCEPTION expect the first element's constructor.
+		   2 - if operator new was called twice,can not guarantee the steps is in
+		       a expected order to be executed.
+		       e.g.
+		         A *x = new A(*new A);
+			 //  may be compiler process operator new calling twice,
+			 //  then calls constructors on the memory units.
+
+	      >  memory address comparison
+	      	 e.g.
+		   bool onHeap(const void *address)
+		   {
+		     char x = 'x';
+		     return address < &x;
+		   }
+
+		   many system organize C/C++ program like this figure :
+		     TOP  STACK
+		     ----------    [UNLINKED AREA]
+		          HEAP
+			  .bss
+			  .data
+			  .text
+	           this trick is used to compare stack variable's address and heap address.
+		   STACK grows from top to bottom,and HEAD grows from bottom to top.
+		   if @address < &x,that means the object *address is under @x.
+
+		 problem :
+		   there is not to distinguish static variable and heap variable.
+		   generally,static object is stored in .bss segment,and global object is
+		   stored in .data segment.
+		   so,if the object @r is static,then its address must less than @address!
+
+		   !  this trick depends on system architecture,so it is not portable  !
+
+
 
