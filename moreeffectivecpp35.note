@@ -1914,6 +1914,79 @@ Chapter Techniques >
 		   so,if the object @r is static,then its address must less than @address!
 
 		   !  this trick depends on system architecture,so it is not portable  !
+		   !  if you absolutely,positively have to tell whether an address is on the heap,
+		      you are going to have to turn to unportable,implementation-dependent system
+		      calls  !
 
+	      it is easier to determine whether it is safe to delete a pointer than to determine
+	      whether a pointer points to somethting on the heap,because all we need to answer the
+	      former question is a collection of address that have been returned by operator new.
 
+	      >  abstract class to track pointer
+	      	 for track pointer if it is returned by operator new,there could be a bookkeeping
+		 to store entries from operator new,and "delete it" will remove it from bookkeeping,
+		 this will be done in operator delete.
+		 of course,function isOnHeap() should exist and used to determine @it is in bookkeeping.
+
+		 e.g.
+		   void *operator new(size_t size)
+		   {
+		     get memory;
+		     if not null,store it in bookkeeping and return it;
+		     else return nullptr;
+		   }
+
+		   void operator delete(void *it)
+		   {
+		     check if @it is in bookkeeping;
+		     if @it is,then remove @it from bookkeeping,and delete it;
+		     else do nothing or throw an exception;
+		   }
+
+		   bool isOnHeap(const void *ptr)
+		   {
+		     return if @ptr is in bookkeeping;
+		   }
+
+		 the problems occur in there is :
+		   1 - should not add anything to global scope of C++,that will 
+		       pollut namespace.
+		   2 - efficiency,if it is not necessary,why we have to track it in
+		       bookkeeping.
+		   3 - objects with multiple or virtual base classes have multiple address,
+		       so there is no guarantee that the address passed to isOnHeap() is the
+		       same as the one returned from operator new,even if the object in question
+		       was allocated on the heap.
+
+		 for sovle these problems,we should design an abstract class,and each class we want
+		 to track if it is on heap,should make it inherit from the abstract class.
+
+		 e.g.
+		   class HeapTracker {
+		   public:
+		     static void *operator new(size_t size);
+		     static void operator delete(void *ptr);
+		     bool isOnHeap() const;
+		     virtual ~HeapTracker() = 0;
+		   private:
+		     std::list<void *> _bookkeeping;
+		   };
+
+		   bool HeapTracker::isOnHeap() const
+		   {
+		     const void *rawAddress = dynamic_cast<const void *>(this);
+		     return _bookkeeping.find(rawAddress) != _bookkeeping.end();
+		   }
+
+		   dynamic_cast : this casting can only be used in inheritance hierarchy.
+		   		  and it cast derived class to base class.
+				  thus,dynamic_casting a pointer to void * yields a pointer
+				  to the beginning of the memory for the object pointed to by
+				  the pointer.
+				  !  dynamic_cast is applicable only to pointers to objects
+				     that have at least one virtual function.
+
+	         !!  Attention :
+		       this technique can not apply to built-in types,because they are no this
+		       pointer.
 
