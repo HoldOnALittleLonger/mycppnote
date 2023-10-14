@@ -1990,3 +1990,34 @@ Chapter Techniques >
 		       this technique can not apply to built-in types,because they are no this
 		       pointer.
 
+          prohibiting heap-based objects >
+	    if class'author wants preventing clients to allocate the class object on heap,the author
+	    could overload operator new and operator delete,place them in same part.
+	    e.g.
+	      class HeapPreventing {
+	      ...
+	      private:
+	        static void *operator new(size_t size);
+		static void operator delete(void *ptr);
+	      };
+
+	      HeapPreventing a;  //  OKAY
+	      HeapPreventing *x = &a;  //  OKAY
+	      HeapPreventing *ptr = new HeapPreventing;  //  ERROR
+	      		     	    			 //  attempts to call private method.
+
+	   but there has some problems..
+	     >  if operator new and operator delete in private part,that prevents HeapPreventing objects
+	     	from being instantiated as base class parts of heap-based derived class objects.
+		(if derived class did not define its own version)
+		if derived class defined its own version,then HeapPreventing's methods will not effects
+		heap allocating,that means HeapPreventing could be the base class part in a heap-based
+		object.
+             >  if there is a class which contains HeapPreventing,the heap-based object is allowed,
+	     	even HeapPreventing has private new and delete.
+		but if the class contains HeapPreventing* and try to allocate memory for it via new,
+		that would be fail.
+
+          !!  for requiring heap-based objects,could place destructor in protected zone.  !!
+	  !!  for determine whether an object is heap-based,could use track pointer abstract class.  !!
+	  !!  there is difficult to has a good way for prohibiting heap-based objects.  !!
