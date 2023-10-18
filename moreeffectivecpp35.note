@@ -2021,3 +2021,129 @@ Chapter Techniques >
           !!  for requiring heap-based objects,could place destructor in protected zone.  !!
 	  !!  for determine whether an object is heap-based,could use track pointer abstract class.  !!
 	  !!  there is difficult to has a good way for prohibiting heap-based objects.  !!
+
+  Item 28 : Smart pointers
+       	  smart pointers are objects that are designed to look,act,and feel like built-in pointers,but to
+	  offer greater functionality.
+
+	  smart pointers'behavior :
+	    construction and destruction
+	    copying and assignment
+	    dereferencing
+
+	  smart pointers are generated from templates because,like built-in pointers,they must be strongle typed;
+	  the template parameter specifies the type of object pointed to.
+
+	  Construction,Assignment,and Destruction of Smart Pointers >
+	    e.g.
+	      template<typename _Type>
+	      class SmartPointer {
+	      public:
+	        explicit SmartPointer(_Type *ptr) = default;
+		~SmartPointer()
+		{
+		  if (_shared == 0)
+		    delete ptr;
+		  _shared--;
+		}
+
+		//  if unique pointer have to transfer ownership in these functions,
+		//  then the parameters can not be constant.
+		SmartPointer(const SmartPointer<_Type> &obj);
+		SmartPointer &operator=(const SmartPointer<_Type> &obj);
+
+		_Type &operator*() const;
+		_Type *operator->() const;
+	      private:
+	        _Type *_internal_ptr;
+		static size_t _shared;  //  increase in copy and assignment.
+	      }; 
+
+	      template<typename _Type>
+	      size_t SmartPointer<_Type>::_shared = 0;
+
+	    !  if the smart pointer is unique pointer,have to transfer the ownership of the object
+	       which pointed to.notice that the assignment operator must delete the object it
+	       owns before assuming ownership of a new object.
+	    !  if the smart pointer is shared pointer,have to maintain the counter which would be
+	       shared by all smart pointer object.
+	    !  do not passing unique pointer by value!(ownership would be transferred in copying)
+
+	  Implementing the Dereferencing Operators >
+	    the dumb pointer has behavior with operator* and operator->,thus,smart pointer must
+	    has these behaviors to emulate dumb pointer.
+
+	    _Type &operator*() const
+	    {
+	      //  do somethings
+	      return *_internal_ptr;
+	    }
+	    !  returns a reference to the object will not create any temporary object,
+	       it is more efficiency,and C++ allows base-class reference to refers
+	       an derived class object.
+
+	    _Type *operator->() const
+	    {
+	      //  do somethings
+	      return _internal_ptr;
+	    }
+	    !  operator-> is similar to operator*,whatever the function returns,it must apply
+	       to member-selection operator.
+	       e.g.
+	         pt->func();  //  compiler interpreted this statement to (pt.operator->())->func()
+
+          Testing Smart Pointers for Nullness >
+	    smart pointer have to support comparison like dubm pointer :
+	      char *x = &a;
+	      char *y = &b;
+
+	      SmartPointer<char> pChar1(&a);
+	      SmartPointer<char> pChar2(&b);
+
+	      x == y;
+	      x < y;
+	      x > y;
+	      !x;
+	      !y;
+
+	      pChar1 == pChar2;
+	      pChar1 < pChar2;
+	      pChar1 > pChar2;
+	      !pChar1;
+	      !pChar2;
+
+	    the most simply method to achieve this is define an implicit conversion which convert
+	    SmartPointer to void *.
+	    void * is built-in type,so C++ supply comparison to it.
+	    e.g.
+	      operator void*() const
+	      {
+	        return static_cast<void *>(_internal_ptr);
+	      }
+	    
+	    !  implicit conversion often brings some problems,so programmer have to minimize
+	       implicit conversions(just allow expected).
+
+	    another way is to define implicit conversion SmartPointer -> bool type.
+	    it suit of comparison.
+	    e.g.
+	      operator bool() const
+	      {
+	        return _internal_ptr != nullptr;
+	      }
+
+	    the best way is overload operator!,it is useful to test if smart pointer is null.
+	    e.g.
+	      bool operator!() const
+	      {
+	        return !_internal_ptr;
+	      }  //  this is not implicit conversion,it is operator overloading.
+
+	      if (!sp) {
+	        ...
+	      } else {
+	        ...
+	      }  //  such statement has been supported by operator!().
+	      	 //  if (sp) ...  still an error  (no such conversion function has been defined)
+		 //  if (sp == 0) ... still an error
+	       
