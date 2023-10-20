@@ -2146,4 +2146,38 @@ Chapter Techniques >
 	      }  //  such statement has been supported by operator!().
 	      	 //  if (sp) ...  still an error  (no such conversion function has been defined)
 		 //  if (sp == 0) ... still an error
-	       
+
+          Converting Smart Pointers to Dumb Pointers >
+	    !  provide implicit conversion to dumb pointers will no longer need to overload
+	       operator!,operator void *,operator bool,etc.
+	    !  dont provide implicit conversion operators to dumb pointers unless there is a compelling
+	       reason to do so.
+	       #  the std::unique_ptr class provide a function get() which is used to get the raw pointer.
+
+	    e.g.
+	      SmartPointer<char> pc = new char;
+	      ...
+	      delete pc;
+
+	      //  pc is an object,thus it can not be deleted.
+	      //  if there is a implicit conversion from SmartPointer to char *,
+	      //  compilers want this function call(operator delete) to succeed,then
+	      //  pc will be converted to char *,so,the pointer would be deleted twice.
+
+	      class SmartPointerI {
+	      public:
+	        SmartPointerI(const char *arg);  //  constructor also a type-conversion operator
+              ...
+	      };
+	      
+	      void func(SmartPointerI &arg1, SmartPointerI &arg2);
+
+	      SmartPointer<char> pc1 = new char, pc2 = new char;
+	      func(pc1, pc2);
+		
+	      //  if want func() calls succeed,then compiler have to convert @pc1 and @pc2's type to
+	      //  SmartPointerI,suppose implict conversion from SmartPointer to _Type,then
+	      //  compiler will convert SmartPointer to _Type at first,convert _Type to SmartPointerI
+	      //  at second.
+	      //  but that will not success,because the converting sequence contains two user-defined
+	      //  conversion functions.
