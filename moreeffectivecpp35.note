@@ -2181,3 +2181,67 @@ Chapter Techniques >
 	      //  at second.
 	      //  but that will not success,because the converting sequence contains two user-defined
 	      //  conversion functions.
+
+          Smart Pointers and Inheritance-Based Type Conversions >
+	    suppose where is an inheritance hierarchy :
+	      	    	  Class A	  (TOP,all is "is-a")
+
+		    Class B       Class C
+		    
+		    Class D
+
+             void func(const SmartPointer<A> &arg);
+	     
+	     SmartPointer<B> pB = new B;
+	     SmartPointer<C> pC = new c;
+	     SmartPointer<D> pD = new D;
+
+	     func(pB);	     //  ERROR
+	     func(pC);	     //  ERROR
+	     func(pD);	     //  ERROR
+
+	     compiler would not compiles these function calls,because there is no conversion had been defined in
+	     SmartPointer which lets SmartPointer<B> SmartPointer<C> SmartPointer<D> convert to SmartPointer<A>.
+
+	     in the inheritance hierarchy,if the pointers are dumb pointer,then such converting is no problem.
+	     but SmartPointer is an object,not dumb pointer,if no conversion had been defined,compiler can not
+	     convert an object of type T1 to another object of type T2.
+
+	     solve method :
+	       1>  specialize SmartPointer template for _Type,add conversion to each template specializing.
+	       	   (this is the most bad way,programmer have to add a lot of conversions manually)
+	       2>  use member template.
+
+	       e.g.1
+	         SmartPointer<B>::operator SmartPointer<A>() const;
+		 SmartPointer<C>::operator SmartPointer<A>() const;
+		 ...
+
+		 //  bad idea
+
+	       e.g.2
+	         template<typename _ToConvert>
+		 SmartPointer<_Type>::operator SmartPointer<_ToConvert>() const
+		 {
+		   return SmartPointer<_ToConvert>(_internal_ptr);
+		 }
+
+		 //  compiler automatically find out template and instantiate it.
+		 //  if the @_internal_ptr is type of _Type and which is able to be
+		 //  converted to _ToConvert,then compiler will compiles code.
+
+	       !!  Attention :
+	       	     if there is an overload version for func() which is
+		       void func(const SmartPointer<B> &arg);
+	       	     after added member template for conversion,the following statements
+		     will be ambiguity.
+
+		     func(pB);
+		     func(pC);
+
+		     because convert @pC to Class B pointer is legal,of course convert it
+		     to Class A pointer also legal,so compiler can not find out which
+		     func() to be called.
+
+            !  this technique needs compiler supporting member template.
+	    !  smart pointers are smart,but they are not pointers.
