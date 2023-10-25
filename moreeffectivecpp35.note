@@ -2245,3 +2245,76 @@ Chapter Techniques >
 
             !  this technique needs compiler supporting member template.
 	    !  smart pointers are smart,but they are not pointers.
+
+          Smart Pointers and const >
+	    conversions involving const are a one-way street :
+	      it is safe to go from non-const to const,but it is not safe to go from const to
+	      non-const.
+	      furthermore,anything you can do with a const pointer you can do with a non-const
+	      pointer,but with non-const pointers you can do other things,too.
+
+	    const with dumb pointer :
+	      const char *c;			//  c pointed-to-const-char-object
+	      char * const c = &x;		//  const c pointed-to-char-object
+	      const char * const d = &x;	//  const c pointed-to-const-char-object
+
+	    const with smart pointer :
+	      SmartPointer<const char> c;
+	      const SmartPointer<char> c;
+	      const SmartPointer<const char> c;
+
+	      !  these three objects are different,if programmer wants to assign an object to another,
+	      	 there must be a conversion function is existed.
+		 e.g.
+		   SmartPointer<char> x(&a);
+		   SmartPointer<const char> y(x);  //  convert x to y.
+
+		 #  member template could automatically generate conversion functions,but that is not
+		    the best way.
+
+	     inheritance between const and non-const :
+	       this method will allows assign non-const object to const object.C++ default apply
+	       derived class converts to based class.
+
+	       template<typename _Type>
+	       class SmartPointerConst {
+	       ...
+	       private:
+	         const _Type *_internal_const_ptr;
+	       };
+
+	       template<typename _Type>
+	       class SmartPointer : public SmartPointerConst<_Type> {
+	       ...
+	       private:
+	         _Type *_internal_ptr;
+	       };
+
+	       but this way will waste space,because an object which type is SmartPointer will
+	       contains @_internal_const_ptr.
+	       the structure union could solve this problem.
+
+	       e.g.
+	         template<typename _Type>
+		 class SmartPointerConst {
+		 public:
+		   SmartPointerConst<_Type>(_Type *x) : _internal_const_ptr(x) {}
+		   ...
+		 protected:
+		   union {
+		     const _Type *_internal_const_ptr;
+		     _Type *_internal_ptr;
+		   };
+		 };
+
+		 template<typename _Type>
+		 class SmartPointer : public SmartPointerConst<_Type> {
+		 public:
+		   SmartPointer<_Type>(_Type *x) : SmartPointerConst<_Type>(x), _internal_ptr(x) {}
+		   ...
+		 };
+
+          !!  Smart pointers should be used judiciously,but every C++ programmer will find them
+	      useful at one time or another.  !!
+	  !!  Smart pointers are objects not pointers,but they emulate the behaviors the dumb pointer owns.  !!
+
