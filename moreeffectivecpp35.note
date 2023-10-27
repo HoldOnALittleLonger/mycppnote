@@ -2318,3 +2318,58 @@ Chapter Techniques >
 	      useful at one time or another.  !!
 	  !!  Smart pointers are objects not pointers,but they emulate the behaviors the dumb pointer owns.  !!
 
+
+  Item 29 : Reference counting
+       	  reference counting is a technique that allows multiple objects with the same value to share a 
+	  single representation of that value.
+	  there are two common motivations for the technique :
+	    1>  bookkeeping
+	    	(keeping track of an object's ownership is hard work)
+            2>  shared object and reference counting
+	    	(when an object employs reference counting,it owns itself)
+		(no need store object more than once)
+
+          bookkeeping is used in std::unique_ptr,there ownership would be transferred at the time that 
+	  operator=(std::unique_ptr<_Type> &&) was called.
+	  reference counting is used in std::shared_ptr,there several objects shared single value,and 
+	  they maintain a reference counter.
+
+	  as above,implemente reference counting have to maintain a reference counter between several
+	  class objects.
+	  e.g.
+	    class SharedObject {
+	    public:
+	    ...
+	    private:
+	      static struct {
+	        size_t _reference_counter;
+		void _destroyInternalData(void)
+		{
+		  if (!(--_reference_counter))
+		    delete[] _internal_array;
+		}
+	        char *_internal_array;
+	      } _data;
+
+	      /*
+	      struct {
+	        ...
+              } *_data;  //  definition of struct as same as above
+	      		 //  use pointer to instead static object
+	      */
+	    };
+
+	    the private member @data contains a reference counter and an array which is type of char;
+	    when copy operation is occured,have to increase @_reference_counter.
+	    if an object which is type of SharedObject is going to be destroyed,the destructor have to
+	    call @_destroyInternalData;
+
+	    !  nesting a struct in the private part of a class is a convenient way to give access to the 
+	       struct to all the members of the class,but to deny access to everybody else.
+	    !  the class whose implementation is based on reference-counting should emulate non-reference-counting
+	       version,that is if it is possible,should hide details from clients of that class.
+	    !  pointer-to-implementation will reduce memory request when program is running,because 
+	       this way is dynamically allocate or deallocate memory.
+	       static memory can not be deallocate dynamically and longer existed until program exited.
+	    
+
