@@ -2371,5 +2371,63 @@ Chapter Techniques >
 	    !  pointer-to-implementation will reduce memory request when program is running,because 
 	       this way is dynamically allocate or deallocate memory.
 	       static memory can not be deallocate dynamically and longer existed until program exited.
-	    
+
+          Copy-on-Write :
+	    sharing a value with other objects until we have to write on our own copy of the value.
+
+	    if an object is sharing a value with other and it would like to do write operation on the value,
+	    should write to its own copy.(under reference-counting)
+
+	    for implemente copy-on-write,we have to know what interface will be called for write a value,
+	    then,deal with copy-on-write in the interface.
+
+	    e.g.
+	      const char & ShareObject::operator[](int index) const  //  read-only version
+	      {
+	        return _data->_internal_array[index];
+	      }
+	      char & ShareObject::operator[](int index)      	      //  read-write version
+	      {
+	        if (_data->_reference_counter > 1)  //  copy-on-write,this version maybe called for write
+		{
+		  --_data->_reference_counter;
+		  _data = new value object;
+		}
+		return _data->_internal_array[index];
+	      }
+
+	      !  there is no way for C++ compilers to tell us whether a particular use of operator[] is
+	      	 for a read or a write,so we must be pessimistic and assume that all calls to the
+		 non-const operator[] are for writes.
+
+          Pointers,References,and Copy-on-Write :
+	    Reference-counting and Copy-on-Write will bring this problem :
+	      ShareObject s1("hello world");
+	      
+	      char &r = s1[0];
+	      char *p = &s1[1];
+
+	      ShareObject s2 = s1;  //  now s2 and s1 share a value
+
+	      r = 'd';  //  "hello world" => "dello world" <- s1 <- s2
+	      *p = 't'; //  "dello world" => "dtllo world" <- s1 <- s2
+	      	   	//  these statements have been modified both s1 and s2.
+
+	    !  there is no way the ShareObject copy constructor can detect this problem.
+
+	    sovling methods :
+	      1>  ignore.to pretend it does not exist.(bad idea)
+	      2>  define them out of existence.put somehing in the documentation that says,more or less,
+	      	  "Don't do that.if you do,results are undefined."(not good)
+	      3>  use shareable flag.(best)
+	      	  add a flag to each class object indicating whether that object is shareable.
+		  turn the flag on initially,but turn it off whenever the non-const operator[] is invoked
+		  on the value represented by that object.(if the interface maybe write a value,have to turn
+		  off the flag when it be called)
+		  !  this way will reduce the amount of value sharing between objects.
+
+		  e.g.
+		    char &r = s1[0];  //  non-const version was called,flag will be truned off
+		    ...
+		    ShareObject s2(s1);  //  flag is false,copy-constructor will copy @s1 not sharing.
 
