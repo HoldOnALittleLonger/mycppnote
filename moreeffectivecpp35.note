@@ -1834,7 +1834,7 @@ Chapter Techniques >
 	      then use proxy creation function to construct object.
 	      so the better way is method1.
 
-	    !  private destructor will forbid inheritance and comtainment,for solve this problem,
+	    !  private destructor will forbid inheritance and containment,for solve this problem,
 	       declare destructor protected.the class contains a object is requiring heap-based object,
 	       should contains its pointer to instead object.
 
@@ -2430,4 +2430,101 @@ Chapter Techniques >
 		    char &r = s1[0];  //  non-const version was called,flag will be truned off
 		    ...
 		    ShareObject s2(s1);  //  flag is false,copy-constructor will copy @s1 not sharing.
+
+          A Reference-Counting Base Class :
+	    abstract reference-counting as a base class,if the class needs reference-counting functionality,
+	    it can inherit the base class.
+	    e.g.
+	      class RCObject {
+	      public:
+	        addRef();
+		removeRef();
+		isShared();
+		isShareable();
+		makeUnshareable();
+		RCObject();
+		RCObject(const RCObject &);
+		RCObject &operator=(const RCObject &);
+              protected:
+	        virtual ~RCObject() = 0 {}
+	
+              private:
+	        size_t _ref_counter;
+		bool _shareable;
+	      };
+
+	      @_ref_counter default value is 0,the creator of the class is referring it,do not need to set
+	      @_ref_counter to 1 at the time the object is initializing.
+	      @_shareable default value is true,this flag maybe changed to false later if a writing is occurred.
+	      removeRef() is a proxy destructor,it will not only decrease @_ref_counter,it also delete this when
+	      @_ref_counter is equal to 0.
+	      operator=() will do nothing,because,reference-counter was assigned do not change the number of objects
+	      sharing the same value.do nothing is do right thing.
+	      protected destructor is used to forbid non-heap-based object been created,because "delete this;" is safely
+	      only this pointer is the head of the memory space which had been allocated.
+
+          Automating Reference Count Manipulations :
+	    when an object is initialized and which is reference-counting and inherited RCObject,it have to calls 
+	    addRef() manually,and calls removeRef() in its destructor,have to call responding interfaces anytime
+	    anything interesting happens on it.
+	    if the value container(inherited RCObject) which is composition of a class and implemented as pimpl,
+            then smart-pointer can automatically detects such interesting happens and automatically calls the
+	    responding interfaces.
+
+	    e.g.
+	      class A {
+	      public:
+	        class AValue : public RCObject {
+		...
+		};
+
+              private:
+	        SmartPointer<AValue> _avalue;
+	      };
+
+	      A::A() : _avalue(new AValue) {}
+
+	      virtual A::AValue *A::AValue::virtual_copy_constructor()
+	      {
+	        return new A::AValue(*this);
+	      }  //  supports to the case which virtual copying is required.
+	      	 //  derived class can redefine this function for its own version.
+
+	      template<typename _Type>
+	      class SmartPointer {
+	      ...
+	      private:
+	        _Type *pointee;
+	      };
+
+	      template<typename _Type>
+	      SmartPointer<_Type>::SmartPointer(_Type *realP)
+	      {
+	        proxy_init();
+	      }
+
+	      template<typename _Type>
+	      SmartPointer<_Type>::SmartPointer(const SmartPointer<_Type> &rhs)
+	      {
+	        proxy_init();
+	      }
+
+	      //  this function is a virtual constructor,which as a proxy to init object.
+	      template<typename _Type>
+	      static void SmartPointer<_Type>::proxy_init()
+	      {
+	        if (!pointee)
+		  return;
+	        if (!pointee->isShareable())
+		  pointee = new _Type(*pointee);
+		pointee->addRef();
+	      }
+	      
+
+	      !  suppose there is class named K which is inherited A::AValue,and template parameter
+	      	 _Type == A::Value,but pointee is realy points to a K,then the statement :
+		   "pointee = new _Type(*pointee);"
+		 needs supporting from virtual copy constructor in A::K :
+		   "pointee = pointee->virtual_copy_constructor();"
+	    
 
