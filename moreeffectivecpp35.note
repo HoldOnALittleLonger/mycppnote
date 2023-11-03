@@ -2456,7 +2456,7 @@ Chapter Techniques >
 	      @_ref_counter default value is 0,the creator of the class is referring it,do not need to set
 	      @_ref_counter to 1 at the time the object is initializing.
 	      @_shareable default value is true,this flag maybe changed to false later if a writing is occurred.
-	      removeRef() is a proxy destructor,it will not only decrease @_ref_counter,it also delete this when
+	      removeRef() is a proxy destructor,it will not only decrease @_ref_counter,it also delete @this when
 	      @_ref_counter is equal to 0.
 	      operator=() will do nothing,because,reference-counter was assigned do not change the number of objects
 	      sharing the same value.do nothing is do right thing.
@@ -2465,11 +2465,11 @@ Chapter Techniques >
 
           Automating Reference Count Manipulations :
 	    when an object is initialized and which is reference-counting and inherited RCObject,it have to calls 
-	    addRef() manually,and calls removeRef() in its destructor,have to call responding interfaces anytime
+	    addRef() manually,and calls removeRef() in its destructor,have to call corresponding interfaces anytime
 	    anything interesting happens on it.
 	    if the value container(inherited RCObject) which is composition of a class and implemented as pimpl,
             then smart-pointer can automatically detects such interesting happens and automatically calls the
-	    responding interfaces.
+	    corresponding interfaces.
 
 	    e.g.
 	      class A {
@@ -2526,5 +2526,28 @@ Chapter Techniques >
 		   "pointee = new _Type(*pointee);"
 		 needs supporting from virtual copy constructor in A::K :
 		   "pointee = pointee->virtual_copy_constructor();"
-	    
+
+          Putting it All Together :
+	    e.g.
+
+	       ShareObject{contains: SmartPointer<AValue>}
+	       			     SmartPointer{contains: _Type *pointee -> pointed to Heap Memory}
+	       AValue{contains: _data} public inherited RCObject
+	       RCObject is a reference-counting class as the base class of others
+
+	    apply the benefits of reference counting to some class which we
+	    do not know its source code(object in library) :
+	      e.g.
+	        
+		ShareObject{contains: SmartPointer<the_class_we_want_apply>}
+				      SmartPointer{contains: struct CountHolder *counter}
+				      CountHolder{contains: _Type *pointee -> pointed to @target} public inherited RCObject
+
+          !!  Reference counting is an optimization technique predicated on the assumption that objects will commonly
+	      share values.if this assumption fails to hold,reference counting will use more memory than a more conventional
+	      implementation and it will execute more code.  !!
+	  !!  reference counting is most useful for improving efficiency under the following conditions :
+	        relatively few values are shared by relatively many object.
+		object values are expensive to create or destroy,or they use lots of memory.(the values have to be shared)
+          !!  use Reference-Counting judiciously.  !!
 
