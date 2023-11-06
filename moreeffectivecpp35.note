@@ -2551,3 +2551,41 @@ Chapter Techniques >
 		object values are expensive to create or destroy,or they use lots of memory.(the values have to be shared)
           !!  use Reference-Counting judiciously.  !!
 
+
+  Item 30 : Proxy classes
+          !  array dimensions must be known during compilation,even operator new.
+
+	  Objects that stand for other objects are often called proxy objects,and the classes
+	  that give rise to proxy objects are often called proxy classes!(surrogates)
+	  e.g.
+	    template<typename _Type, unsigned short columns, unsigned short rows>
+	    class Array2D {
+	    public:
+	      class Array1D {
+	      public:
+	        _Type &operator[](int index);
+		...
+              private:
+	        _Type _inner_1D[rows];
+	      };
+
+	      ...
+	      Array1D operator[](int index);
+	      ...
+	    private:
+	      Array1D _inner_proxy_object[columns];
+	    };
+
+	    Array2D<char, 3, 5> the_array2d;
+	    the_array2d[1][3];  //  -->  (the_array.operator[](1)).operator[](3);  <legal>
+	    			//  kept the traditional syntax for multidimensions array
+				//  of both C and C++.
+				//  the_array(1, 3) a curious syntax it is look like a
+				//  function invocation.
+
+	    //  the class Array1D is a proxy class,which represent the one-dimension array
+	    //  of the two-dimensions array,but the clients of Array2D will not be aware of
+	    //  the existence of the proxy object _inner_proxy_object,which represents a
+	    //  one-dimension array in Array2D.
+	    
+
