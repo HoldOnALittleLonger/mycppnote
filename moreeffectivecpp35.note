@@ -2587,5 +2587,54 @@ Chapter Techniques >
 	    //  of the two-dimensions array,but the clients of Array2D will not be aware of
 	    //  the existence of the proxy object _inner_proxy_object,which represents a
 	    //  one-dimension array in Array2D.
-	    
+
+          Distinguishing Reads From Writes via operator[] :
+	    lvalue it might be modified,rvalue it can not be modified.
+	    !  the function which returns by-value,C++ limits the use of such by-value returns to rvalue
+	       contexts only.
+
+	    the main concept for distinguish reads from writes via operator[] that is postpone the
+	    stag of determining.in other words,we need not to examine whether operator[] is used for
+	    read or write,we can see later the result from operator[] how to be used.
+	    proxy class can stands for the object operator[] would returns,after operator[] returned,
+	    such a proxy class object will represents the object we really wants accessing to.
+
+	    e.g.
+	      class Array {
+	      public:
+	        class ElementProxy {
+		public:
+		  ElementProxy(Array &, size_t);
+		  ElementProxy &operator=(size_t);
+		  ElementProxy &operator=(const ElementProxy &);
+		  operator int() const;
+		private:
+		  Array &_representing;
+		  size_t _index;
+		};
+
+                friend class ElementProxy;  //  bypass the ElementProxy object accessing the 
+		       	     		    //  data in Array object via @_representing.
+					    //  i.e. _representing.data->elements[_index]
+
+		...
+
+		ElementProxy operator[](int index)
+		{
+		  return ElementProxy{*this, index};
+		}
+
+		const ElementProxy operator[](int index) const
+		{
+		  //  returns a const object.
+		  //  the calling to const_cast<Array &> is necessary for
+		  //  satisfy the constructor of ElementProxy.
+		  return ElementProxy{const_cast<Array &>(*this), index};
+		}
+		//  !!  const ElementProxy object can not calls ElementProxy::operator=
+		//      because these functions are not const.(const this pointer)
+		//      but such const this pointer is satisfy the requirement
+		//      of ElementProxy::operator int() const
+	      ...
+	      };
 
