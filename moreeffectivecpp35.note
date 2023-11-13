@@ -2638,3 +2638,47 @@ Chapter Techniques >
 	      ...
 	      };
 
+          Limitations :
+	    proxy have to emulates all the possbile behaviors(legal) of the real object which it is 
+	    standing for.
+	    e.g.
+	      int Object;
+	      Proxy<int> p(&Object);
+	      p++;
+	      int *pointer = &p;	//  if proxy does not defined such behaviors,
+	      	  	     		//  these statements will no longer be compiled.
+
+	    if the object the proxy class stands for has some member functions,then for make member function
+	    invocation succeed,proxy class have to encapsulates all the member functions inside the object
+	    it is standing for.
+	    e.g.
+	      std::string str1("Hello world");
+	      Proxy<std::string> s(&str1);
+	      s.c_str();		//  the same named function have to be defined in Proxy.
+
+	    suppose there is a function which requires two char references as its parameters,then,
+	    passed two Proxy<char> to it would not be compiled.
+	    e.g.
+	      void func(char &, char &);
+
+	      ...
+	      Proxy<char> pc1(&c1);
+	      Proxy<char> pc2(&c2);
+
+	      //  Proxy::operator _Type() has been defined.
+	      func(pc1, pc2);  //  would fail.because Proxy::operator _Type() const returns by-value,
+	      		       //  C++ refuses to bind reference to temporary object.
+
+	      another :
+	      void func2(std::string &);
+
+	      ...
+	      Proxy<std::string> ps1(&str1);
+	      func2(ps1);  //  would fail.requires convert ps1 to std::string &,but C++ does not 
+	      		   //  allow more than one user-defined converting function was invoked in
+			   //  sequence.
+
+          !!  use Proxy Classes judiciously.  !!
+	  !!  Proxy Classes bring costs of constructor and destructor.  !!
+	      
+	      
