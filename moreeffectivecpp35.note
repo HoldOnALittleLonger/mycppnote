@@ -2682,3 +2682,33 @@ Chapter Techniques >
 	  !!  Proxy Classes bring costs of constructor and destructor.  !!
 	      
 	      
+  Item 31 : Making functions virtual with respect to more than one object
+       	  C++ supports virtual function,and a virtual function is depend on only one object.if there is
+	  a requestion that require a function which behavior depends on its several parameter,C++ virtual
+	  function will not satisfy the request.
+
+	  the C++ programmer from the object-oriented programming community know as a virtual function call
+	  is termed a "message dispatch".
+	  double-dispatch : a call that is virtual on two parameters is implemented through a "double dispatch".
+	  multiple-dispatch : a function acting virtual on several parameters.
+
+	  C++ is not directly supports such technique,but allows programmer go to achive it.
+	  there are several implement methods for "message dispatch" >
+
+	    Using Virtual Functions and RTTI :
+	      RTTI is runtime type identification,for use this technique,have to include header <typeinfo>.
+	      RTTI is only supports to the classes they are contain virtual function.
+	      typeid() returns a reference refers to the type_info class for its parameter,parameter could
+	      be the name of a class or an object of a class.
+	      e.g.
+	        class Base { virtual void func(); };
+	        class A : public Base {};
+		class B : public Base {};
+		
+		A a;
+		B b;
+		A c;
+		
+		if (typeid(a) == typeid(c)) ...;	//  TRUE,because @a and @c are same class type
+		if (typeid(a) != typeid(b)) ...;	//  FALSE,because @a and @b are not same class type
+		if (typeid(a) == typeid(A)) ...;        //  TRUE,@a is type of A
