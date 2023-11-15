@@ -2712,3 +2712,43 @@ Chapter Techniques >
 		if (typeid(a) == typeid(c)) ...;	//  TRUE,because @a and @c are same class type
 		if (typeid(a) != typeid(b)) ...;	//  FALSE,because @a and @b are not same class type
 		if (typeid(a) == typeid(A)) ...;        //  TRUE,@a is type of A
+
+              virtual function is single dispatch,and this tenique shift the burden of generating and 
+	      maintaining type-based function calls from programmers to compilers.
+	      if the program has been employed RTTI,it will becomes unmaintainable,enhancement of such programs
+	      eventually becomes unthinkable.
+
+	      e.g.
+	        class BaseClass {
+		public:
+		  virtual void doSomething(BaseClass &other) = 0;
+		  ...
+		};
+
+		class DerivedA : public BaseClass {
+		public:
+		  virtual void doSomething(BaseClass &other);
+		  ...
+		};
+
+		//  we do not need to check what the type info of *this is,because
+		//  this function is virtual defined in DerivedA,*this must be DerivedA object.
+		virtual void DerivedA::doSomething(BaseClass &other)
+		{
+		  const type_info tinfo_other(typeid(other));
+		  
+		  if (tinfo_other == typeid(BaseClass))
+		    //  do something
+		  else if (tinfo_other == typeid(*this))
+		    //  do something
+		  else
+		    //  throw exception or report the situation encountered via different way
+
+		  ...
+		}
+
+		!  if a new class which inherited BaseClass had been added into the system,
+		   each RTTI if-then-else statement(clause) have to handle the new type.
+		   that is,maintenance becomes difficult.
+
+	      RTTI is not a good idea for program design at there,but sometimes it will be useful.
