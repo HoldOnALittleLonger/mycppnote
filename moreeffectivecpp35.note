@@ -2752,3 +2752,58 @@ Chapter Techniques >
 		   that is,maintenance becomes difficult.
 
 	      RTTI is not a good idea for program design at there,but sometimes it will be useful.
+
+            Using Virtual Functions Only :
+	      double dispatch require the two objects'types has known.but using RTTI,program will becomes
+	      unmaintainable.
+	      there is a way to implement double dispatch just use virtual function.
+	      the principle is that,if the virtual function represents one dispatch,we can overload it
+	      to achieve double dispatch.
+	      e.g.
+	        class BaseClass {
+		public:
+		  virtual void doSomething(BaseClass &) = 0;
+		  virtual void doSomething(DerivedA &) = 0;
+		  virtual void doSomething(DerivedB &) = 0;
+		...
+		};
+
+		class DerivedA : public BaseClass {
+		public:
+		  virtual void doSomething(BaseClass &other)
+		  {
+		    other.doSomething(*this);
+		  }
+
+
+		  virtual void doSomething(DerivedA &other)
+		  {
+		    //  do something
+		  }
+
+		  virtual void doSomething(DerivedB &other);
+		...
+		};
+
+		class DerivedB : public BaseClass { ... };
+
+		!  inside the overloaded doSomething with BaseClass & as parameter,we just calls to
+		   other_type::doSomething(*this),because we have been known the type of *this,it is
+		   DerivedA.
+		   we do not know what is the type of @other is,but we can calls its doSomething() with
+		   *this,a reference refers to DerivedA object.
+		   inside other::doSomething(),all two objects'types would be known.
+		   this is the implementation for double dispatch through virtual function only.
+
+              disadvantages :
+	        1>  if there are several classes in the inheritance hierarchy,then the total number of 
+		    virtual functions with its overloading will be 1 + n(1 is the base class,@n is the number
+		    of classes under base class)
+		    programmer have to overrides these overloadings in each inherited class.
+		2>  lost extensibility.
+		    if a new class will be added into the hierarchy,then every class have to contains a 
+		    new overloading which parameter is new_class_type reference.
+		3>  if author try to add new class into system,then it have to modify the class headers
+		    and recompile the library.if program had been compiled in static compiling,then program
+		    have to be recompile,too.RTTI no recompile request.
+		   
