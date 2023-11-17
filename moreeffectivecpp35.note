@@ -2806,4 +2806,70 @@ Chapter Techniques >
 		3>  if author try to add new class into system,then it have to modify the class headers
 		    and recompile the library.if program had been compiled in static compiling,then program
 		    have to be recompile,too.RTTI no recompile request.
+
+            Emulating Virtual Function Tables :
+	      there is a way to improve virtual function only method.
+	      we has known that C++ compiler do virtual function calling via vtbl,it is an array conceptually.
+	      so,we also can do this ourself,that is emulating virtual function tables.
+	      (This method conceptually as same as Lisp data-driven design.)
+
+	      class member function pointer :
+	        return-type ClassName::(*)(@arguments)
+		!  a pointer points to a member object inside a class.
+		   member object inside a class maybe a variable object/constant object or member function.
+		   member function inside a class is an object,so '&' is used to retrive its address.
+
+		e.g.
+		  size_t std::string(*str_member_pointer)(void) = &std::string::length;
+		  std::string x;
+		  x.*str_member_pointer;
+		  (&x)->*str_member_pointer;  //  structure accessing demands the target is an object,
+		  			      //  so '*' is used to derefer the member pointer.
+
+	      !  typeid() returns an object which type is type_info,and the member function name() could
+	      	 retrive the class name which the type_info object is represeting.
+		 (different implementations use different types to encapsulate the class name,it maybe std::string
+		 or another type.)
+
+	      std::map from STL can be used to establish mapping between two types.
+	      for emulate virtual function table,we can establish mapping between class name and member function pointer.
+
+	      e.g.
+	        class BaseClass {
+		public:
+		  virtual void doSomething(BaseClass &) = 0;
+		...
+		};
+
+		class DerivedA : public BaseClass {
+		public:
+		  typedef void (DerivedA::*MemberFunctionPtr)(BaseClass &);	   //  member function pointer
+		  typdef std::map<std::string, MemberFunctionPtr> CUSTOMIZE_VTBL;  //  container
+
+		  virtual void doSomething(BaseClass &other)
+		  {
+		    MemberFunctionPtr calling_entity = lookup(other);
+		    if (calling_entity)
+		      (this->*calling_entity)(other);
+		    else
+		      throw ERROR;
+		    ...
+		  }
+		  
+		  virtual void PeerIsDerivedA(BaseClass &);	//  these functions will be putted into container
+		  virtual void PeerIsDerivedB(BaseClass &);
+		  ...
+
+		  static MemberFunctionPtr lookup(BaseClass &);  //  find the calling entity from CUSTOMIZE_VTBL
+
+		  ...
+		};
+
+		class DerivedB : public BaseClass { ... };
+		class DerivedC : public BaseClass { ... };
+
+              !  RTTI is still needed,but it will be only used in one place where the class name is required,
+	      	 there is inside the function lookup().
+	         suppose,a new type will be added into the system,we just adjust the @CUSTOMIZE_VTBL and put
+		 the handle function into the class which will interact to the new type as well.
 		   
