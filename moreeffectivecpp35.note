@@ -2872,4 +2872,32 @@ Chapter Techniques >
 	      	 there is inside the function lookup().
 	         suppose,a new type will be added into the system,we just adjust the @CUSTOMIZE_VTBL and put
 		 the handle function into the class which will interact to the new type as well.
+
+            Initializing Emulated Virtual Function Tables : 
+	      it is simple,just initialize a std::map object.
+	      we can put all the steps into a private function which will initialize the std::map object for us.
+	      e.g.
+	        CUSTOMIZE_VTBL *DerivedA::initializeMap(void)
+	        {
+  		  CUSTOMIZE_VTBL *theVtbl = new CUSTOMIZE_VTBL;
+		  (*theVtbl)["PeerIsDerivedA"] = &PeerIsDerivedA;
+		  (*theVtbl)["PeerIsDerivedB"] = &PeerIsDerivedB;
+		  return theVtbl;
+	        }
+
+		static DerivedA::MemberFunctionPtr DerivedA::lookup(const BaseClass &peer)
+		{
+		  static std::unique_ptr<CUSTOMIZE_VTBL> customize_vtbl(initializeMap());
+		  //  smart pointer manages the resource.
+		  ...
+		}
+
+              !  Attention : the type MemberFunctionPtr == void DerivedA::(*)(BaseClass &),
+	      	 	     so all the elements will be putted into @CUSTOMIZE_VTBL must be same type,
+			     that is none of element which is a function and expected an argument with
+			     the type is "DerivedA &".
+			     DO NOT EMPLOY reinterpret_cast operator try to cast function type,
+			     that will be disaster in MI.
+			     if necessary,member function is able to employs dynamic_cast operator to
+			     casts the type of its argument for itself.
 		   
