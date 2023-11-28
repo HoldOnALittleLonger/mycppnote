@@ -2880,8 +2880,8 @@ Chapter Techniques >
 	        CUSTOMIZE_VTBL *DerivedA::initializeMap(void)
 	        {
   		  CUSTOMIZE_VTBL *theVtbl = new CUSTOMIZE_VTBL;
-		  (*theVtbl)["PeerIsDerivedA"] = &PeerIsDerivedA;
-		  (*theVtbl)["PeerIsDerivedB"] = &PeerIsDerivedB;
+		  (*theVtbl)["DerivedA"] = &PeerIsDerivedA;
+		  (*theVtbl)["DerivedB"] = &PeerIsDerivedB;
 		  return theVtbl;
 	        }
 
@@ -2900,4 +2900,85 @@ Chapter Techniques >
 			     that will be disaster in MI.
 			     if necessary,member function is able to employs dynamic_cast operator to
 			     casts the type of its argument for itself.
+
+            Using Non-Member doSomething Functions :
+	      the method vtbl-like requires the class contains the member functions which interactive to
+	      another type,if the class'declaration did not contain that,an ERROR will be thrown to caller,
+	      even the class careless about the new type added into the hierarchy.
+
+	      move the vtbl emulating and lookup outside to class hierarchy will prevent the recompiling when
+	      new class type added,that is use Non-Member doSomething Functions.(modularize)
+	      e.g.
+	        namespace {
+		  typedef void (*doSomethingFuncPtr)(BaseClass &);
+		  typedef std::map<std::pair<std::string, std::string>, doSomethingFuncPtr> CUSTOMIZE_VTBL;
+
+		  void DerivedAwithDerivedB(BaseClass &a, BaseClass &b);
+		  void DerivedBwithDerivedA(BaseClass &b, BaseClass &a)
+		  {
+		    DerivedAwithDerivedB(a, b);
+		    ...
+		  }  //  symmertric
+
+		  doSomethingFuncPtr lookup(const std::string &className1, std::string &className2);
+		  ...
+
+		  void doSomething(BaseClass &obj1, BaseClass &obj2)
+		  {
+		    //  different order for names will let lookup() returns different function pointer.
+		    doSomethingFuncPtr dsfp = lookup(typeid(obj1).name(), typeid(obj2).name());
+		    if (dsfp)
+		      dsfp(obj1, obj2);
+		    else
+		      throw UNKNOWN_TYPES;  //  of course,author can modify the FALSE statement
+		      	    		    //  to prevent error would be thrown if there is
+					    //  no associate between @obj1 and @obj2.
+					    //  because,if @obj1 does not care about @obj2,there must
+					    //  be none of existense of such function which handling @obj1 and @obj2.
+		  }
+		};  //  no name namespace means translation unit private.
+
+		//  recompiling problem will be no longer existed.
+
+            Inheritance and Emulated Virtual Function Tables :
+	      if the design need to implement double-dispatching and need to support inheritance-based 
+	      parameter conversions,your only practical recourse is to fall back on the double-virtual-function-call
+	      mechanism,that implies you will also have to put up with everybody recompiling when you add to your 
+	      inheritance hierarchy.
+
+            Initializing Emulated Virtual Function Tables (Reprise) :
+	      For dynamically add entry into map or remove from map,we can encapsulate map to a class.
+	      and that class will has some primitives addEntry() removeEntry() lookup() etc.
+	      (if wants there only one map is existed when program is running,can use the methods introduced
+	       in Item26)
+
+	      For ensure that any associative function must be added into map before using,there are two
+	      methods :
+	        1>  let class constructor to checks if the functions had been added into map.
+		    (runtime performance penalty)
+		2>  design a constructor for map.we can let an class becomes map's constructor.
+		    e.g.
+		      class RegisterAssociativeFunc {
+		      public:
+		        RegisterAssociativeFunc(const std::string &type1, const std::string &typ2,
+						doSomethingFuncPtr func, bool symmetric = true)
+			{
+			  theMap().addEntry(type1, type2, func, symmetric);
+			  //  theMap - static THEMAP &theMap();  technique from Item26.
+			}
+		      };
+
+		    //  these objects will be created before main begining.
+		    RegisterAssociativeFunc raf("DerivedA", "DerivedB", DerivedAwithDerivedB);
+		    RegisterAssociativeFunc raf("DerivedB", "DerivedC", DerivedBwithDerivedC);
+	      	    ...
+
+		    int main(void)
+		    {
+		      ...
+		    }
+	      
+          !!  deeply understand what the title means.  !!
+	  !!  deeply understand what is Genericity.  !!
+	      
 		   
