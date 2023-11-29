@@ -2982,3 +2982,31 @@ Chapter Techniques >
 	  !!  deeply understand what is Genericity.  !!
 	      
 		   
+Chapter Miscellany >
+
+  Item 32 : Program in the future tense
+       	  things will change.
+
+	  ! You need a virtual destructor whenever someone deletes a B* that actually points to a D.
+	  ! If a public base class does not have a virtual destructor,no derived class nor members of a
+	    derived class should have a destructor.
+	  ! If a multiple inheritance hierarchy has any destructors,every base class should have a 
+	    virtual destructor.
+
+	  Future-tense thinking simply adds a few additional considerations :
+	    Provide complete classes,even if some parts are not currently used.
+	    When new demands are made on your classes,you are less likely to
+	    have to go back and modify them.
+
+	    Design your interfaces to facilitate common operations and prevent common errors.
+	    Make the classes easy to use correctly,hard to use incorrectly.For example,prohibit 
+	    copying and assignment for classes where those operations make no sense.
+	    Prevent partial assignments.
+
+	    If there is no great penalty for generalizing your code,generalize it.
+	    For example,if you are writing an algorithm for tree traversal,consider generalizing
+	    it to handle any kind of directed acyclic graph.
+
+	  !!  Future tense thinking increases the reusability of the code you write,enhances its
+	      maintainability,makes it more robust,and facilitates graceful change in an environment
+	      where change is a certainty.it must be balanced against present-tense constraints.  !!
