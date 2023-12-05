@@ -3028,6 +3028,7 @@ Chapter Miscellany >
 	    	  	//  so call it via the type of the pointer,not
 			//  the real type which points now.
 			//  thus,only the Base part of @a will be modified.
+			//  calls to Base::operator=(const Base &rhs).
 
           !  such statement often appeared in C.
 
@@ -3089,6 +3090,8 @@ Chapter Miscellany >
 	    an abstract base class between them.
 
 	    class AbstractBase {
+	    protected:
+	      AbstractBase &operator=(const AbstractBase &rhs);
 	    public:
 	      virtual ~AbstractBase() = 0;
 	    ...
@@ -3116,12 +3119,17 @@ Chapter Miscellany >
 	    *pA = *pB;  //  error,A::operator=() expects an argument with type of a reference to an
 	    	  	//  object is type of A.
 	    *pA = *pA;  //  fine.call to A::operator=().
+	    	  	//  cant not access protected member(AbstractBase::operator=()) outside class,
+			//  and AbstractBase can not be instantiated,so do not need to worry about
+			//  @ab1 = @ab2.
 	    a = a;      //  fine.call to A::operator=().
 	    ...
 
 	    prevented mixed-type assignment and partial copy!!!
 	    !  generally,abstract base class does not exist any data member,but it still can has some
-	       data members.these data members must be private or protected.
+	       data members.
+	       deprecate that abstract base class has data members,because them is used to represents
+	       interfaces.
 
           if you have two concrete classes C1 and C2 and you would like C2 to publicly inherit from C1,
 	  you should transform that two-class hierarchy into a three-class hierarchy by creating a new
