@@ -3030,7 +3030,7 @@ Chapter Miscellany >
 			//  thus,only the Base part of @a will be modified.
 			//  calls to Base::operator=(const Base &rhs).
 
-          !  such statement often appeared in C.
+          !  such statement often appear in C.
 
 	  resolve it via virtual declaring :
 	    virtual <Type> operator=(const Base &rhs);
@@ -3104,8 +3104,8 @@ Chapter Miscellany >
 	    class A : public AbstractBase { ... };
 	    class B : public AbstractBase { ... };
 
-	    !  abstract base class can not be instantiated,so no longer to worry about
-	       partial copy and instantiating,etc.
+	    !  abstract base class can not be instantiated and operator=() is protected,so no longer to
+	       worry about partial copying and instantiating,etc.
 
 	    no longer need to declare virtual operator=() for there class.
 	    A a;
@@ -3116,16 +3116,19 @@ Chapter Miscellany >
 	    AbstractBase *pB = &b;
 	    AbstractBase *pBase = &base;
 
-	    *pA = *pB;  //  error,A::operator=() expects an argument with type of a reference to an
-	    	  	//  object is type of A.
-	    *pA = *pA;  //  fine.call to A::operator=().
-	    	  	//  cant not access protected member(AbstractBase::operator=()) outside class,
-			//  and AbstractBase can not be instantiated,so do not need to worry about
-			//  @ab1 = @ab2.
+	    *pA = *pB;  //  error,try to call AbstractBase::operator=().
+	    *pA = *pA;  //  error,try to call AbstractBase::operator=().
+	    ...
 	    a = a;      //  fine.call to A::operator=().
 	    ...
+	    a = b;      //  no such operator= function with a parameter is type of const B& in A.
 
-	    prevented mixed-type assignment and partial copy!!!
+	    prevented mixed-type assignment and partial copying!!!
+	    partial copying is come from "*pA = *pB;",but as above,it is failed to access protected member
+	    outside class.our goal is not let partial copying becomes completed copying,is prohibit
+	    partial copying.such syntax "*pA = *pB;" should not appears in C++ code when we working with
+	    C++ class.(polymorphism)
+
 	    !  generally,abstract base class does not exist any data member,but it still can has some
 	       data members.
 	       deprecate that abstract base class has data members,because them is used to represents
