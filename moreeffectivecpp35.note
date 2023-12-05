@@ -3010,3 +3010,142 @@ Chapter Miscellany >
 	  !!  Future tense thinking increases the reusability of the code you write,enhances its
 	      maintainability,makes it more robust,and facilitates graceful change in an environment
 	      where change is a certainty.it must be balanced against present-tense constraints.  !!
+
+
+  Item 33 : Make non-leaf classes abstract
+       	  suppose,there is a base class named Base,which is inherited by both A and B.
+	    class Base { ... };
+	    class A : public Base { ... };
+	    class B : public Base { ... };
+	  and the function operator=() was defined in each,now try to do assignment between A and B.
+	  e.g.
+	    A a;
+	    A b;
+	    Base *pA = &a;
+	    Base *pB = &b;
+
+	    *pA = *pB;  //  operator=() is not virtual function,
+	    	  	//  so call it via the type of the pointer,not
+			//  the real type which points now.
+			//  thus,only the Base part of @a will be modified.
+
+          !  such statement often appeared in C.
+
+	  resolve it via virtual declaring :
+	    virtual <Type> operator=(const Base &rhs);
+
+	    *pA = *pB;  //  call operator=() via the type of the object
+	    	  	//  @pA is points now.
+	    
+	    problem1 :
+	      A a;
+	      B b;
+	      ...
+	      *pA = *pB;  //  legal! assign @b to @a.
+	      	    	  //  but this is what the behavior we want.
+
+	    resolve problem1 :
+	      no virtual declaring.and declare Base::operator=() as a private member
+	      or a protected member.
+	      
+	      *pA = *pB;  // try to call a private member function Base::operator().
+
+	      but the operator=() inside both A and B must be able to access
+	      Base::operator=() to assign Base part,declare Base::operator=() as a
+	      protected member can resolve this problem.
+	      !  but such statement "base1 = base2;" will fail.
+
+	    problem2 :
+	      have to employ dynamic_cast<>() for the implementation of operator=().
+
+	      A a;
+	      A b;
+	      ...
+	      *pA = *pB;
+
+	      A &A::operator=(const Base &rhs)
+	      {
+	        const A &rhs_local = dynamic_cast<const A &>(rhs);
+		...  //  do something.
+	      }
+
+	      but dynamic_cast might throw exception(std::bad_cast),and it must
+	      consults a type_info structure.
+	      then everytime the operator=() was invoked,such costs will have to
+	      pay.
+
+	    resolve problem2 :
+	      define another operator=(const A &rhs) without virtual,
+	      and it as a term of implementing for virtual operator=().
+
+	      A &A::operator(const A &rhs);
+	      A &A::operator(const Base &rhs)
+	      {
+	        return operator=(dynamic_cast<const A &>(rhs));
+	      }
+
+          resolve it via abstract base class : 
+	    because A and B is publicly inherit from Base,so there could has
+	    an abstract base class between them.
+
+	    class AbstractBase {
+	    public:
+	      virtual ~AbstractBase() = 0;
+	    ...
+	    };  //  if the class is none of any member but must as an abstract base class,
+	    	//  the destructor is properly becomes pure virtual function.
+
+	    AbstractBase::~AbstractBase() {}  //  have to implement pure virtual destructor outside class.
+
+	    class Base : public AbstractBase { ... };
+	    class A : public AbstractBase { ... };
+	    class B : public AbstractBase { ... };
+
+	    !  abstract base class can not be instantiated,so no longer to worry about
+	       partial copy and instantiating,etc.
+
+	    no longer need to declare virtual operator=() for there class.
+	    A a;
+	    B b;
+	    Base base;
+
+	    AbstractBase *pA = &a;
+	    AbstractBase *pB = &b;
+	    AbstractBase *pBase = &base;
+
+	    *pA = *pB;  //  error,A::operator=() expects an argument with type of a reference to an
+	    	  	//  object is type of A.
+	    *pA = *pA;  //  fine.call to A::operator=().
+	    a = a;      //  fine.call to A::operator=().
+	    ...
+
+	    prevented mixed-type assignment and partial copy!!!
+	    !  generally,abstract base class does not exist any data member,but it still can has some
+	       data members.these data members must be private or protected.
+
+          if you have two concrete classes C1 and C2 and you would like C2 to publicly inherit from C1,
+	  you should transform that two-class hierarchy into a three-class hierarchy by creating a new
+	  abstract class A and having both C1 and C2 publicly inherit from it.
+	  (it forces the introduction of a new abstract class only when an existing concrete class is
+	   about to be used as a base class,i.e.,when the class is about to be (re)used in a new
+	   context.)
+
+	  the need for an abstraction in more than one context is usually meaningful.useful abstractions,
+	  then,are those that are needed in more than one context.
+
+	  at the situation that you can not modify the library you used it in your application,but you want
+	  to insert a new abstract class to it,the choices you can pick but all are limited and unappealing :
+	    >  derive your concrete class from the existing concrete class.
+	    >  try to find an abstract class higher in the library hierarchy that does most of what you need.
+	    >  implement your new class in terms of the library class you would like to inherit from.
+	    >  make do with what you have got.use the concrete class that is in the library and modify your
+	       software so that the class suffices.write non-member functions to provide the functionality
+	       you would like to add to the class,but can not.
+
+	  !!  non-leaf classes should be abstract.  !!
+	  
+	       
+
+	      
+
+
