@@ -3154,6 +3154,95 @@ Chapter Miscellany >
 	       you would like to add to the class,but can not.
 
 	  !!  non-leaf classes should be abstract.  !!
+
+
+  Item 34 : Understand how to combine C++ and C in the same program
+       	  for combined C++ and C,must ensure that compilers generate compatible output files.
+	  and then,there are four other things need to consider :
+	    name mangling
+	    initialization of statics
+	    dynamic memory allocation
+	    data structure compatibility
+
+	  Name Mangling :
+	    C++ functions can overload,but C functions can not,so C++ compiler have to give each
+	    function in program a unique name.
+	    Overloading is incompatible with most linkers,because linkers generally take a dim view of
+	    multiple functions with the same name.
+	    !  name mangling is a concession to the linkers;in particular,to the fact that linkers usually
+	       insist on all function names being unique.
+
+	    C++ directive "extern" can tell to compiler do not name mangling for certain function.
+	    e.g.
+	      extern "C" void func(int x);  //  the function has C linkage.
+	      extern "C" {
+	        void func(int x);
+		...
+	      }  //  these functions have C linkage.
+
+	    !  you can even declare C++ functions extern "C",this can be useful if you are writing a library
+	       in C++ that you would like to provide to clients using other programming languages.
+	    !  __cplusplus preprocessor symbol is used to take a preprocessing branch.
+	       e.g.
+	         #ifdef __cplusplus
+		 extern "C" {
+		 #endif
+		   void func(int x);
+		   ...
+		 #ifdef __cplusplus
+		 }
+		 #endif
+
+          Initialization of Statics :
+	    lots of code can ge executed before and after main,in particular,the constructors of static class objects
+	    and objects at global,namespace,and file scope are usually called before the body of main is executed.
+	    This process is known as static initialization.
+	    similarly,objects that are created through static initialization must have their destructors called 
+	    during static destruction;that process typically takes place after main has finished executing.
+
+	    !  if a C++ compiler adopts this approach to the initialization and destruction of static objects,
+	       such objects will be neither initialized nor destroyed unless main is written in C++.
+	       of course,main function generally written in C,but C++ has more extensibility.
+	       (C only supports to built-in types initialization and destruction,it does not support to
+	        class object.)
+
+          Dynamic Memory Allocation :
+	    the general rule is simple : 
+	      the C++ parts of a program use new and delete,and the C parts of a program use malloc and free.
+
+	    calling free on a newed pointer yields undefined behavior,however,as does deleting a malloced pointer.
+
+	  Data structure compatibility :
+	    C does understand normal pointers,that is,it can not understand the pointer pointed to a member-function,
+	    or a reference .
+	    but if the C++ compiler and the C compiler produce compitable output,functions in the two languages can
+	    safely exchange pointers to objects and pointers to non-member or static functions.
+	    and built-in types can also freely cross the C++/C border.
+
+	    this rule govern the layout of a struct in C++ are consistent with those of C.
+	    !  if you add nonvirtual functions to the C++ version of the struct,its memory layout should not change,
+	       so objects of a struct(or class) containing only non-virtual functions should be compatible with
+	       their C brethren whose structure definition lacks only the member function declaration.
+	       but virtual functions will change everythings,and having a struct inherit from another struct(or class)
+	       usually changes its layout,too.
+	       (i dont think that a class object can safely cross C++/C border,because C does not have the keyword
+	        'class',and it does not support to omit the 'struct' or the 'class' keywords before the type name.
+		but just pass pointer cross the border is safely,that is,C does not interpret the pointer which
+		is really point to a class object in C++.cast the object's pointer to void*.
+               )
+
+	    it is safe to pass data structures from C++ to C and from C to C++ provided the definition of those
+	    structures compiles in both C++ and C.
+
+	  !!  Summary :
+	        Make sure the C++ and C compilers produce compatible object files.
+		Declare functions to be used by both languages extern "C".
+		If at all possible,write main in C++.
+		Always use delete with memory from new;always use free with memory from malloc.
+		Limit what you pass between the two languages to data structures that compile
+		under C;the C++ version of structs may contain non-virtual member functions.
+          !!
+	       
 	  
 	       
 
