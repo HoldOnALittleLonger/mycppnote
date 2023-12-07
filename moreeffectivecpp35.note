@@ -3242,8 +3242,34 @@ Chapter Miscellany >
 		Limit what you pass between the two languages to data structures that compile
 		under C;the C++ version of structs may contain non-virtual member functions.
           !!
-	       
+
+
+  Item 35 : Familiarize yourself with the language standard
+       	  post-ARM and ISO/ANSI,two C++ standards,but now,all programmers and vendors have been following
+	  ISO/ANSI.
+
+	  The capabilities of the standard library can be broken down into the following general categories :
+	    >  support for the standard C library
+	    >  support for strings
+	    >  support for localization
+	    >  support for I/O
+	    >  support for numeric applications
+	    >  support for general-purpose containers and algorithms
+
+	  two idiosyncrasies of C++ std :
+	    >  almost everything in the library is a template.
+	    >  virtually everything it contains is inside the namespace std.
+
+	  The Standard Template Library :
+	    the STL is based on three fundamental concepts :
+	      containers  --  hold collections of objects
+	      iterators	  --  pointer-like objects
+	      algorithms  --  functions that work on STL containers(use iterators to help work)
+	    
+	    !  a pointer to an array can legitimately point to any element of the array or to one
+	       element beyond the end of the array.   
 	  
+	  !!  familiarize yourself with the language standard is very important to a C++ programmer.  !!
 	       
 
 	      
