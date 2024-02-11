@@ -1911,3 +1911,71 @@
 
 		    The final specifier can appear in a class definition,immediately after the
 		    class name;
+
+# about overload the operator -> and the operator ->*
+  these two operators can only be overloadded inside a class,that is,they must be overloaded
+  as class member function.
+
+  e.g.
+    struct INT {
+      int a;
+    };
+
+    class A {
+    public:
+      struct INT *operator->();
+      ANY_TYPE operator->*(ANY_TYPE);
+    ...
+    };  
+  
+  C++ allows overloaded '->' returns either a regular pointer or an instance of another class if
+  this class also provides a '->' operator.
+  when in the second case the search for the dereferenced object continues from this new instance.
+  e.g.
+    INT sINT = {2};
+    A pINT(&sINT);
+    pINT->a;        //  OK,C++ compiler resolve name searching.
+
+    class B {
+    public:
+      A &operator->();
+    ...
+    };
+
+    B pB(pINT);
+    pB->a;          //  OK.pB->->a is an ERROR
+
+  !  I find out a user of stackoverflow answered that,in the second case,the object must have a
+     pointer dereference operator(the '*' symbol).
+     (referred to "Bruce Eckel: Thinking CPP Vol-one: operator->")
+     Im consider he wants to describe '->' symbol,the member access operator for a pointer type
+     left value.
+     If the object only have '*' operator but no '->' operator existed,compiler search will fail,
+     even let opertor*() return a pointer.
+
+     !! Im ensure this is the naming problem,in some books,'->' is called 'structure pointer
+        dereference operator',and in another books,'->' is called 'member access' operator
+        (cppreference also refers it to this name),
+        or "arrow operator"(What?Ok,it is very simple,the best name.)
+
+  !  C++ allows programmer overload '*',similar to C++ Smart Pointer.
+
+  '->*',there is nothing special about it.the non-overloadding version requires an object of pointer
+  to class type on the left-hand side,and an object of pointer to member type on the right side hand.
+  when overloading it,programmer can let it takes anything that want it to take and returns anything
+  that want it to return.
+  e.g.
+    class A {
+    public:
+      int operator->*(int x);
+    ...
+    };
+
+    A a;
+    std::cout<<a->*(3)<<std::endl;
+
+  there is no restricts on these two overloading requires const or non-const on them.
+
+
+
+  
