@@ -3035,7 +3035,7 @@ chapter7> Templates and Generic Programming
 		    template<typename T>
 		    class baseA {
 		      protected:
-		        A(T *dptr = nullptr) : operand(dptr) {}
+		        baseA(T *dptr = nullptr) : operand(dptr) {}
 		        void func(std::size_t n) {}
 			void setDataPtr(T *dptr) { operand = dptr; }
 		    //	void func(T *dptr, std::size_t n) {}
@@ -3047,7 +3047,7 @@ chapter7> Templates and Generic Programming
 		    class A : private baseA<T> {
 		      public:
 		        A() : x(new T[n]) {}
-		    //	explicit A(T *dptr) : baseA(dptr), x(dptr) {]
+		    //	explicit A(T *dptr) : baseA(dptr), x(dptr) {}
 		        void func() { setDataPtr(x); func(n); }
 		      private:
 		        T *x;

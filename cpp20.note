@@ -980,7 +980,7 @@ C++20>
 
       syntax :
         template<template-parameter-list>
-	concept <concept-name> <attr>(optional) = <constraint-expression>;
+	    concept <concept-name> <attr>(optional) = <constraint-expression>;
 
       concept can be a part in id-expression.
       concept can be named in a type-constraint,as part of type template parameter declaration,
@@ -988,8 +988,8 @@ C++20>
 
       attention :
         concept is not allowed to recursive.
-	concept is not allowed to explicit instantiation,explicit specialization,partial specialization.
-	(the meaning of the original definition of a constraint cant be changed)
+	    concept is not allowed to explicit instantiation,explicit specialization,partial specialization.
+	    (the meaning of the original definition of a constraint cant be changed)
 
 	in a type-constraint,a concept takes one less template argument than its parameter list demands,
 	because the contextually deduced type is implicitly used as the first argument of the concept.
@@ -1008,12 +1008,26 @@ C++20>
       the constraint associated with a declaration are determined by normalizing a logical AND
       expression whose operands are in the following order :
         >  the constraint expression introduced for each constrained type template parameter or
-	   non-type template parameter declared with a constained placeholder type,in order of
-	   appearance.
-	>  the constraint expression in the requires clause after the template parameter list.
-	>  the constraint expression introduced for each parameter with constrained placeholer type
-	   in an abbreviated function template declaration.
-	>  the constraint expression in the trailing requires clause.
+	       non-type template parameter declared with a constrained placeholder type,in order of
+	       appearance.
+
+           template<constraint1<T>, constraint2<U>>
+           ...
+
+           the_constraint_expression := constrained_placeholder1<T> AND constrained_placeholder2<U> ...
+
+	    >  the constraint expression in the requires clause after the template parameter list.
+    
+           the_constraint_expression := requires.requirement1 AND requires.requirement2 ...
+
+	    >  the constraint expression introduced for each parameter with constrained placeholer type
+	       in an abbreviated function template declaration.
+
+           void func(constrained_placeholder<Arg1> a1, constrained_placeholder<Arg2> a2);
+
+           the_constraint_expression := constrained_placeholder<Arg1> AND constrained_placeholder<Arg2>;
+
+	    >  the constraint expression in the trailing requires clause.
 
 	e.g.
 	  template<class T>
