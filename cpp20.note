@@ -1023,9 +1023,12 @@ C++20>
 	    >  the constraint expression introduced for each parameter with constrained placeholer type
 	       in an abbreviated function template declaration.
 
-           void func(constrained_placeholder<Arg1> a1, constrained_placeholder<Arg2> a2);
+           abbreviated function template :
+             void func(auto x);  //  equal to "template<class T> void func(T)"
+           
+           void func(CONCEPT auto x);  //  equal to "template<CONCEPT<T>> void func(T x)"
 
-           the_constraint_expression := constrained_placeholder<Arg1> AND constrained_placeholder<Arg2>;
+           the_constraint_expression := constrained_placeholder<auto := T>
 
 	    >  the constraint expression in the trailing requires clause.
 
