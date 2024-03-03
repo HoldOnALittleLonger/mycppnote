@@ -890,6 +890,25 @@
 		static_assert(bool-constexpr)
 		static_assert(bool-constexpr,message)
 
+    !  TMP : 
+         in  : the specification about program
+         out : the source code
+    !  template metaprogramming is a kind of language used to tell compiler
+       what components to be generated at compile-time and how to combine them.
+       programmer can only tell compiler about the specification of components and
+       request the compiler to generates the source code.
+    !  benefits :
+         compile-time versus execution-time tradeoff
+         generic programming
+         readability
+         source code automate
+           generative programming :
+             generative programming and the related term meta-programming are
+             concepts whereby programs can be written "to manufacture software
+             components in an automated way".
+
+    
+
 # C++ multi-thread
 	C++ had been packing posix-thread model or windows-thread model
 	into C++ thread class which named std::thread was defined in
