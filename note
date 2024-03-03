@@ -581,7 +581,7 @@
 		    declaration."
 
 		  for prevent this error,can use a different declaration within another concepts.
-		      	      template<class T>
+		      	  template<class T>
 			      requires std::integral<T>
 			      void func(T x) { ... }
 			      template<class T>
@@ -607,6 +607,34 @@
 	// specifically implement in explicitly
 	template<>
 	type-return <func><std::type>(arg-list);
+
+    // partial specialization
+
+    template<class T1, class T2, class T3>
+    struct C {};
+
+    template<class T, class T3>
+    struct C<T, T *, T3> {};
+
+    template<class T1>
+    struct C<T1, int, float> {};
+
+    template<class T>
+    struct C<int, T *, float> {};
+
+    template<typename T>
+    type-return <func><T *>(arg-list);  //  ERROR,function is not allowed to
+                                        //  partial specialization.
+
+    template<class _Tp>
+    struct iterator_traits<_Tp *> {};  //  apply to all pointer types
+
+    template<class _Tp>
+    struct iterator_traits<const _Tp *> {};  //  apply to all constant pointer types
+
+    !  the specialization selected by compiler follow minmum matching,that is
+       the template parameters constructed a minmum acceptible argument subset of
+       the definition.(precise matching first)
 
 	template instance implement>
 	
