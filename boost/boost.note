@@ -1,0 +1,73 @@
+C++ Boost 1.84.0
+
+foreach >
+    BOOST_FOREACH : <boost/foreach.hpp>
+      It iterates over sequences for us,freeing us from having to deal directly with
+      iterators or write predicates.
+      Advantages :
+        no dynamic allocations
+        makes no virtual function calls or calls through function pointers
+        makes no calls that are not transparent to the compiler's optimizer
+
+      Syntax :
+        BOOST_FOREACH(iterator, sequence)
+        {
+          ...  //  loop body
+        }
+        @iterator : <type> <id-expression>
+                    everytime entered the loop body,@id-expression represents
+                    the element in @sequence.
+        @sequence : the sequence for loop.
+                    if it is a function invocation,the return value must be
+                    proper type and the function only be called once.
+
+        //  if typeof(@iterator) != typeof(@element)
+              convert type of @element to type of @iterator
+
+        e.g.
+          std::string hello("hello, world!");
+          BOOST_FOREACH(char ch, hello)
+          {
+            std::cout << ch;
+          }  //  hello, world!
+  
+          @ch : the object that Iterator refers to.
+                @ch can be a predeclared variable.
+          @hello : the target to BOOST_FOREACH
+          { ... } : what to do for each @ch
+
+      supported sequence types :
+        stl containers
+        arrays
+        null-terminated strings(char and wchar_t)
+        std::pair of iterators
+
+      loop keywords is able to be used in the body of BOOST_FOREACH :
+        return
+        continue
+        break
+        /*  BOOST_FOREACH is a macro function implemented via "for-loop"  */
+
+      BOOST_FOREACH is possible to be nested :
+        e.g.
+          std::vector<std::string> vs;
+          ...
+          BOOST_FOREACH(std::string s, vs)
+          {
+            ...
+            BOOST_FOREACH(char ch, s)
+            {
+              ...
+            }
+            ...
+          }
+
+      !  use a C++ macro to define BOOST_FOREACH is possible but discourage,
+         because that maybe cause name conflicts.
+         #  i.e. Qt defined a macro named "foreach".
+
+      BOOST_REVERSE_FOREACH(@iterator, @sequence) :
+        iterating over collections in reverse order.
+
+    
+       
