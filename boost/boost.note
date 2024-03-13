@@ -69,5 +69,119 @@ foreach >
       BOOST_REVERSE_FOREACH(@iterator, @sequence) :
         iterating over collections in reverse order.
 
-    
+asio >
+    Boost.Asio may be used to perform both synchronous and asynchronous operations
+    on I/O objects.
+
+    Synchronous operations :
+      Program ->
+      I/O Object ->
+      I/O Execution Context ->
+      Operating System
+      <- Operating System
+      <- I/O Execution Context
+      <- I/O Object
+         Program
+
+    Asynchronous operations :
+      Program -> {
+        I/O Object
+        Completion Handler
+      }
+      I/O Object ->
+      I/O Execution Context ->
+      Operating System
+      <- Operating System
+      <- I/O Eexcution Context
+      <- Completion Handler
+         Program
+
+    I/O Object :
+      the specific I/O object such socket,file,pipe, etc.
+      e.g.
+        boost::asio::ip::tcp::socket object
+
+    I/O Execution Context :
+      it represents the link of program to the operating system's I/O services.
+      the program at least one I/O execution context,such as an
+        boost::asio::io_context object
+        boost::asio::thread_pool object
+        boost::asio::system_context object
+
+    Completion Handler :
+      a function or function object with the signature 
+        void <completion_handler_name>(const boost::system::error_code &);
+
+    any request program initiates on a specific I/O object,the corresponding I/O Execution Context
+    object will as an agent submits this request to Operating System.
+    after the action for the request accmoplished by Operating System,it returns the result of the
+    operation to I/O execution context.
+    I/O Execution Context translates any error resulting from the operation into an object of
+    type boost::system::error_code,the result is then forwarded back up to the I/O object.
+    I/O object throws an exception of type boost::system::system_error if the operation failed.
+    /*  Some overloaded version of action-methods does not throw an exception,as instead,such methods
+     *  requires an object of type boost::system::system_error as the additional parameter.
+     *  e.g.
+     *    boost::asio::ip::tcp::socket s(boost::asio::io_context{});
+     *    s.connect(server_endpoint);      //  throw
+     *    boost::system::system_error ec;
+     *    s.connect(server_endpoint, ec);  //  no throw
+     */
+
+    the advantage for boost.asio library that is :
+      >  portability
+           boost has different implementations to different Operating System
+      >  scalability
+           facilitate concurrent connections
+      >  efficiency
+           support some special techniques allow programs to minmise data copying
+      >  model concepts from established APIs
+           such BSD sockets
+      >  ease of use
+           it is complex but ease of to learn how to use them
+      >  basis for further abstraction
+           permit the development of other libraries that provide higher levels of abstraction
+
+      /*  I figure that boost.asio is another wraper of POSIX.1 I/O APIs,the POSIX.1 I/O APIs
+       *  are flexible to composing,feature require on demand.
+       *  but even POSIX.1 is a standard about system features,might a special system does not
+       *  support some particular features.
+       *  and new to such OS have to learn the POSIX.1 features on that OS,it maybe spend a lot of
+       *  times.
+       *  another problem is resource manage,the object holds relative resource its lifetime is
+       *  unclear,some resource have to be manually recycled by programmer.
+       *  high-level abstract layer such boost.asio will eliminates the problems occurred on the
+       *  low-level interace.
+       *  e.g.
+       *    POSIX.1 API :
+       *      int socket = -1;
+       *      errno = 0;
+       *      socket = socket(AF_INET, SOCK_STREAM, IPPROT_TCP);
+       *      if (socket < 0) {
+       *              fprintf(stderr, "Failed to acquire a socket in tcp protocol.\n");
+       *              exit(errno);
+       *      }
+       *      errno = 0;
+       *      if (connect(socket, server_endpoint, server_endpoint_length) < 0) {
+       *              fprintf(stderr, "Failed to establish connection with server.\n");
+       *              exit(errno);
+       *      }
+       *      ...
+       *      shutdown(socket, SHUT_RDWR);  //  if @socket is a local variable,and returned from
+       *                                    //  a special worker but did not release the resource
+       *                                    //  it represents,then the resource will be existing until
+       *                                    //  program exit and recycled by kernel.
+       *      ...
+       *    
+       *    Boost.Asio :
+       *      boost::asio::ip::tcp::socket socket(boost::asio::io_context{});
+       *      boost::system::system_error ec;
+       *      socket.connect(server_endpoint, ec);
+       *      ...
+       *      //  connection will be released when the I/O object is destructing.(RAII)
+       *      //  programmer need not to manage resource manually.
+       *      //  programmer need not to learn about the low-level APIs on a specific system,just
+       *      //  learn about APIs of boost.asio as well.
+       */
+      
        
