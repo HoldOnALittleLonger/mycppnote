@@ -183,5 +183,124 @@ asio >
        *      //  programmer need not to learn about the low-level APIs on a specific system,just
        *      //  learn about APIs of boost.asio as well.
        */
+
+
+SmartPtr >
+    Boost.SmartPtr: The Smart Pointer Library
+
+    smart pointer class templates:
+      scoped_ptr:  used to contain ownership of a dynamically allocated object
+                   to the current scope.
+      scoped_array:  provides scoped ownership for a dynamically allocated array.
+      shared_ptr:  a versatile tool for managing shared ownership of an object or
+                   or array.
+      weak_ptr:  a non-owning observer to a shared_ptr-managed object that can be
+                 promoted temporarily to shared_ptr.
+      intrusive_ptr:  a pointer to objects with an embedded reference count.
+      local_shared_ptr:  providing shared ownership within a single thread.
+
+      //  shared_ptr and weak_ptr are part of the C++ standard from C++11.
+
+    utility functions and classes:
+      make_shared(),allocate_shared():  factory functions for creating objects 
+                                        that return a shared_ptr.
+      make_unique():  factory function returning std::unique_ptr.
+      allocate_unique():  factory function for creating objects using an allocator
+                          that return a std::unique_ptr.
+      enable_shared_from_this:  helper base class that enables the acquisition
+                                of a shared_ptr pointing to this.
+      enable_shared_from:  a newer and better replacement for enable_shared_from_this.
+      pointer_to_other:  helper trait for converting one smart pointer type to
+                         another.
+      static_pointer_cast:  generic smart pointer casts.
+      intrusive_ref_counter:  helper base class containing a reference count.
+      atomic_shared_ptr:  helper class implementing the interface of std::atomic
+                          for a value of type shared_ptr.
+
+      !  the destructor or operator delete for an object managed by pointers in
+         the library are not allowed to throw exceptions.
+
+    scoped_ptr :
+      scoped_ptr is a simple solution for simple needs,supplies a basic
+      "resource acquisition is initialization" facility,without shared-ownership
+      or transfer-of-ownership semantics.
       
-       
+      scoped_ptr - noncopyable
+                   cannot be used in C++ Standard Library containers.
+                   cannot correctly hold a pointer to a dynamically allocated array
+
+      <boost/smart_ptr/scoped_ptr.hpp>
+        namespace boost {
+          template<class T>
+          class scoped_ptr {
+            ...
+          };
+        }
+        
+        element type :
+          typedef T element_type;
+        
+        construct and destruct :
+          explicit scoped_ptr(T *p = 0) noexcept;
+  
+          /*  the destructor or the operator delete of the object is type of T
+           *  forbid throw exception.
+           *  and T must be a complete type.(Succeed to constructed)
+           */
+          ~scoped_ptr() noexcept;
+  
+        member functions :
+          /*  reset - member function reset @pointer to @p.
+           *          the previous object pointed by @pointer
+           *          will automatically freed.
+           */
+          void reset(T *p = 0) noexcept;
+  
+          /*  operator* - overload operator *  */
+          T &operator*() const noexcept;
+          
+          /*  operator-> - overload member-accessing operator  */
+          T *operator->() const noexcept;
+  
+          /*  get - returns the raw pointer.  */
+          T *get() const noexcept;
+  
+          /*  operator bool - overload type converting,enforce explicit.  */
+          explicit operator bool() const noexcept;
+          
+          /*  swap - swap two scoped_ptr objects.
+           *  @b:    another,it will swap to this.
+           */
+          void swap(scoped_ptr &b) noexcept;
+  
+        free functions :
+          template<class T>
+          void swap(scoped_ptr<T> &a, scoped_ptr<T> &b) noexcept;
+  
+          template<class T>
+          bool operator==(scoped_ptr<T> const &p, std::nullptr_t) noexcept;
+      
+          template<class T>
+          bool operator==(std::nullptr_t, scoped_ptr<T> const &p) noexcept;
+          
+          template<class T>
+          bool operator!=(scoped_ptr<T> const &p, std::nullptr_t) noexcept;
+          
+          template<class T>
+          bool operator!=(std::nullptr_t, scoped_ptr<T> const &p) noexcept;
+  
+      e.g.
+        void func(void)
+        {
+          scoped_ptr<int> pInt(new int(10));  //  explicit construct.
+          if (pInt == NULL)                   //  free function calls.
+            throw std::abort();
+        }  //  @pInt dead,and the memory of a int object with value 10 freed automatically.
+
+      !!  the primary reason to use scoped_ptr rather than std::auto_ptr or std::unique_ptr
+            1>  "resource acquisition is initialization" to be applied only for
+                the current scope and have no intent to transfer ownership.
+            2>  prevent a later maintenance programmer from adding a function
+                that transfers ownership by returning the auto_ptr,because
+                saw auto_ptr,and assumed ownership could safely be transferred.
+  
