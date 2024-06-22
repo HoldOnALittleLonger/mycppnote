@@ -292,7 +292,7 @@ SmartPtr >
       e.g.
         void func(void)
         {
-          scoped_ptr<int> pInt(new int(10));  //  explicit construct.
+          boost::scoped_ptr<int> pInt(new int(10));  //  explicit construct.
           if (pInt == NULL)                   //  free function calls.
             throw std::abort();
         }  //  @pInt dead,and the memory of a int object with value 10 freed automatically.
@@ -303,4 +303,87 @@ SmartPtr >
             2>  prevent a later maintenance programmer from adding a function
                 that transfers ownership by returning the auto_ptr,because
                 saw auto_ptr,and assumed ownership could safely be transferred.
+
+    scoped_array :
+      the scoped_array class template stores a pointer to a dynamically allocated array.
+      it is similar to scoped_ptr,but it is designed for array.
+
+      scoped_array - noncopyable
+                     cannot be used in C++ standard library containers
+                     cannot correctly hold a pointer to single object
+                     no more space overhead than a built-in array pointer
+      //  need an array in C++ standard library containers?
+      //  see shared_ptr<T[]>
+
+      !  std::vector is an alternative to scoped_array that is a bit heavier
+         duty but far more flexible.
+         boost::array is an alternative that does not use dynamic allocation.
+
+      <boost/smart_ptr/scoped_array.hpp>
+        namespace boost {
+          template<class T>
+          class scoped_array {
+            ...
+          };
+        }
   
+        element type :
+          typedef T element_type;
+  
+        construct and destruct :
+          /*  storing a copy of p,which must have been allocated via a
+           *  C++ new[] expression or be 0.
+           *  T is not required be a complete type.
+           */
+          explicit scoped_array(T *p = 0) noexcept;
+  
+          /*  T must be complete,and delete[] on the stored pointer must not
+           *  throw exceptions.
+           */
+          ~scoped_array() noexcept;
+  
+        member functions :
+          /*  reset - reset the internal array pointer to newer.
+           *  @p:     the new array address with element type T.
+           */
+          void reset(T *p = 0) noexcept;
+  
+          /*  operator[] - overload random access operator.  */
+          T &operator[](std::ptrdiff_t i) const noexcept;
+  
+          /*  get - get the raw array address.  */
+          T *get() const noexcept;
+  
+          /*  operator bool - overload converting,enforce explicit calling.  */
+          explicit operator bool() const noexcept;
+  
+          /*  swap - swap current array to another.
+           *  @b:    referrence to a scoped_array object.
+           *  #  T need not be a complete type.
+           */
+          void swap(scoped_array &b) noexcept;
+  
+        free functions :
+          template<class T>
+          void swap(scoped_array<T> &a, scoped_array<T> &b) noexcept;
+  
+          template<class T>
+          bool operator==(scoped_array<T> const &p, std::nullptr_t) noexcept;
+  
+          template<class T>
+          bool operator==(std::nullptr_t, scoped_array<T> const &p) noexcept;
+  
+          template<class T>
+          bool operator!=(scoped_array<T> const &p, std::nullptr_t) noexcept;
+  
+          template<class T>
+          bool operator!=(std::nullptr_t, scoped_array<T> const &p) noexcept;
+
+      e.g.
+        void func(void)
+        {
+          boost::scoped_array<int> paV(new int[5]);
+          if (paV == nullptr)
+            throw std::abort();
+          paV[0] = 3;
+        }
