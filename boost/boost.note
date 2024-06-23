@@ -387,3 +387,213 @@ SmartPtr >
             throw std::abort();
           paV[0] = 3;
         }
+
+    shared_ptr :
+      it is a class template stores a pointer to a dynamically allocated object.
+
+      shared_ptr deletes the exact pointer that has been passed at construction
+      time,complete with its original type,regardless of the template parameter.
+      e.g.
+        std::shared_ptr<void> p(new int(5));
+        //  @p destruct,"delete __interPointer" __interPointer points to a
+            int object with value 5 but it is type of void *.
+
+      shared_ptr - copyconstructible
+                   moveconstructible
+                   copyassignable
+                   moveassignable
+                   can be used in standard library containers
+                   comparison operators are supplied
+
+      !  because the implementation uses reference counting,cycles of shared_ptr
+         instances will not be reclaimed.
+         e.g.
+           struct A {
+             std::shared_ptr<A> __interPointer;
+             ...
+           };
+
+           void func(void)
+           {
+             A *pA = new A;
+             std::shared_ptr<A> spA(pA);
+             spA->__interPointer.reset(pA);
+             //  A's use count will be 2.
+             //  @spA destructed,A will be leaved dangling with a use count of 1.
+             //  "weak_ptr" can "break cycles".
+           }
+
+      shared_ptr<T> can be implicitly converted to shared_ptr<U> whenever T*
+      can be implicitly converted to U* .
+      in particular,shared_ptr<T> is implicitly convertible to shared_ptr<T const>,
+      to shared_ptr<U> where U is an accessible base of T,and to shared_ptr<void>.
+
+      !  shared_ptr can be used to hold a pointer to a dynamically allocated array.
+         this is accomplished by using an array type (T[] or T[N]) as the template
+         parameter.
+         if template-parameter = T[N]
+           operator[] index range checking will be enabled.
+
+      !  avoid using unnamed shared_ptr tempraries to save typing.
+
+      <boost/smart_ptr/shared_ptr.hpp> "or <memory>  /*  C++11  */"
+        namespace boost {
+          class bad_weak_ptr : public std::exception;
+          template<class T> class weak_ptr;
+          template<class T>
+          class shared_ptr {
+            ...
+          };
+        }
+
+        element type :
+          /*  element_type is T when T is not an array type,and U when T
+           *  is U[] or U[N].
+           */
+          typedef ... element_type;
+
+        construct and destruct :
+          /*  these two constructors construct an empty shared_ptr  */
+          constexpr shared_ptr() noexcept;
+          constexpr shared_ptr(std::nullptr_t) noexcept;
+
+          /*  Y must be a complete type.
+           *  delete p or delete[] p cannot throw exceptions.
+           *  when T is U[N],Y(*)[N] must be convertible to T* ,
+           *  when T is U[],Y(*)[] must be convertible to T*,
+           *  otherwise,Y* must be convertible to T* .
+           *  the constructor is a template in order to remember the 
+           *  actual pointer type passed,the destructor will call delete with
+           *  the same pointer,complete with its original type,even when
+           *  T does not have a virtual destructor or is void.
+           */
+          template<class Y>
+          explicit shared_ptr(Y *p);
+
+          /*  unique_ptr constructor  */
+          template<class Y, class D>
+          shared_ptr(std::unique_ptr<Y, D> &&r);
+          
+          ...
+          
+          /*  if *this is empty,or shares ownership with another shared_ptr
+           *  instance(use_count() > 1),there are no side effects.
+           *  if *this owns a pointer p and a deleter d,d(p) is called.
+           *  if *this owns a pointer p,and have no deleter d,delete p is called.
+           */
+          ~shared_ptr() noexcept;
+
+        member functions :
+          /*  reset - no parameter,do nothing.  */
+          void reset() noexcept;
+
+          /*  reset - reset internal pointer to a new pointer.
+           *  @p:     the new pointer.
+           */
+          template<class Y>
+          void reset(Y *p);
+
+          /*  reset - reset internal pointer to new pointer and also
+           *          replace deleter.
+           *  @p:     new pointer.
+           *  @d:     deleter.
+           */
+          template<class Y, class D>
+          void reset(Y *p, D d);
+
+          /*  operator* - overload pointer deref operator.  */
+          T &operator*() const noexcept;
+
+          /*  operator-> - overload member accessing operator.  */
+          T *operator->() const noexcept;
+
+          /*  operator[] - overload random accessing operator.  */
+          element_type &operator[](std::ptrdiff_t i) const noexcept;
+
+          /*  get - get the raw pointer.  */
+          element_type *get() const noexcept;
+
+          /*  unique - if use_count() == 1.  */
+          bool unique() const noexcept;
+
+          /*  use_count - return the number of local_shared_ptr objects,
+           *              *this included,that share ownership with *this
+           *              or 0 when *this is empty.
+           */
+          long use_count() const noexcept;
+
+          /*  operator bool - overload bool converting and enforce explicit.  */
+          explicit operator bool() const noexcept;
+
+          /*  operator shared_ptr<Y> - convert T* to Y* .  */
+          template<class Y>
+          operator shared_ptr<Y>() const noexcept;
+
+          /*  operator weak_ptr<Y> - returns a copy of the owned shared_ptr.
+          template<class Y>
+          operator weak_ptr<Y>() const noexcept;
+
+          /*  swap - exchange *this to b.  */
+          void swap(local_shared_ptr &b) noexcept;
+
+          /*  owner_before - it be like of operator< .  */
+          template<class Y>
+          bool owner_before(shared_ptr<T> const &r) const noexcept;
+          template<class Y>
+          bool owner_before(weak_ptr<Y> const &r) const noexcept;
+
+          /*  owner_equals - true if and only if *this and @r share ownership
+           *                 or are both empty.
+           */
+          template<class Y>
+          bool owner_equals(weak_ptr<Y> const &r);
+          template<class Y>
+          bool owner_equals(shared_ptr<Y> const &r) const noexcept;
+
+          /*  owner_hash_value - returns an unspecified hash value such that
+           *                     two instances that share ownership have the
+           *                     same hash value.
+           */
+          std::size_t owner_hash_value() const noexcept;
+
+        free functions :
+          operator==
+          operator!=
+          operator<
+          swap()
+          get_pointer()
+          static_pointer_cast
+          const_pointer_cast
+          dynamic_pointer_cast
+          reinterpret_pointer_cast
+
+          template<class E, class T, class Y>
+          std::basic_ostream<E, T> &operator<<
+
+          get_deleter
+
+          atomic_is_lock_free
+          atomic_load
+          atomic_load_explicit
+          atomic_store
+          atomic_store_explicit
+          atomic_exchange
+          atomic_exchange_explicit
+          atomic_compare_exchange
+          atomic_compare_exchange_explicit
+
+      e.g.
+        void func(void)
+        {
+          //  these two statements call to copy-constructor.
+          shared_ptr<int> pI0(make_shared<int>(3));
+          auto pI1(pI0);
+          //  use_count() == 2
+
+          //  this statement call to move-constructor.
+          shared_ptr<int> pIMoved(std::move(pI1));
+          //  use_count() still equal to 2,but @pI1 is in undefined state.
+
+          //  just one memory space for a int object had been allocated.
+        }  //  all shared_ptr<int> instances will be destroyed before returns
+           //  control to the caller,of couse,the memory space will be recycled.
