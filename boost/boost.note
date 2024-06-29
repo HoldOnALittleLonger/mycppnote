@@ -557,30 +557,71 @@ SmartPtr >
           std::size_t owner_hash_value() const noexcept;
 
         free functions :
-          operator==
-          operator!=
-          operator<
-          swap()
-          get_pointer()
-          static_pointer_cast
-          const_pointer_cast
-          dynamic_pointer_cast
-          reinterpret_pointer_cast
+          template<class T, class U>
+          bool operator==(shared_ptr<T> const &a, shared_ptr<U> const &b) noexcept;
+                                                  //  std::nullptr_t
+                          //  std::nullptr_t
+
+          template<class T, class U>
+          bool operator!=(shared_ptr<T> const &a, shared_ptr<U> const &b) noexcept;
+                                                  //  std::nullptr_t
+                          //  std::nullptr_t
+
+          template<class T, class U>
+          bool operator<(shared_ptr<T> const &a, shared_ptr<U> const &b) noexcept;
+
+          template<class T>  
+          void swap(shared_ptr<T> &a, shared_ptr<T> &b) noexcept;
+
+          template<class T>
+          typename shared_ptr<T>element_type *
+          get_pointer(shared_ptr<T> const &p) noexcept;
+
+          template<class T, class U>
+          shared_ptr<T> static_pointer_cast(shared_ptr<U> const &r) noexcept;
+
+          template<class T, class U>
+          shared_ptr<T> const_pointer_cast(shared_ptr<U> const &r) noexcept;
+
+          template<class T, class U>
+          shared_ptr<T> dynamic_pointer_cast(shared_ptr<U> const &r) noexcept;
+
+          template<class T, class U>
+          shared_ptr<T> reinterpret_pointer_cast(shared_ptr<U> const &r) noexcept;
 
           template<class E, class T, class Y>
-          std::basic_ostream<E, T> &operator<<
+          std::basic_ostream<E, T> &
+          operator<<(std::basic_ostream<E, T> &os, shared_ptr<Y> const &p);
 
-          get_deleter
+          template<class D, class T>
+          D *get_deleter(shared_ptr<T> const &p) noexcept;
 
-          atomic_is_lock_free
-          atomic_load
-          atomic_load_explicit
-          atomic_store
-          atomic_store_explicit
-          atomic_exchange
-          atomic_exchange_explicit
-          atomic_compare_exchange
-          atomic_compare_exchange_explicit
+          //  atomic accessing
+          template<class T>
+          bool atomic_is_lock_free(shared_ptr<T> const *p) noexcept;
+
+          template<class T>
+          shared_ptr<T> atomic_load(shared_ptr<T> const *p) noexcept;
+          template<class T>
+          shared_ptr<T> atomic_load_explicit(shared_ptr<T> const *p, int) noexcept;
+
+          template<class T>
+          void atomic_store(shared_ptr<T> *p, shared_ptr<T> r) noexcept;
+          template<class T>
+          void atomic_store_explicit(shared_ptr<T> *p, shared_ptr<T> r, int) noexcept;
+
+          template<class T>
+          shared_ptr<T> atomic_exchange(shared_ptr<T> *p, shared_ptr<T> r) noexcept;
+          template<class T>
+          shared_ptr<T>
+          atomic_exchange_explicit(shared_ptr<T> *p, shared_ptr<T> r, int) noexcept;
+
+          template<class T>
+          bool atomic_compare_exchange(shared_ptr<T> *p, shared_ptr<T> *v,
+                                       shared_ptr<T> w) noexcept;
+          template<class T>
+          bool atomic_compare_exchange_explicit(shared_ptr<T> *p, shared_ptr<T> *v,
+                                                shared_ptr<T> w) noexcept;
 
       e.g.
         void func(void)
@@ -597,3 +638,130 @@ SmartPtr >
           //  just one memory space for a int object had been allocated.
         }  //  all shared_ptr<int> instances will be destroyed before returns
            //  control to the caller,of couse,the memory space will be recycled.
+
+    weak_ptr :
+      the weak_ptr class template stores a "weak reference" to an object that is
+      already managed by a shared_ptr.
+      to access the object,a weak_ptr can be converted to a shared_ptr using the
+      shared_ptr constructor taking weak_ptr,or the weak_ptr member function lock.
+      when the last shared_ptr to the object goes away and the object is deleted,
+      the attempt to obtain a shared_ptr from the weak_ptr instances that refer
+      to the deleted object will fail: constructor throws boost::bad_weak_ptr,
+      weak_ptr::lock() returns an empty shared_ptr.
+
+      weak_ptr - copyconstructible
+                 assignable
+                 can be used in C++ standard library containers
+                 comparison operators are supplied
+                 operations never throw exceptions
+
+      <boost/smart_ptr/weak_ptr.hpp>
+        namespace boost {
+          template<class T>
+          class weak_ptr {
+            ...
+          };
+        }
+
+        element type :
+          /*  element_type is T when T is not an array type,and U when
+           *  T is U[] or U[N].
+           */
+          typedef ... element_type;
+
+        construct and destruct :
+          /*  default constructor,constructs an empty weak_ptr.  */
+          weak_ptr() noexcept;
+
+          /*  constructs a weak_ptr object from a shared_ptr<Y> object.  */
+          template<class Y>
+          weak_ptr(shared_ptr<Y> const & r) noexcept;
+          
+          /*  template-bound copy-constructor.  */
+          weak_ptr(weak_ptr const &r) noexcept;
+
+          /*  template-unbound copy-constructor.  */
+          template<class Y>
+          weak_ptr(weak_ptr<Y> const &r) noexcept;
+
+          /*  move-constructor.  */
+          weak_ptr(weak_ptr &&r) noexcept;
+
+          /*  destructor,destroys this weak_ptr but has no effect on the
+           *  object its stored pointer points to.
+           */
+          ~weak_ptr() noexcept;
+
+        member functions :
+          /*  operator=& - copy assignment operator.  */
+          weak_ptr &operator=(weak_ptr const &r) noexcept;
+
+          /*  operator=&& - move assignment operator.  */
+          weak_ptr &operator=(weak_ptr &&r) noexcept;
+
+          /*  use_count - returns 0(empty weak_ptr) or the number
+           *              of shared_ptr objects that share ownership
+           *              with *this.
+           */
+          long use_count() const noexcept;
+
+          /*  expired - if *this has been expired?(if use_count == 0)  */
+          bool expired() const noexcept;
+
+          /*  empty - if *this is empty?
+           *  #  this function is an extension,not present in std::weak_ptr .
+           */
+          bool empty() const noexcept;
+
+          /*  lock - convert *this to a shared_ptr object,returned by value.  */
+          shared_ptr<T> lock() const noexcept;
+
+          /*  reset - reset *this to another shared_ptr or NULL.  */
+          void reset() noexcept;
+
+          /*  swap - exchange *this and @b.  */
+          void swap(weak_ptr &b) noexcept;
+
+          /*  owner_before - if *this < @r?  */
+          template<class Y>
+          bool owner_before(weak_ptr<Y> const &r) const noexcept;
+          template<class Y>
+          bool owner_before(shared_ptr<Y> const &r) const noexcept;
+
+          /*  owner_equals - if *this and @r share ownership or both empty?  */
+          template<class Y>
+          bool owner_equals(weak_ptr<Y> const &r) const noexcept;x
+          template<class Y>
+          bool owner_equals(shared_ptr<Y> const &r) const noexcept;
+
+          /*  owner_hash_value - hash *this and return a hash value.  */
+          std::size_t owner_hash_value() const noexcept;
+
+        free functions :
+          /*  operator< - operator overload.  */
+          template<class T, class U>
+          bool operator<(weak_ptr<T> const &a, weak_ptr<U> const &b) noexcept;
+
+          /*  swap - exchange @a and @b.  */
+          template<class T>
+          void swap(weak_ptr<T> &a, weak_ptr<T> &b) noexcept;
+
+      e.g.
+        template<class T>
+        void g(const shared_ptr<T> &v)
+        {
+          boost::weak_ptr<T> w(v);  //  sPInt.use_count() == w.use_count() == 1
+          auto sp(w.lock());        //  sPInt.use_count() == sp.use_count() == 2
+        }  //  decrease sPInt.use_count(),because @sp destroyed,now it is equal to 1.
+           //  destroy @w do not affect @sPInt.
+
+        void f(void)
+        {
+          boost::shared_ptr<int> sPInt(make_shared<int>(3));  //  sPInt.use_count() == 1
+          g(sPInt);
+          int *x = new int(10);
+          boost::weak_ptr<decltype(*x)> w(sPInt, x);  //  call to aliasing-constructor
+                                                      //  no shared_ptr object was created
+          delete x;                                   //  thus have to delete @x
+        }
+
