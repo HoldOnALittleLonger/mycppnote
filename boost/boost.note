@@ -765,3 +765,162 @@ SmartPtr >
           delete x;                                   //  thus have to delete @x
         }
 
+    intrusive_ptr :
+      the intrusive_ptr class template stores a pointer to an object with an 
+      embedded reference count,every new intrusive_ptr instance increments the
+      reference count by using an unqualified call to the function intrusive_ptr_add_ref(),
+      passing it the pointer as an argument.
+      when an intrusive_ptr is destroyed,it calls intrusive_ptr_release(),this
+      function is responsible for destroying the object when its reference count
+      drops to zero.
+
+      !  USER HAVE TO PROVIDE intrusive_ptr_add_ref() and intrusive_ptr_release()
+         IN NAMESPACE,OTHERWISE,THE BOOST'S HELPER BASE CLASS TEMPLATE intrusive_ref_counter
+         MAY HELP ADDING SUPPORT FOR intrusive_ptr TO THE USER TYPES.
+
+      reasons for intrusive_ptr to be used :
+        1>  some existing frameworks or OSes provide objects with embedded
+            reference counts.
+        2>  the memory footprint of intrusive_ptr is the same as the corresponding
+            raw pointer.
+        3>  intrusive_ptr<T> can be constructed from an arbitrary raw pointer
+            of type T*.
+
+      <boost/smart_ptr/intrusive_ptr.hpp>
+        namespace boost {
+          template<class T>
+          class intrusive_ptr {
+          ...
+          };
+        }
+
+        element type :
+          typedef T element_type;
+
+        construct and destruct :
+          /*  default constructor,construct empty intrusive_ptr object.  */
+          intrusive_ptr() noexcept;
+
+          /*  construct instrusive_ptr object with a pointer @p,and add ref_counter
+           *  in the object @p points to.
+           *  #  if add_ref == false
+           *       do not call to intrusive_ptr_add_ref()
+           */
+          intrusive_ptr(T *p, bool add_ref = true);
+
+          /*  copy-constructor  */
+          intrusive_ptr(intrusive_ptr const &r);
+
+          template<class Y>
+          intrusive_ptr(intrusive_ptr<Y> const &r);
+
+          /*  move-constructor  */
+          intrusive_ptr(intrusive_ptr &&r);
+        
+          template<class Y>
+          intrusive_ptr(intrusive_ptr<Y> &&r);
+
+          /*  destructor,intrusive_ptr_release() would be called.  */
+          ~intrusive_ptr();
+
+        member functions :
+          /*  assignment  */
+          intrusive_ptr &operator=(intrusive_ptr const &r);
+
+          template<class Y>
+          intrusive_ptr &operator=(intrusive_ptr<Y> const &r);
+
+          /*  move-assignment  */
+          intrusive_ptr &operator(intrusive_ptr &&r);
+
+          template<class Y>
+          intrusive_ptr &operator=(intrusive_ptr<Y> &&r);
+
+          /*  reset - reset get() to @r.  */
+          void reset();     //  reset to an empty intrusive_ptr.
+          void reset (T *r);
+          void reset(T *r, bool add_ref);
+
+          /*  member accessing  */
+          T &operator*() const noexcept;
+          T *operator->() const noexcept;
+
+          /*  get - get the raw pointer.  */
+          T *get() const noexcept;
+
+          /*  detach - escapes the safety of automatic referrence counting
+           *           provided by intrusive_ptr.it should be used only
+           *           where strictly necessary,and when the implications are
+           *           thoroughly understood.
+           *  #  when use detach() to an instrusive_ptr object,the ref_counter
+           *     of the object would not release.
+           */
+          T *detach() noexcept;
+
+          /*  operator bool - convert intrusive_ptr to bool value and enforce
+           *                  explicitly call.
+           */
+          explicit operator bool() const noexcept;
+          
+          /*  swap - exchange *this and @b.  */
+          void swap(intrusive_ptr &b) noexcept;
+
+        free functions :
+          template<class T, class U>
+          bool operator==(intrusive_ptr<T> const &a, intrusive_ptr<U> const &b) noexcept;
+                                                     //  U *b
+                          //  T *a
+
+          template<class T, class U>
+          bool operator!=(intrusive_ptr<T> const &a, intrusive_ptr<U> const &b) noexcept;
+                                                     //  U *b
+                          //  T *a
+
+          template<class T>
+          bool operator<(intrusive_ptr<T> const &a, intrusive_ptr<T> const &b) noexcept;
+
+          template<class T>
+          void swap(intrusive_ptr<T> &a, intrusive_ptr<T> &b) noexcept;
+
+          template<class T>
+          T *get_pointer(intrusive_ptr<T> const &p) noexcept;
+
+          template<class T, class U>
+          intrusive_ptr<T>
+          static_pointer_cast(intrusive_ptr<U> const &r) noexcept;
+
+          template<class T, class U>
+          intrusive_ptr<T>
+          const_pointer_cast(intrusive_ptr<U> const &r) noexcept;
+
+          template<class T, class U>
+          intrusive_ptr<T>
+          dynamic_pointer_cast(intrusive_ptr<U> const &r) noexcept;
+
+          template<class E, class T, class Y>
+          std::basic_ostream<E, T> &operator<<(std::basic_ostream<E, T> &os,
+                                               intrusive_ptr<Y> const &p);
+
+      e.g.
+        struct A {
+          int v;
+          ssize_t ref_counter;
+        };
+
+        void intrusive_ptr_add_ref(A *a)
+        {
+          ++a->ref_counter;
+        }
+
+        void intrusive_ptr_release(A *a)
+        {
+          --a->ref_counter;
+        }
+
+        void func(void)
+        {
+          A a(0);
+          boost::intrusive_ptr<A> intrusive1(&a);   //  a.ref_counter == 1
+          boost::intrusive_ptr<A> intrusive2(&a);   //  a.ref_counter == 2
+          intrusive1->v = 3;  //  intrusive2.get() == intrusive1.get()
+        }
