@@ -60,7 +60,9 @@ struct A {
     std::cout<<"Calls internal_func v."<<std::endl;
   }
   */
+  //  const A &a is more efficient than A a.
 };
+
 /*
 A func(A arg)
 {
@@ -68,9 +70,35 @@ A func(A arg)
   return arg;
 }
 */
-
 //  if copy-constructor is explicit,then cant pass object as parameter of a
 //  function,and cant return from a function by value.
+
+int &ret_ref(int)
+{
+  static int i(16);
+  return i;
+}
+
+int ref_ref(char)
+{
+  return 32;
+}
+
+void real_func(int &fri)
+{
+  std::cout<<"Calls real_func(int&)."<<std::endl;
+}
+
+void real_func(int &&fri)
+{
+  std::cout<<"Calls real_func(int&&)."<<std::endl;
+}
+
+template<typename T>
+void func(T &&fr)
+{
+  real_func(std::forward<T>(fr));
+}
 
 int main(void)
 {
@@ -92,6 +120,27 @@ int main(void)
   a.forward_func(std::forward<A&&>(rA));
   a.forward_func(a);
 
+  auto &&frli = ret_ref(0);
+  auto &&frri = ref_ref('\0');
+
+  //  create a rvalue reference to a lvalue reference will
+  //  create the lvalue reference itself. (frli)
+
+  //  auto&& is a forward reference.
+  //  it it refers to a temporary value,then the lifetime of the value
+  //  will be extended until the "auto&& rref" was destroyed. (frri)
+  //  !!  const lvalue reference has same effect but can not modify the value.
+
+  std::cout<<"frli = "<<frli<<std::endl;
+  std::cout<<"frri = "<<frri<<std::endl;
+
+  func(frli);
+  func(std::forward<int&&>(frli));
+  func(std::move(frli));
+
+  func(frri);
+  func(std::forward<int&&>(frri));
+  func(std::move(frri));
 
   return 0;
 }
