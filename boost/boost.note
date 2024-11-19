@@ -676,6 +676,16 @@ SmartPtr >
           /*  constructs a weak_ptr object from a shared_ptr<Y> object.  */
           template<class Y>
           weak_ptr(shared_ptr<Y> const & r) noexcept;
+
+          /*  aliasing constructor.
+           *  create weak_ptr from @r as if by using the corresponding 
+           *  converting/copy/move/ constructor,but stores p instead.
+           *  use_count() == r.use_count()
+           *  when !expired(),shared_ptr<T>(*this).get() == p
+           *  !  extension.
+           */
+          template<class Y>
+          weak_ptr(shared_ptr<Y> const & r, element_type *p) noexcept;
           
           /*  template-bound copy-constructor.  */
           weak_ptr(weak_ptr const &r) noexcept;
@@ -761,7 +771,10 @@ SmartPtr >
           g(sPInt);
           int *x = new int(10);
           boost::weak_ptr<decltype(*x)> w(sPInt, x);  //  call to aliasing-constructor
-                                                      //  no shared_ptr object was created
+                                                      //  no shared_ptr object was created,
+                                                      //  w.use_count == sPint.use_count,
+                                                      //  but weak_ptr object do not destroy the object
+                                                      //  it managed when destructor was called.
           delete x;                                   //  thus have to delete @x
         }
 
