@@ -2311,14 +2311,22 @@ Chapter6> Inheritance and Object-Oriented Design
 
 		     //  how to redefine virtual function in base class private zone ?
 		     //  just do this :
+                   class Base {
+                   public:
+                     ...
+                   private:
+                     //  you have to provide a function body to it at first.
+                     //  the function body can outside to class declaration.
+                     virtual <ReturnType> virtual_function(<arg-list>) { ... }
+                   };
 		           class Derived : public Base {
-			     ...
-			   private:
-			     virtual <ReturnType> virtual_function(<arg-list>)
-			     {
 			       ...
-			     }
-			   };
+			       private:
+			         virtual <ReturnType> virtual_function(<arg-list>)
+			         {
+			           ...
+			         }
+			       };
 
 			 //  of course,definition of that virtual function could outside to
 			 //  class definition.

@@ -69,6 +69,66 @@ foreach >
       BOOST_REVERSE_FOREACH(@iterator, @sequence) :
         iterating over collections in reverse order.
 
+boost.iostreams >
+    purpose :
+      1>  make it easy to create standard C++ streams and stream buffers for
+          accessing new sources and sinks
+      2>  provide a framework for defining filters and attaching them to
+          standard streams and stream buffers
+      3>  provide a collection of ready-to-use filters,sources and sinks
+
+    source:  provides read access to a sequence of characters
+    sink:    provides write access to a sequence of characters
+    inputfilter:  filters input read from a source
+    outputfilter: filters output written to a sink
+    devices:  refinements of sources and sinks
+    filters:  refinements of inputfilter and outputfilter 
+
+    class template stream_buffer and stream implement standard stream buffers
+    and streams which perform i/o by delegating to a contained device.
+
+    class template filterintg_streambuf and filtering_stream contain chains of
+    filters and devices.
+
+    Writing Devices :
+      model the concept of the device to a class,
+      transfer the class of the device to stream or stream_buffer as a template
+      argument.
+      e.g.
+        #include<boost/iostreams/stream.hpp>
+        #include<boost/iostreams/stream_buffer.hpp>
+          class device_keyboard {
+            ...
+          };
+          namespace io = boost::iostreams;
+
+          //  stream_buffer<device_keyboard> inherits from 
+          //  std::basic_streambuf and io::stream<device_keyboard>
+          io::stream_buffer<device_keyboard> keyboard_io_streambuffer;
+
+          //  stream<device_keyboard> inherits from std::basic_istream,
+          //  std::basic_ostream or std::basic_iostream depending on the
+          //  mode of @device_keyboard
+          io::stream<device_keyboard> keyboard_io_stream;
+
+      in practice,boost::iostreams::stream_buffer is more used frequently than
+      boost::iostreams::stream,provides boost::iostreams::stream as a convenience.
+      stream_buffer is able to be combined together with standard C++ io stream
+      templates.
+      e.g.
+        boost::iostreams::stream_buffer<device_keyboard> keyboard_stream_buffer;
+        keyboard_stream_buffer.open("/dev/input/by-id/usb-VENDOR_USB_Keyboard-event");
+        ...
+        std::istream input(&keyboard_stream_buffer);
+        //  read from the keyboard.
+        //  the underlying data source is stream_buffer @keyboard_stream_buffer
+        //  thus read from @input is equivalence read from the keyboard.
+
+      !!  boost iostreams provides the regular file type which is defined in
+          <boost/iostreams/device/file.hpp> as a class template basic_file_source.
+          using file_source = basic_file_source<char>;
+          using wfile_source = basic_file_source<wchar_t>;
+
 asio >
     Boost.Asio may be used to perform both synchronous and asynchronous operations
     on I/O objects.
