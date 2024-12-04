@@ -129,6 +129,102 @@ boost.iostreams >
           using file_source = basic_file_source<char>;
           using wfile_source = basic_file_source<wchar_t>;
 
+    Writing a container_source :
+      in boost iostreams library,"source" means the device only support reading
+      from it refuse writ into it.
+      as the name,container_source is a "source" and the underlying data stream
+      if come from a container.
+
+      <boost/iostreams/categories.hpp>
+        /*  source_tag - structure source_tag used as C++ trait to represents
+         *               a "source".
+         *  derive:      public {
+         *                 @device_tag
+         *                 @input 
+         *               }
+         */
+        struct source_tag : device_tag, input {};
+
+        e.g.
+          class the_device {
+          public:
+            typedef source_tag category;
+            ...
+          };
+
+          //  member type category indicates what the device is.
+          //  @soure_tag means the device is a source,conversely,
+          //  @sink_tag means the device is a sink.
+
+      <boost/iostreams/concepts.hpp>
+        /*  type-definition - specialization of class template @device with @input
+         *                    is source type.
+         */
+        typedef device<input> source;
+
+        e.g.
+          //  C++ "is-a"
+          class the_device : public source { ... };
+        
+          //  class @the_device is a "source".
+
+      container_source :
+        <boost/iostreams/categories.hpp>
+        ...
+
+        template<typename _TContainer>
+        class container_source {
+        public:
+          typedef _TContainer::value_type char_type;
+          typedef source_tag category;
+          //  tell to boost iostreams library that class container_source
+          //  is a model of "source".
+
+          container_source(_TContainer &container);  //  constructor
+
+          std::streamsize read(char_type *des, std::streamsize n);  //  read-op
+
+        ...
+        };
+
+        template<typename _TContainer, typename _TDestination>
+        std::streamsize getline(container_source<_TContainer> &src, _TDestination *des)
+        {
+          if (!des)
+            return -1;
+   
+          //  member function source.getNextLineLength() maybe undefined,just provide a 
+          //  abstract primitive on there.
+          return src.read(des, src.getNextLineLength());
+        }
+
+        //  overload
+        template<typename _TContainer>
+        std::streamsize getline(container_source<_TContainer> &src, _TContainer &des)
+        {
+          ...
+        }
+
+        !!  instances of boost::iterator_range can be added directly to
+            filtering streams and stream buffers,thus there is a easier way
+            to read from an STL container:
+              e.g.
+                <boost/iostreams/filtering_stream.hpp>
+                <boost/range/iterator_range.hpp>
+                <string>
+
+                string input("Hello world");
+                string output;
+
+                //  combine boost iostreams filtering stream with
+                //  boost iterator range.
+                //  make an iterator,which moving in the range defined by @input.
+                //  install the new iterator to filtering_istream object for replace
+                //  the older one.
+                boost::iostreams::filtering_istream in(boost::make_iterator_range(input));
+                getline(in, output);
+
+
 asio >
     Boost.Asio may be used to perform both synchronous and asynchronous operations
     on I/O objects.
