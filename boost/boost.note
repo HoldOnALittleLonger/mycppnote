@@ -168,7 +168,7 @@ boost.iostreams >
         
           //  class @the_device is a "source".
 
-      container_source :
+      container_source :  //  device is type of source
         <boost/iostreams/categories.hpp>
         ...
 
@@ -205,6 +205,15 @@ boost.iostreams >
           ...
         }
 
+        //  or use the library feature
+        //    std::string input("Hello world");
+        //    std::string output;
+        //    
+        //    //  stream on device container_source<string>
+        //    boost::iostreams::stream<container_source<string>> in(input);
+        //    getline(in, output);  //  libaray function
+        //    
+
         !!  instances of boost::iterator_range can be added directly to
             filtering streams and stream buffers,thus there is a easier way
             to read from an STL container:
@@ -224,6 +233,100 @@ boost.iostreams >
                 boost::iostreams::filtering_istream in(boost::make_iterator_range(input));
                 getline(in, output);
 
+    Writing a container_sink :
+      a sink is a device which support write operation only.
+      
+      <boost/iostreams/categories.hpp>
+        //  sink_tag - tag used indicates that the device contains it
+        //             is a sink.
+        struct sink_tag : device_tag, output {};
+
+        e.g.
+          class the_device {
+          public:
+            typedef sink_tag category;
+          ...
+          };
+
+      <boost/iostreams/concepts.hpp>
+        //  type-definition - specialization of class template @device with
+        //                    template parameter @output is a sink.
+        //  #  class derived from this type is also a sink.
+        typedef device<output> sink;
+
+        e.g.
+          class the_device : public sink {};
+
+      container_sink :  //  device is type of sink
+
+        //  the underlying container is specified by template parameter
+        //  @_TContainer
+        template<typename _TContainer>
+        class container_sink {
+        public:
+          typdef _TContainer::value_type char_type;  //  character type
+          typedef sink_tag category;  //  category of this device
+                                      //  tell boost iostreams that the
+                                      //  device container_sink is a
+                                      //  model of Sink.
+
+          container_sink(_TContainer &container);  //  constructor
+
+          //  write - member function write,write characters from @s
+          //          to the underlying container with size @n
+          //  @src:   source data
+          //  @n:     size to write
+          //  return: size have been written
+          //          -1  =>  EOF or other errror
+          std::streamsize write(const char_type *src, std::streamsize n);
+        };
+        
+        template<typename _TContainer, typename _TCharacter = char>
+        std::streamsize operator<<(container_sink<_TContainer> &sink, const _TCharacter *src)
+        {
+          if (!src)
+            return -1;
+          return sink.write(src, strlen(src));
+        }
+
+        //  operator overload can not modify the basic rule of that operator.
+
+        template<typename _TContainer>
+        std::streamsize operator<<(container_sink<_TContainer> &sink, const _TContainer &source)
+        {
+          //  read_data just a primitive used to retrieve the real underlying buffer of @source
+          return sink.write(source.real_data(), source.length());
+        }
+
+        //  or use the library feature
+        //    std::string destination;
+        //
+        //    //  stream on device container_sink<std::string>.
+        //    boost::iostreams::stream<container_sink<std::string>> out(destination);
+        //    out << "Hello world";  //  read and write into @out
+        //                           //  @out had been linked to @destination
+        //                           //  operator<< overload provides by iostreams library
+        //    out.flush();  //  flush
+
+        !!  boost iostreams library provides buffering by default.
+
+        !!  OutputIterators can be added directly
+            to filtering streams and stream buffers of boost iostreams library.
+            e.g.
+              <iterator>
+              <boost/iostreams/filtering_stream.hpp>
+
+              string destination;       //  as underlying container
+              
+              //  construct an object is type of filtering_ostream,initialize it with
+              //  a back_insert obtained from @destination
+              boost::iostreams::filtering_ostream out(back_insert(destination));
+              out << "Hello world";
+              out.flush();
+
+            //  <boost/iostreams/device/back_inserter.hpp> provides a back_inserter
+            //  more efficient than C++ Standard Library back_inserter.
+            //    boost::iostreams::back_inserter()
 
 asio >
     Boost.Asio may be used to perform both synchronous and asynchronous operations
