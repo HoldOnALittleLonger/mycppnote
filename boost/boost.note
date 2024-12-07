@@ -328,6 +328,120 @@ boost.iostreams >
             //  more efficient than C++ Standard Library back_inserter.
             //    boost::iostreams::back_inserter()
 
+    Writing a container_device :
+      suppose a device support to input and output,in order for combined
+      reading and writing to be useful,then it must supports to seek.
+
+      several types of devices which combine reading and writing,the different
+      is: 
+        there are two separate character sequences for input and output or only
+        a character sequence for input and output
+        there are separate position indicators for reading and writing or only
+        a single read/write position indicator
+
+      boost iostreams library provides several modes to specify what the device
+      is.
+
+      <boost/iostreams/positioning.hpp>
+        //  type-definition - stream offset type.
+        typedef boost::intmax_t stream_offset;
+
+      <boost/iostreams/categories.hpp>
+        //  seekable_device_tag - tag to indicates the device contains this tag
+        //                        is a seekable device,it supports input/output
+        //                        on a single character sequence with a single
+        //                        position indicator.
+        struct seekable_device_tag : virtual device_tag, seekable { };
+
+        e.g.
+          class the_seekable_device {
+          public:
+            typedef seekable_device_tag category;
+            ...
+
+            std::streamsize read(char *s, std::streamsize n);
+            std::streamsize write(const char *s, std::streamsize n);
+
+            //  seek - seek stream position to @base + @off 
+            //  @off:  offset to @base
+            //  @base: where to start
+            //         std::io_base::beg
+            //         std::io_base::cur
+            //         std::io_base:end
+            //  return: the new stream position
+            stream_offset seek(stream_offset off, std::io_base::seekdir base);
+          };
+
+      //  I have not find out the type-definition about seekable_device in
+      //  <boost/iostreams/concepts.hpp> .
+      //  but i think the type-definition should be
+      //    typedef device<seekable> seekable_device;
+      //  
+      //  make @the_seekable_device public inherits("is-a") from such
+      //  specifialized class is easy way to indicates the class is a
+      //  seekable device.
+
+      container_device :
+        <boost::iostreams::categories.hpp>
+        <boost::iostreams::positioning.hpp>
+        ...
+
+        //  the C++ head <iterator> contains several iterators with
+        //  different type,and the STL container selects a kind of
+        //  them as its iterator.
+        //  because this device is seekable(base + offset),thus the
+        //  container at least selected std::random_access_iterator
+        //  as its iterator.
+        template<typename _TContainer>
+        class container_device {
+        public:
+          typedef _TContainer::value_type char_type;
+          typedef seekable_device_tag category;  //  container_device is a model
+                                                 //  of seekable device.
+
+          container_device(_TContainer &container);
+
+          //  a seekable device must supports input and output
+
+          //  reading starts at current position
+          std::streamsize read(char *des, std::streamsize n);
+
+          //  writing starts at current position
+          std::streamsize write(const char *src, std::streamsize n);
+
+          //  a seekable device must supports to seek position
+          //  the problem new position exceed end of container how to be
+          //  solved is according to design,just throw an exception or
+          //  extend the size of underlying container are OK.
+          stream_offset seek(stream_offset offset, std::io_base::seekdir base);
+
+        ...
+        };
+
+        e.g.
+          <string>
+          <ios>
+          <boost/iostreams/stream.hpp>
+
+          std::string str1;
+          std::string str2;
+
+          //  construct a stream @io_device on container_device<std::string>,and
+          //  the underlying container of the device is @str1.
+          boost::iosteams::stream<container_device<std::string>> io_device(str1);
+
+          io_device << "Hello world";
+          io_device.flush();  //  @str1 contains "Hello world"
+
+          io_device.seek(0, BOOST_IOS::beg);  //  seek to beg + 0
+
+          getline(io_device, str2);  //  read from @io_device write into @str2
+
+
+
+
+
+
 asio >
     Boost.Asio may be used to perform both synchronous and asynchronous operations
     on I/O objects.
