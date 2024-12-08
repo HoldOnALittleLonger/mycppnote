@@ -438,7 +438,146 @@ boost.iostreams >
           getline(io_device, str2);  //  read from @io_device write into @str2
 
 
+    The Modes that device could be :
+      the modes defined in <boost/iostreams/categories.hpp>
 
+      struct any_tag { };
+
+      Input                             single sequence of characters
+                                        - input on sc1
+
+      struct input : virtual any_tag { };
+
+      Output                            single sequence of characters
+                                        - output on sc1
+
+      struct output : virtual any_tag { };
+
+      Bidirectional                     two separate sequences of characters
+                                        - input on s1
+                                        - output on sc2
+
+      struct bidirectional 
+          : virtual input,
+            virtual output,
+            detial::two_sequence
+          { };
+
+      Input-seekable                    single sequence of characters
+                                        - input on sc1
+                                        - I-seekable
+
+      struct input_seekable : virtual input, virtual detail::random_access { };
+
+      Output-seekable                   a single sequence of characters
+                                        - output on sc1
+                                        - O-seekable
+
+      struct output_seekable : virtual output, virtual detail::random_access { };
+
+      Seekable                          single sequence of characters
+                                        - input on sc1
+                                        - output on sc2
+                                        - I/O-seekable
+
+      struct seekable
+          : virtual input_seekable,
+            virtual output_seekable,
+            detail::one_head
+          { };
+
+      Dual-seekable                     single sequence of characters
+                                        - input on sc1
+                                        - output on sc2
+                                        - I-seekable AND O-seekable
+
+      struct dual_seekable
+          : virtual input_seekable
+            virtual output_seekable
+            detail::two_head
+          { };
+
+      Bidirectional-seekable            two separate sequences of characters
+                                        - input on sc1
+                                        - ouput on sc2
+                                        - I-seekable AND O-seekable
+
+      struct bidirectional_seekable
+          : input_seekable,
+            output_seekable,
+            bidirectional,
+            detail::two_head
+          { };
+
+    InputFilters,OutputFilters and Filter Helpers :
+      filters are used to modify character sequences.
+      of course,filters can do nothing except just observe the characters.
+
+                                 +-------+
+      unfiltered characters ===> |Filters| ===> filtered characters
+                                 +-------+
+                                  | | |
+                                  | | +-------> observer => do nothing
+                                  | +---------> cryptor  => encrypt characters
+                                  +-----------> replacer => replace X to Y
+
+      InputFilters and OutputFilters :
+        InputFilter and OutputFilter are the basic filters in iostreams.
+
+        InputFilters represent a "pull" model of filtering >
+          a source of unfiltered data is provided--represented as a "source",
+          it is expected to generate a certain number of characters of the 
+          filtered sequence.
+
+          InputData => InputFilter => sequence of characters(filtered)
+                                      as "Source" for reading
+
+          //  InputFilter is a observer
+
+        OutputFilters represent a "push" model of filtering >
+          a sequence of unfiltered characters and a "Sink" are provided,
+          it is expected to filter the characters and write them to the "Sink".
+
+          OutputData => OutputFilter => sequence of characters(filtered)
+                                        as "Sink" for writing
+
+          //  OutputFilter is a observer
+
+      Filter Helpers :
+        helpers are the utilities provided by iostreams to writing a filter
+        easier.
+        
+                            //  usage scenario
+        aggregate_filter > (high-memory usage, well-defined end)
+          for define filter by reading unfiltered data from std::vector,
+          and writing filtered data to another std::vector.
+
+        stdio_filter > (high-memory usage, well-defined end)
+          for defing filter by reading unfiltered data from STDIN,
+          and writing filtered data to STDOUT.
+
+        symmetric_filter > (C-Language APIs such zlib,OpenSSL)
+          for define filter by reading unfiltered data from one array,
+          and writing filtered data to another array.
+
+
+                                      +------+                    
+        std::vector ==> InputData ==> |Filter| ==> OutputData ==> std::vector
+        STDIN---+ |                   +------+                    STDOUT
+        Array-+ | |                    | | |                      Array
+              | | |                    | | +-----+
+              | | |                    | +-----+ |
+              | | |                    +-----+ | |
+              | | |                          | | |
+              | | |                          | | |
+              | | +------>aggregate_filter<--+ | |
+              | +--------->stdio_filter<-------+ |
+              +----------->symmetric_filter<-----+
+
+
+        finite_state_filter >
+          for define filter as a finite state machine.
+          //  it is not currently an official part of the library.
 
 
 
