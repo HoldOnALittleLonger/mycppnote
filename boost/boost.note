@@ -579,6 +579,57 @@ boost.iostreams >
           for define filter as a finite state machine.
           //  it is not currently an official part of the library.
 
+    Some examples about how to use filters :
+      filters are usually used in conjunction with filtering streams and 
+      stream buffers.
+
+      filtering_ostream example :
+        <boost/iostreams/device/file_descriptor.hpp>
+        <boost/iostreams/filtering_stream.hpp>
+
+        boost::iostreams::filtering_ostream out;
+    
+        out.push(streamAction(FIRST));    //  push a character processor,
+                                          //  which take an action FIRST
+                                          //  on all characters in the stream.
+        out.push(streamAction(SECOND));   //  as same as FIRST
+
+        out.push(file_sink("/dev/null")); //  push a Sink,finally,all characters
+                                          //  in the stream would be written
+                                          //  into "/dev/null" .
+
+        //  filtering_ostream maintains an internal chain of
+        //  Filters and Devices.when data is written to this
+        //  chain,it flows through the components in the order
+        //  they were pushed.
+        //  the last component could be a Sink,or std::ostream
+        //  Sink such std::cout .
+
+      filtering_istream as same as filtering_ostream,a differences that is
+      it acts on InputData,not OutputData and the order is reverse to the
+      components they are pushed.
+
+      class constructor file_sink() construct a Sink through a file pathname.
+      class constructor file_source() consruct a Source through a file pathname.
+
+      //  in <boost/iostreams/device/file_descriptor.hpp>,
+      //  file_descriptor_sink() and file_descriptor_source()
+      //  do the same things as what file_sink() and file_source() do,
+      //  but "descriptor" means they require a file descriptor,and they would
+      //  not process code conversion.
+      //  as usually,"descriptor" version provides open() method .
+      //            Linux use file descriptor
+      //            Windows use file handle 
+      
+      !!  FILE OPERATIONS REQUIRE SUPPORT FROM BOOST LIBRARY,BECAUSE DIFFERENT
+          SYSTEM IMPLEMENTS FILE-SYSTEM IN A DIFFERENT WAY.
+
+                    PUSH: C1, C2, ... , Cn, SINK
+      OutputData => filtering_ostream { C1 => C2 => ... => Cn => SINK } => real Sink
+
+                    PUSH: C1, C2, ... , Cn, SOURCE
+      InputData => { SOURCE => Cn => ... => C2 => C1 } => filtering_istream => buffer
+
 
 
 asio >
