@@ -82,16 +82,25 @@ int main(void)
 
   char c('\0');
   while (in >> c && c != EOF) {
-    output_filter_toupper().put(outFile, c);  //  manually create filter
-    //    out << c;
+    //    output_filter_toupper().put(outFile, c);  //  manually create filter
+        out << c;
     /**
+     * <fixed>
      * use @out the object is type of boost::iostreams::filtering_ostream would
      * leave @sink unchanged,that is,no data is written into it.
      * filter function put() exactly called,and call to boost::iostreams::put()
      * is succeed,too.
      * but strang,the file have no data in it.
+     *
+     * c++ iostream flush buffer at the time when basic_iostream::tie() was called,
+     * or the object is destructing.
+     * boost iostreams is similar as such.
+     * but the local object is destructed when function main exit,and the code
+     * close Linux file descriptor before than occurence of boost iostreams flush.
+     * thus,all data in the buffer will be dropped.
      */
   }
+  out.flush();
 
   close(fdIn);
   close(fdOut);
