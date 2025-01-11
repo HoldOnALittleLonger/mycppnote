@@ -1,18 +1,13 @@
-//  Because I did not compile boost library and install,
-//  thus I can not compile this.
-
-
 #include <unistd.h>
 #include <fcntl.h>
+
+#include <ctype.h>
 
 #include <boost/iostreams/filtering_stream.hpp>
 #include <boost/iostreams/device/file_descriptor.hpp>
 #include <boost/iostreams/concepts.hpp>
 
-#include <ctype.h>
-
 using boost::iostreams::input_filter, boost::iostreams::output_filter;
-
 
 struct input_filter_increase : input_filter {
   typedef input_filter::char_type char_type;
@@ -22,12 +17,11 @@ struct input_filter_increase : input_filter {
   int get(Source &src)
   {
     char_type c('\0');
-    
+
     while ((c = boost::iostreams::get(src)) != EOF
            &&
-           !isalpha(c))
-      ;
-    return c + 1;
+           !isalpha(c));
+    return (c == EOF) ? c : c + 1;
   }
 
 };
@@ -42,26 +36,25 @@ struct output_filter_toupper : output_filter {
   template<typename Sink>
   bool put(Sink &sink, char_type c)
   {
-    return boost::iostreams::put(sink, toupper(c));
+    return boost::iostreams::put(sink, static_cast<char_type>(toupper(c)));
   }
 };
 
-#define SOURCE_FILE "boost_filtering_istream_source"
-#define SINK_FILE "boost_filtering_ostream_sink"
+#define SOURCE_FILE  "boost_filtering_istream_source"
+#define SINK_FILE  "boost_filtering_ostream_sink"
 
 int main(void)
 {
+  //  boost filtering istream and boost filtering ostream
   boost::iostreams::filtering_istream in;
   boost::iostreams::filtering_ostream out;
 
+  //  Linux file descriptor
   int fdIn = -1, fdOut = - 1;
 
   //  POSIX open
   fdIn = open(SOURCE_FILE, O_RDONLY);
   fdOut = open(SINK_FILE, O_WRONLY);
-
-  boost::iostreams::file_descriptor_source inFile;
-  boost::iostreams::file_descriptor_sink outFile;
 
   if (fdIn < 0)
     return -1;
@@ -69,28 +62,36 @@ int main(void)
   if (fdOut < 0)
     return -1;
 
-
-  //  !!  implementation of method open is depends on what
-  //      the system is.
-  //      so,boost library is required.
+  //  source and sink
+  boost::iostreams::file_descriptor_source inFile;
+  boost::iostreams::file_descriptor_sink outFile;
+  //  use deprecated method open() on handle
   inFile.open(fdIn, boost::iostreams::never_close_handle);
   outFile.open(fdOut, boost::iostreams::never_close_handle);
 
   //  C-Language string version for pathname is also provided
   //  by boost.
 
-
+  //  reserve order to pushed
   in.push(input_filter_increase());
   in.push(inFile);
 
-
+  //  in order they pushed
   out.push(output_filter_toupper());
   out.push(outFile);
 
   char c('\0');
-
-  while (in >> c && c != EOF)
-    out << c;
+  while (in >> c && c != EOF) {
+    output_filter_toupper().put(outFile, c);  //  manually create filter
+    //    out << c;
+    /**
+     * use @out the object is type of boost::iostreams::filtering_ostream would
+     * leave @sink unchanged,that is,no data is written into it.
+     * filter function put() exactly called,and call to boost::iostreams::put()
+     * is succeed,too.
+     * but strang,the file have no data in it.
+     */
+  }
 
   close(fdIn);
   close(fdOut);
