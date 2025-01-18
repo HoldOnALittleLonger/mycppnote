@@ -747,6 +747,89 @@ asio >
        *      //  learn about APIs of boost.asio as well.
        */
 
+    Tutorial :
+      Using a timer synchronously :
+        header <boost/asio.hpp>
+        I/O Execution context => boost::asio::io_context
+
+        !!  library list :
+              boost_thread(boost thread) pthread(posix event)
+              //  boost library system had became head-only since 1.6.69
+
+        boost::asio::steady_timer :
+          an asio core class.
+          it is a type definition of (selected automatically)
+            boost::asio::basic_waitable_timer<chrono::steady_clock>  //  C++
+            boost::asio::basic_waitable_timer<boost::chrono::steady_clock>  //  boost
+
+          one of waitable_timer constructors :
+            /**
+             * basic_waitable_timer - the class template of waitable timer
+             * @ex:                   boost asio I/O execution context pointer
+             * @expiry_time:          boost time_point pointer for time to wait
+             */
+            basic_waitable_timer(const executor_type &ex, const time_point &expiry_time)
+            : impl_(0, ex)  //  implementation
+            {
+              ...
+            }
+
+          member method :
+            /**
+             * wait - member method wait to request @impl_ call to
+             *        its wait primitive through get_service() API
+             *        to wait time duration specifed by @expiry_time
+             * throw: type boost::system::error_code,error set by
+             *        @impl_.get_service().wait().
+             */
+            void wait();
+
+          attributes :
+            disabled copy-construction
+            disabled assignment
+
+        <boost/asio/chrono.hpp>
+          //  boost wrapper
+          using boost::asio::chrono::seconds = std::seconds;
+
+        <chrono>
+           template<typename _Clock, typename _Dur>
+           struct time_point :
+             it is a C++ template struct used to product a time duration.
+
+           template<typename _Rep, typename _Period>
+           struct duration :
+             it is a C++ template struct used to represent a time duration.
+             the default value of @_Period is "ratio<1>".
+
+             type definitions :
+               using rep = _Rep;
+               using period = typename _Period::type;
+
+             private data member :
+               rep __r;
+
+             one of duration constructors :
+               template<typename _Rep2, typename = _Require<
+                                        is_convertible<const _Rep2&, rep>,
+                                        __or_<_is_float<rep>,
+                                        __not_<__is_float<_Rep2>>>>>
+               constexpr explicit duration(const _Rep2 &__rep)
+               : __r(static_cast<rep>(__rep)) { } 
+
+           using seconds = duration<_GLIBCXX_CHRONO_INT64_T>;
+
+        usage :
+          create an I/O Execution Context,and used it to create a boost timer
+          with a specified time duration.
+          call wait() on it to wait time expired synchronously.
+
+          e.g.
+            boost::asio::steady_timer timer(boost::asio::io_context{},
+                                            boost::asio::chrono::seconds(SECONDS));
+            ...
+            timer.wait();
+            ...
 
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
