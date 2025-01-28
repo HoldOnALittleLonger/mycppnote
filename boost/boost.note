@@ -831,6 +831,57 @@ asio >
             timer.wait();
             ...
 
+      Using a timer asynchronously :
+        boost ASIO asynchronously defines a completion token,which determines how
+        the result will be delivered to a completion handler when an asynchronous
+        operation completes.
+        //  similar to Linux signal mechanism.
+        
+        the ASIO steady_timer also support to asynchronous operations.
+        the member method wait() is synchronous,constray,the method async_wait()
+        is asynchronous.
+
+        the method run() of boost ASIO io_context is used to tell the 
+        asynchronous waiter a completion event.and ASIO provides a guarantee that
+        completion handlers will only be called from threads that are currently
+        calling boost::asio::io_context::run().
+        //  run() return to caller thread unless completion handler has returned.
+        //  if no completion handler have been registered,then run() returns
+        //  immediately from the invocation.
+
+        <boost/asio/basic_waitable_timer.hpp>
+          ////
+          //  async_wait - the template member method of class basic_waitable_timer
+          //               to processes an asynchronously waiting
+          //  @TP1:        type template parameter boost asio completion token
+          //  @TP2:        non-type template parameter specified default handler
+          //  
+          //  @token:      rvalue of completion handler which is a function
+          //               in type void (*)(boost::system::error_code)
+          //  return:      a template class async_result instance
+          //  # this function used tail return type definition
+          //    template function async_initiate() is defined in
+          //    <boost/asio/async_result.hpp>
+          //  # this function does not suspend caller
+          template<BOOST_ASIO_COMPLETION_TOKEN(void (boost::system::error_code))
+                   WaitToken = default_completion_token_t<executor_type>
+                  >
+          auto
+          waitable_timer::async_wait(WaitToken &&token =
+                                     default_completion_token_t<executor_type>())
+          -> decltype(async_initiate<WaitToken, void (boost::system::error_code)>(
+                      declval<initiate_async_wait>(), token));
+
+        <boost/asio/io_context.hpp>
+          typedef std::size_t count_type;
+
+        <boost/asio/impl/io_context.ipp>
+          ////
+          //  run - complete an asynchronous waiting,call to completion handler
+          //  return:   return value of run() the private io_context::impl_ call to
+          io_context::count_type io_context::run();
+
+
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
 
