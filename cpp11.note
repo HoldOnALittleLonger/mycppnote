@@ -1674,65 +1674,75 @@ cpp11>
 		     owner_before  -  provides owner-based ordering of weak pointers
 
 
-	       forwarding reference :
-	         If a typedef-name or a decltype-speficier denotes a type TR that is a reference to a type T,
-		 an attempt to create the type "lvalue reference to cv TR" creates the type "lvalue reference to T",
-		 while an attempt to create the type "rvalue reference to cv TR" is called a forwarding reference and creates the type TR.
+         forwarding reference :
+           If a typedef-name or a decltype-speficier denotes a type TR that is a reference to a type T,
+           an attempt to create the type "lvalue reference to cv TR" creates the type "lvalue reference to T",
+           while an attempt to create the type "rvalue reference to cv TR" is called a forwarding reference and creates the type TR.
 
-		 A reference type that is declared using & is called an lvalue reference,and a reference type that is declared using && is
-		 called an rvalue reference or a forwarding reference.lvalue references and rvalue references and forwarding references are
-		 distinct types.except where explicitly noted,they are semantically equivalent and commonly referred to as references.
+           A reference type that is declared using & is called an lvalue reference,and a reference type that is declared using && is
+           called an rvalue reference or a forwarding reference.lvalue references and rvalue references and forwarding references are
+           distinct types.except where explicitly noted,they are semantically equivalent and commonly referred to as references.
 
-		 in c++ template,the parameter has type T&& means this parameter is a forwarding reference.
-		 E.g.
+           in c++ template,the parameter has type T&& means this parameter is a forwarding reference.
+           e.g.
+             void foo(X&& x);
 
-  		   void foo(X&& x);
+             template<class Y>
+             void bar(Y&& x);
 
-		   template<class Y>
-		   void bar(Y&& x);
+             foo takes an rvalue reference to non-cons.
+             bar takes an lvalue or rvalue reference to everything: const,volatile,bothn,and neither.
+             foo accepts only rvalue X objects.
+             bar accepts all Y objects.
+             foo's parameter is for capturing temporaries(and other rvalues).
+             bar's parameter is for forwaring its argument onward.
 
-		   foo takes an rvalue reference to non-cons.
-		   bar takes an lvalue or rvalue reference to everything: const,volatile,bothn,and neither.
-		   foo accepts only rvalue X objects.
-		   bar accepts all Y objects.
-		   foo's parameter is for capturing temporaries(and other rvalues).
-		   bar's parameter is for forwaring its argument onward.
+             //  forwarding reference cant has cv-qualifier
 
-		   //  forwarding reference cant has cv-qualifier
-		 
-		 auto&& used for local variables really are forwarding references too.
-		 //  lambda expression or for loop etc.
-
-
-	       std::forward :
-	         <utility>
-		 template<class T>
-		 T&& forward(typename std::remove_reference<T>::type& t) noexcept;
-		 template<class T>
-		 constexpr T&& forward(std::remove_reference_t<T>& t) noexcept;
-		 template<class T>
-		 T&& forward(typename std::remove_reference<T>::type&& t) noexcept;
-		 template<class T>
-		 constexpr T&& forward(std::remove_reference_t<T>&& t) noexcept;
-
-		 forward() forwards lvalues as either lvalues or as rvalues,depending on T.
-		 when t is a forwarding reference,this overload forwards the argument to another function with
-		 the value category it had when passed to the calling funcion.
-
-		 forward() prohibit forwards rvalues as lvalues via overload version has parameter of type &&,
-		 these overload version would forwards rvalues as rvalues.
+             auto&& used for local variables really are forwarding references too.
+             //  lambda expression or for loop etc.
 
 
-	       std::remove_reference :
-	         <type_traits>
-		 template<class T>
-		 struct remove_reference;
+         std::forward :
+	       <utility>
+             template<class T>
+             T&& forward(typename std::remove_reference<T>::type& t) noexcept;
+             template<class T>
+             constexpr T&& forward(std::remove_reference_t<T>& t) noexcept;
+             template<class T>
+             T&& forward(typename std::remove_reference<T>::type&& t) noexcept;
+             template<class T>
+             constexpr T&& forward(std::remove_reference_t<T>&& t) noexcept;
 
-		 if the type T is a reference type,provides the member typedef type which is the type referred to
-		 by T.
-		 otherwise type is T.
+             forward() forwards lvalues as either lvalues or as rvalues,depending on T.
+             when t is a forwarding reference,this overload forwards the argument to another function with
+             the value category it had when passed to the calling funcion.
 
-		 //  the behavior of a program that adds specializations for remove_reference is undefined.
+             forward() prohibit forwards rvalues as lvalues via overload version has parameter of type &&,
+             these overload version would forwards rvalues as rvalues.
+
+
+         std::remove_reference :
+           <type_traits>
+             template<class T>
+             struct remove_reference;
+
+             if the type T is a reference type,provides the member typedef type which is the type referred to
+             by T.
+             otherwise type is T.
+             //  the behavior of a program that adds specializations for remove_reference is undefined.
+
+         std::bind :
+           <functional>
+             template<class F, class... Args>
+             /* unspecified */ bind(F &&f, Args&&... args);
+             template<class R, class F, class... Args>
+             /* unspecified */ bind(F &&f, Args&&... args);
+
+           The function template std::bind generates a forwarding call wrapper for @f,calling this wrapper
+           is equivalent to invoking @f with some of its arguments bound to @args.
+           // C++ placeholders such "_1" "_2" ... are able to be bound with the wrapper,and they are
+              replaced later when @f is called with special arguments.
 
 
 END

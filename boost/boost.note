@@ -845,7 +845,8 @@ asio >
         asynchronous waiter a completion event.and ASIO provides a guarantee that
         completion handlers will only be called from threads that are currently
         calling boost::asio::io_context::run().
-        //  run() return to caller thread unless completion handler has returned.
+        //  run() return to caller thread unless completion handler has returned,
+            and there is no more thing to does.
         //  if no completion handler have been registered,then run() returns
         //  immediately from the invocation.
 
@@ -856,8 +857,9 @@ asio >
           //  @TP1:        type template parameter boost asio completion token
           //  @TP2:        non-type template parameter specified default handler
           //  
-          //  @token:      rvalue of completion handler which is a function
-          //               in type void (*)(boost::system::error_code)
+          //  @token:      rvalue of completion handler which is a function or a
+          //               function object in type void (*)(boost::system::error_code)
+          //               # parameter in type "const boost::system::error_code &" is okay
           //  return:      a template class async_result instance
           //  # this function used tail return type definition
           //    template function async_initiate() is defined in
@@ -881,6 +883,70 @@ asio >
           //  return:   return value of run() the private io_context::impl_ call to
           io_context::count_type io_context::run();
 
+      Binding arguments to a completion handler :
+        C++ std::bind primitive is able to bind arguments for a function or a
+        function object.
+
+        <boost/asio/basic_waitable_timer.hpp>
+          ////
+          //  expires_at - sets the expiry time(accurate time point)
+          //               any pending asynchronous wait operations will be
+          //               cancelled
+          //               the handler for each cancelled operation will be
+          //               invoked with the boost::asio::error::operation_aborted
+          //               error code
+          //  @expiry_time:        asynchronous wait expires at @expiry_time
+          //  return:              the number of asynchronous operations that
+          //                       were cancelled
+          //  throw:               boost::system::system_error
+          //  # asynchronous wait already expired when expires_at() called,
+          //    then the handlers for asynchronous wait operations will
+          //    have already been invoked or have been queued for invocation in
+          //    near furture
+          //    ! these can not be cancelled.
+          //  # this method come with several overload versions.
+          std::size_t basic_waitable_timer::expires_at(const time_point &expiry_time);
+
+          ////
+          //  expires_after - similar to expires_at() method,but this method
+          //                  require a time duration
+          //
+          std::size_t basic_waitable_timer::expires_after(const duration &expiry_time);
+
+          ////
+          //  expiry - obtain the timer's current expiry time
+          //
+          time_point basic__waitable_timer::expiry() const;
+
+          e.g.
+            tick at each second,maximum counter is 8 :
+              namespace basio = boost::asio;
+
+              void tick_second(boost::system::system_error ec,
+                               basio::steady_timer *t,
+                               std::size_t *counter)
+              {
+                if (*counter < 5) {
+                  ...
+                  ++*counter;
+                  // adjust expiry time,these works can be done before next time tick comes
+                  t->expires_at(t->expiry() + basio::chrono::seconds(1));
+                  // initiate a new asynchronous wait operation
+                  t->async_wait(std::bind(tick_second, basio::placeholders::error,
+                                          t, counter));
+                  /**
+                   * the function wrapper created by std::bind is the correct type that
+                   * @WaitToken required(function signature)
+                   * call to handler :
+                   *   WaitToken &&token(error_code from io_context);
+                   *   -> token(error_code from io_context, steady_timer *bound2,
+                   *            counter *bound3);
+                   *   operator() overload on function object.
+                   */
+                }
+                // no more asynchronous wait operation to be initiated,run() return
+                   to caller.
+              }
 
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
