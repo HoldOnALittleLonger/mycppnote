@@ -865,7 +865,7 @@ asio >
           //    template function async_initiate() is defined in
           //    <boost/asio/async_result.hpp>
           //  # this function does not suspend caller
-          template<BOOST_ASIO_COMPLETION_TOKEN(void (boost::system::error_code))
+          template<BOOST_ASIO_COMPLETION_TOKEN_FOR(void (boost::system::error_code))
                    WaitToken = default_completion_token_t<executor_type>
                   >
           auto
@@ -873,6 +873,16 @@ asio >
                                      default_completion_token_t<executor_type>())
           -> decltype(async_initiate<WaitToken, void (boost::system::error_code)>(
                       declval<initiate_async_wait>(), token));
+
+          !!  BOOST_ASIO_COMPLETION_TOKEN_FOR(sig)  ::boost::asio::completion_token_for<sig>
+              completion_token_for<> is a C++ concept type of BOOST_ASIO_CONCEPT
+          !!  typedef any_io_executor executor_type
+              => WaitToken = typename default_completion_token::<executor_type>::type
+          !!  finally,the template parameter is this format in default :
+                ::boost::asio::completion_token_for<void (boost::system::error_code)>
+                typename default_completion_token::<executor_type>::type
+              // completion handler does not retrieve error_code also is okay.
+                 BUT MUST IMPLEMENT IT BY CREATE A FUNCTION OBJECT THROUGH "std::bind"!!
 
         <boost/asio/io_context.hpp>
           typedef std::size_t count_type;
@@ -947,6 +957,37 @@ asio >
                 // no more asynchronous wait operation to be initiated,run() return
                    to caller.
               }
+
+      Use class method as a completion handler :
+        This also is implemented through std::bind,but every non-static class method implicitly
+        requires a class object which is represented by "this" pointer.
+
+        e.g.
+          class my_async_timer {
+          public:
+            my_async_timer(boost::asio::io_context &io)
+            : t_(io, boost::asio::chrono::seconds(1)) = default
+            {
+              t_.async_wait(std::bind(&my_async_timer::tick_second,
+                                      boost::asio::placeholders::error,
+                                      this));
+            }
+
+            void tick_second(boost:system::error_code ec)
+            {
+              if (counter_++ < MAX_COUNT) {
+                std::cout << "Tick" << std::endl;
+                t_.expires_at(t_.expiry() + boost::asio::chrono::seconds(1));
+                t_.async_wait(std::bind(&my_async_timer::tick_second,
+                                        boost::asio::placeholders::error,
+                                        this));
+              }
+            }
+
+          private:
+            boost::asio::steady_timer t_;
+            std::size_t counter_;
+          };
 
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
