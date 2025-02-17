@@ -989,6 +989,137 @@ asio >
             std::size_t counter_;
           };
 
+      Synchronising completion handlers in multithread programs :
+        For single thread programs >
+        The limitations asio places on programs,particularly servers :
+          1> poor responsiveness when handlers can take a long time to complete
+          2> an inability to scale on multiprocessor systems
+          
+        the limitations listed above can be removed by multi-thread design.
+        /**
+         * asio provides a guarantee that completion handles will only be called
+         * from threads that are currently calling boost::asio::io_context::run().
+         * # if there is another thread attempts to invoke run() on the same io_context
+         *   object that previous thread is taking action on,then the second
+         *   thread will be suspended until the first thread returned from
+         *   run().
+         * ! but in multi-thread program,might several threads calling run() at
+         *   same time,in this case,shared resource must be protected from
+         *   concurrent.
+         */
+
+        boost::asio::strand class template :
+          <boost/asio/strand.hpp>
+            ////
+            //  strand - an ASIO class used to serializes the execution of 
+            //           executors dispatched from it
+            //  @TP1:    Executor is the type that object of such type must be
+            //           callable
+            //
+            template<typename Executor>
+            class strand;
+
+            /* allow copy and move */
+
+            private data members :
+              /* entity of an executor object */
+              Executor executor_
+              /* detail implementation type,C++ pointer to implementation */
+              implementation_type impl_
+              
+            constructors :
+              ////
+              //  default constructor
+              //    initialize @executor_ and @impl_ to default value through
+              //    their default constructors
+              //
+              strand() : executor_(), impl_(strand::create_implementation(executor_))
+              {
+              }
+
+              ////
+              //  explicit constructor
+              //    type Executor1 can be a proxy of template parameter Executor
+              //    initializes @executor_ to @e,and use @executor_ to create
+              //    an implementation then let @impl_ refer to it
+              //
+              template<typename Executor1>
+              explicit strand(const Executor1 &e,
+                              constraint_t<conditional_t<!is_same<Executor1, strand>::value,
+                                                         is_convertible<Executor1, Executor>,
+                                                         false_type>::value
+                                          > = 0)
+                : executor_(e), impl_(strand::create_implementation(executor_))
+              {
+              }
+              
+            /**
+             * @name make_strand
+             * @tparam Executor executor type
+             * @param ex a reference to an executor
+             * @param anonyous template constraint  
+             * @brief helper to create a strand object
+             * @details
+             * an inline function template create and initialize a strand entity
+             * with @param ex
+             * @return an entity of intialized class strand<@tparam Executor>
+             */
+            template<typename Executor>
+            inline strand<Executor> make_strand(const Executor &ex,
+                                                constraint_t<is_executor<Executor>::value ||
+                                                execution::is_executor<Executor>::value>
+                                                = 0)
+            {
+              return strand<Executor>(ex);
+            }
+
+        boost::asio::bind_executor routine :
+          <boost/asio/bind_executor.hpp>
+            ////
+            //  bind_executor - bind an object of type @tparam T with an executor of
+            //                  type @tparam Executor
+            //  @Executor:      type of executor
+            //  @T:             the object which Executor bind to
+            //  @return:        an entity is type of class template executor_binder which
+            //                  is constructed through @tparam decay<T>, Executor
+            //                  and @param executor_arg_t(), @ex, T &&@t
+            //  # executor_binder is a call wrapper
+            //
+            template<typename Executor, typename T>
+            BOOST_ASIO_NODISCARD inline executor_binder<decay_t<T>, Executor>
+            bind_executor(const Executor &ex, T &&t,
+                          constraint_t<is_executor<Executor>::value ||
+                                       execution::is_executor<Executor>::value>
+                          = 0);
+
+            /**
+             * @brief: overload version
+             * @return: an entity of class template executor_binder which is 
+             *          constructed through @tparam decay_t<T>, ExecutionContext::executor_type
+             *          and @param executor_arg_t(), @ctx.get_executor(), T &&@t
+             */
+            template<typename ExecutionContext, typename T>
+            BOOST_ASIO_NODISCARD inline executor_binder<decay_t<T>,
+                                                        typename ExecutionContext::executor_type>
+            bind_executor(ExecutionContext &ctx, T &&t,
+                          constraint_t<is_convertible<ExecutionContext &,
+                                                      execution_context &>::value>
+                          = 0);
+
+        e.g.
+          #include <boost/asio.hpp>
+          ...
+
+          boost::asio::io_context io;
+          auto the_strand(boost::asio::make_strand(io));
+
+          boost::asio::steady_timer t1(io, boost::asio::chrono::seconds(1));
+          boost::asio::steady_timer t2(io, boost::asio::chrono::seconds(1));
+          ...
+          t1.async_wait(boost::asio::bind_executor(the_strand, completion_handler));
+          t2.async_wait(boost::asio::bind_executor(the_strand, completion_handler));
+          ...
+
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
 
