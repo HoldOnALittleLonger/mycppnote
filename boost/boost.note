@@ -1120,6 +1120,195 @@ asio >
           t2.async_wait(boost::asio::bind_executor(the_strand, completion_handler));
           ...
 
+      A synchronous TCP dyatime client :
+        boost have introduced a resolver type is ip::tcp::resolver,an object
+        of such type is able to convert a network service name to a transport
+        layout endpoint.                /** normally,a protocol is associated
+                                         *  with a network service name
+                                         */
+
+          <boost/asio/ip/basic_resolver.hpp>
+            /**
+             * basic_resolver - template class basic resolver of boost ASIO
+             *                  to resolve a protocol to a transport layout
+             *                  endpoint
+             * @InternelProtocl: template parameter for internet protocol
+             * @Executor:       template parameter for ASIO io context
+             * # this class disallow copying and assignment
+             */
+            template<typename InternetProtocol, typename Executor>
+            class basic_resolver : public resolver_base {
+            private:
+              class initiate_async_resolve;
+            public:
+              typedef Executor executor_type;
+  
+              /* rebind_executor - rebind resolver to other executor */
+              template<typename Executor1>
+              struct rebind_executor {
+                typedef basic_resolver<InternetProtocol, Executor1> other;
+              };
+              typedef InternetProtocol protocol_type;
+              typedef typename InternetProtocol::endpoint endpoint_type;
+              typedef basic_resolver_results<InternetProtocol> results_type;
+  
+              explicit basic_resolver(const executor_type &ex)
+                : impl_(0, ex)
+              {
+              }
+  
+              template<typename ExecutionContext>
+              explicit basic_resolver(ExecutionContext &context,
+                                      constraint_t<
+                                        is_convertible<
+                                          ExecutionContext &,
+                                          execution_context &
+                                        >::value
+                                      > = 0)
+                : impl_(0, 0, context)
+              {
+              }
+  
+              ...
+          
+              /* resolve - resolve @host and @service to a transport layout endpoint */
+              results_type resolve(BOOST_ASIO_STRING_VIEW_PARAM host,
+                                   BOOST_ASIO_STRING_VIEW_PARAM service);
+              results_type resolve(BOOST_ASIO_STRING_VIEW_PARAM host,
+                                   BOOST_ASIO_STRING_VIEW_PARAM service,
+                                   boost::system::error_code &ec);
+              results_type resolve(BOOST_ASIO_STRING_VIEW_PARAM host,
+                                   BOOST_ASIO_STRING_VIEW_PARAM service,
+                                   resolver_base::flags resolve_flags);
+              results_type resolve(BOOST_ASIO_STRING_VIEW_PARAM host,
+                                   BOOST_ASIO_STRING_VIEW_PARAM service,
+                                   resolver_base::flags resolve_flags,
+                                   boost::system::error_code &ec);
+              ...
+       
+              /* resolve - do reverse resolution */
+              results_type resolve(const endpoint_type &e);
+              results_type resolve(const endpoint_type &e,
+                                   boost::system::error_code &ec);
+              
+            private:
+              /* initiate_async_resolve - initiate asynchronous resolution */
+              class initiate_async_resolve {
+              public:
+                typedef Executor executor_type;
+                ...
+              private:
+                basic_resolver *self_;
+              };
+  
+              boost::asio::detail::io_object_impl<
+                boost::asio::detail::resolver_service<InternetProtocol>,
+                Executor> impl_;
+            };
+
+            ! class resolver inside to namespace boost::asio::ip::tcp .
+
+        every network link based on a socket,which is an object used to represent
+        a network connection.
+
+          <boost/asio/socket_base.hpp>
+            /* socket_base - a class inculdes a lot of socket properties */
+            class socket_base;
+  
+          <boost/asio/ip/tcp.hpp>
+            /* tcp - a class represent a tcp connection */
+            class tcp {
+            public:
+              ...
+              /* socket - a type-definition for basic stream socket under TCP  */
+              typedef basic_stream_socket<tcp> socket;
+              ...
+            };
+
+            ! class tcp inside to namespace boost::asio::ip::tcp .
+
+          <boost/asio/basic_socket.hpp>
+            /**
+             * basic_socket - represent a basic socket type in boost ASIO,
+             *                we should not use this class directly,use it
+             *                as a base class as well
+             */
+            template<typename Protocol, typename Executor>
+            class basic_socket : public socket_base {
+              ...
+            protected:
+              /* this means must use this class as a base class in hierarchy */
+              ~basic_socket()
+              {
+              }
+            };
+  
+            !! if need a socket as same as the BSD-Socket intrudoced in POSIX.1,
+               then should use the class basic_stream_socket.
+
+        start a network connection through function connect().
+          <boost/asio/connect.hpp>
+            /* connect - attempt establish connection on @s and @endpoints */
+            template<typename Protocol, typename Executor,
+                     typename EndpointSequence>
+            typename Protocol::endpoint connect(basic_socket<Protocol, Executor> &s,
+                                                const EndpointSequence &endpoints,
+                                                constraint_t<
+                                                  is_endpoint_sequence<
+                                                    EndpointSequence
+                                                  >::value
+                                                > = 0);
+  
+            template<typename Protocol, typename Executor,
+                     typename EndpointSequence>
+            typename Protocol::endpoint connect(basic_socket<Protocol, Executor> &s,
+                                                const EndpointSequence &endpoints,
+                                                boost::system::error_code &ec,
+                                                constraint_t<
+                                                  is_endpoint_sequence<
+                                                    EndpointSequence
+                                                  >::value
+                                                > = 0);
+
+        make reading on a socket through member method read_some() of class 
+        basic_stream_socket.
+          <boost/asio/basic_stream_socket.hpp>
+            /**
+             * read_some - basic_stream_socket member method used to read on a 
+             *             basic stream socket
+             * @MutableBufferSequence: template parameter,represent mutable buffer
+             *                         sequence
+             * @buffers:   an object is type of const MutableBufferSequence reference
+             *             # one or more buffers into which the data will be read
+             * return:     how many data has readed
+             * @throwing:  this function may throw an error is type of 
+             *             boost::system::error_code to indicates what happened
+             *             during reading
+             */
+            template<typename Protocol, typename Executor>
+              template<typename MutableBufferSequence>
+              std::size_t basic_stream_socket<Protocol, Executor>::
+              read_some(const MutableBufferSequence &buffers);
+  
+            template<typename Protocol, typename Executor>
+              template<typename MutableBufferSequence>
+              std::size_t basic_stream_socket<Protocol, Executor>::
+              read_some(const MutableBufferSequence &buffers,
+                        boost::system::error_code &ec);
+
+          !! an object is type of std::array does not satisfy the constraint MutableBufferSequence in normally,
+             so call to read_some() with a reference to an object is std::array is illegal.
+             but type of boost::asio::buffer can satisfy MutableBufferSequence constraint.because
+             boost does not allow convert std::array to boost::asio::buffer implicitly,thus we have
+             to make up an object is type of boost::asio::buffer with another object is type of std::array
+             explicitly.
+             e.g.
+               @socket.read_some(boost::asio::buffer(std::array<char, N>());
+
+            
+
+
+
 SmartPtr >
     Boost.SmartPtr: The Smart Pointer Library
 
