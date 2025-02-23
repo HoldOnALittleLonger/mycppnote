@@ -26,9 +26,9 @@ Deprecated :
       u8'c-char'
 
       c-char : either
-      	         > basic-c-char
-		 > an escape sequence
-		 > a universal character name
+                   > basic-c-char
+         > an escape sequence
+         > a universal character name
 
     UTF-8 character literal,such literal has type char(until c++20) or char8_t(since c++20) and the value equal to
     ISO/IEC 10646 code point value of c-char,provided that the code point values is representable with a single UTF-8
@@ -52,21 +52,21 @@ Deprecated :
     function signature)
 
     e.g.
-	void f(int a) noexcept;
-	void f(int a);
-			//  the second f() cant be overloaded version of the first,
-			//  because the different between them only in their exception specification.
-			//  the second is no exception,the first is potentially exception.
+    void f(int a) noexcept;
+    void f(int a);
+            //  the second f() cant be overloaded version of the first,
+            //  because the different between them only in their exception specification.
+            //  the second is no exception,the first is potentially exception.
 
-	g() noexcept(false);
-	g();
-			//  both declarations for g are potentially throwing,but there have not overload.
+    g() noexcept(false);
+    g();
+            //  both declarations for g are potentially throwing,but there have not overload.
 
-	void f(void) noexcept;
-	void (*pf)(void) = f;  //  error
-	     		       //  f is noexcept,but pf requires a function which is potentially throwing.
+    void f(void) noexcept;
+    void (*pf)(void) = f;  //  error
+                        //  f is noexcept,but pf requires a function which is potentially throwing.
 
-	void (*pf2)(void noexcept = f;  //  OK 
+    void (*pf2)(void noexcept = f;  //  OK 
 
 
 > new order of evaluation
@@ -80,25 +80,25 @@ Deprecated :
     Summary :
       the following expressions are evaluated in the order a,then b,then c,then d >
         a.b
-	a->b
-	a->*b
-	a(b1,b2,b3)
-	b @= a  //  '@' means any operator which can be combined with '='
-	a[b]
-	a << b
-	a >> b
+    a->b
+    a->*b
+    a(b1,b2,b3)
+    b @= a  //  '@' means any operator which can be combined with '='
+    a[b]
+    a << b
+    a >> b
 
       #  additional rule :
-      	   the order of evaluation of an expression involving an overloaded operator is determined by the
-	   order associated with the corresponding built-in operator,not the rules for function calls.
+             the order of evaluation of an expression involving an overloaded operator is determined by the
+       order associated with the corresponding built-in operator,not the rules for function calls.
 
          function calls :
-	   the function is evaluated before all its arguments,but any pair of arguments(from the argument list) 
-	   is indeterminately sequenced;meaning that one is evaluated before the other but the order is not
-	   specified;it is guaranteed that the function is evaluated before the arguments.
+       the function is evaluated before all its arguments,but any pair of arguments(from the argument list) 
+       is indeterminately sequenced;meaning that one is evaluated before the other but the order is not
+       specified;it is guaranteed that the function is evaluated before the arguments.
 
     //  new order of evaluation is to solve a problem occurs in chaining expressions like :
-    	  std::cout<<f()<<t()<<c();  //  a chaining member functions calls.
+          std::cout<<f()<<t()<<c();  //  a chaining member functions calls.
 
 
 > lambda capture of *this
@@ -107,25 +107,25 @@ Deprecated :
     (c++20,the implicit capture of *this when the capture default is '=' is deprecated)
 
     captures :
-      [this]	simple by-reference capture of the current object
-      [*this]	simple by-copy capture of the current object
+      [this]    simple by-reference capture of the current object
+      [*this]    simple by-copy capture of the current object
 
 
 > compile-time if constexpr
     if statement :
       syntax :
         <attr>(optional) if constexpr(optional) (<init-statement>(optional) <condition>) <statement-true>
-			 else <statement-false>
+             else <statement-false>
 
       the constexpr keyword in if statement :
         if present,the statement becomes a constexpr if statement.
 
       init-statement : (since c++17)
         either an expression statement or a simple declaration,typically a declaration of a variable with
-	initializer,but it may declare arbitrary many variables or be a structured binding declaration.
-	(an alias declaration (since c++23))
-	//  init-statement must end with a symbol ';',null statement is supported just a ';'.
-	//  more than one init should use comma as separator.
+    initializer,but it may declare arbitrary many variables or be a structured binding declaration.
+    (an alias declaration (since c++23))
+    //  init-statement must end with a symbol ';',null statement is supported just a ';'.
+    //  more than one init should use comma as separator.
 
     constexpr if statement :
       in a constexpr if statement,the value of condition must be a contextually converted constant
@@ -136,19 +136,19 @@ Deprecated :
 
       E.g.
         template<typename T>
-	auto get_value(T t)
-	{
-	  if constexpr(std::is_pointer_v<T>)
-	    return *t;
-	  else
-	    return t;
-	}
+    auto get_value(T t)
+    {
+      if constexpr(std::is_pointer_v<T>)
+        return *t;
+      else
+        return t;
+    }
 
       //  if constexpr is not a substitute for the #if preprocessing directive,this means if constexpr
-      	  statement have not macro alike behavior.
+            statement have not macro alike behavior.
       //  when constexpr if statement inside a template,and the condition is not value-dependent after
           instantiation,the discarded statement is not instantiated while the enclosing template is
-	  instantiated.
+      instantiated.
 
     //  consteval if since c++23
 
@@ -176,17 +176,17 @@ Deprecated :
         accessed.
       > an inline function or variable with external linkage has the following additional properties :
         > there may be more than one definition of an inline function or variable in the program as long as each 
-	  definition appears in a different translation unit and all definitions are identical.
-	> it must be declared inline in every translation unit.
-	> it has the same address in every translation unit.
+      definition appears in a different translation unit and all definitions are identical.
+    > it must be declared inline in every translation unit.
+    > it has the same address in every translation unit.
 
-	//  the meaning of the keyword inline for functions came to mean "multiple definitions are permitted" rather
-	    than "inlining is preferred"",that meaning was extended to variables.)(since c++17)
-	//  inline is non-binding,compilers are free to use inline substitution for any function that's not marked
-	    inline,and are free to generate function calls to any function marked inline.
-	//  since c++17,
-	    inline cant be used in block scope.
-	    inline cant re-declare a function or variable that was already defined in the translation unit as non-line.
+    //  the meaning of the keyword inline for functions came to mean "multiple definitions are permitted" rather
+        than "inlining is preferred"",that meaning was extended to variables.)(since c++17)
+    //  inline is non-binding,compilers are free to use inline substitution for any function that's not marked
+        inline,and are free to generate function calls to any function marked inline.
+    //  since c++17,
+        inline cant be used in block scope.
+        inline cant re-declare a function or variable that was already defined in the translation unit as non-line.
 
 
 > structured binding declaration
@@ -201,13 +201,13 @@ Deprecated :
 
       cv-auto :
         possibly cv-qualified type specifier auto,may also include storage-class-specifier static or
-	thread_local.(including volatile in cv-qualifiers is deprecated,since c++20)
+    thread_local.(including volatile in cv-qualifiers is deprecated,since c++20)
       ref-qualifier :
         & or &&
       expression :
         an expression that does not have comma operator at the top level(grammatically,an assignment-expression),
-	and has either arry or non-union class type.if expression refers to any of the name from identifier-list,
-	the declaration is ill-formed.
+    and has either arry or non-union class type.if expression refers to any of the name from identifier-list,
+    the declaration is ill-formed.
 
     usage :
       int a[2] = {1, 2};
@@ -226,20 +226,20 @@ Deprecated :
 
       struct S {
         mutable int x1:2;
-	volatile double y1;
+    volatile double y1;
       };
 
       struct S s(1, 3.3);
       const auto [x, y] = s;  //  x is an int lvalue identifying the 2-bit bit field in s.
-      	    	      	       //  y is a const volatile double lvalue.
+                                   //  y is a const volatile double lvalue.
 
       (since c++20)
       //  structured binding cant be constrained.
-      	  e.g.
-	    template<class T>
-	    concept C = true;  //  define a concept object.
+            e.g.
+        template<class T>
+        concept C = true;  //  define a concept object.
 
-	    C auto [x, y] = std::pair{1, 2};  //  error,constrained
+        C auto [x, y] = std::pair{1, 2};  //  error,constrained
 
 
 > initializers for if and switch
@@ -264,7 +264,7 @@ Deprecated :
 
       switch (auto k(std::string{"kksk"}); k.length()) {
         ...
-	default: ...
+    default: ...
       };
 
 
@@ -289,16 +289,16 @@ Deprecated :
       of class objects even if the copy/move constructor and the destructor have observable side-effects.
         >  in a return statement,when the operand is the name of a non-volatile object with automatic storage duration,which
            isnt a function parameter or a catch clause parameter,and which is of the same class type as the function return type.
-	   (NRVO,named return type optimization)(ignore cv-qualification)
+       (NRVO,named return type optimization)(ignore cv-qualification)
         >  in the initialization of an object,when the source object is a nameless temporary and is of the same class type as the
            target object.when the nameless temporary is the operand of a return statement,this variant of copy elision is known
-	   as RVO,return value optimization.(until c++17)(ignore cv-qualification)
-	   //  return value optimization is mandatory and no longer considered as copy elision,since c++17.
+       as RVO,return value optimization.(until c++17)(ignore cv-qualification)
+       //  return value optimization is mandatory and no longer considered as copy elision,since c++17.
         >  in a throw-expression,when the operand is the name of a non-volatile object with automatic storage duration,which
            isnt a function parameter or a catch clause parameter,and whose scope doesnt extend past the innermost try-block.
         >  in a catch clause,when the argument is of the same type as the exception object thrown,the copy of the exception object
            is omitted and the body of the catch clause accesses the exception object directly,as if caught by reference.
-	   (since c++11)(ignore cv-qualification)
+       (since c++11)(ignore cv-qualification)
         >  in coroutines,copy/move of the parameter into coroutine state my be elided where this doesnt change the behavior of
            the program other than by omiiting the calls to the parameter's constructor and destructor.(since c++20)
   
@@ -308,9 +308,9 @@ Deprecated :
 
     //  guaranteed copy elision :
           since c++17,guaranteed copy elision through simplified value catagories.
-	  "if the initializer expression is a prvalue and the cv-unqualified version of the source type is the same class as
-	   the class of the destination,the initializer expression is used to initialize the destination object.
-	   T x = T(T(T()));  //  calls the T default constructor to initialize x."
+      "if the initializer expression is a prvalue and the cv-unqualified version of the source type is the same class as
+       the class of the destination,the initializer expression is used to initialize the destination object.
+       T x = T(T(T()));  //  calls the T default constructor to initialize x."
 
 
 > temporary materialization
@@ -328,11 +328,11 @@ Deprecated :
       when sizeof is applied to a prvalue ;
       when a prvalue appears as a discarded-value expression ;
                                   //  a discarded-value expression is an expression that is used for its
-				      side-effects only.the value calculated from such expression is discarded.
-				      include :
-				        full-expression of any expression statement ;
-				        the left-hand operand of the built-in comma operator ;
-				        the operand of a cast-expression that casts to the type void ;
+                      side-effects only.the value calculated from such expression is discarded.
+                      include :
+                        full-expression of any expression statement ;
+                        the left-hand operand of the built-in comma operator ;
+                        the operand of a cast-expression that casts to the type void ;
 
     //  temporary materialization doesnt occur when initializing an object from a prvalue of the 
         same type,such object is initialized directly from the initializer.(guaranteed copy elision)
@@ -342,14 +342,14 @@ Deprecated :
     reduces(folds) a parameter pack over a binary operator.
 
     syntax :
-      (<parameter pack> <operator> ...)				//  unary right fold
-      (... <operator> <parameter pack>)				//  unary left fold
-      (<parameter pack> <operator> ... <operator> <init>)	//  binary right fold
-      (<init> <operator> ... <operator> <parameter pack>)	//  binary left fold
+      (<parameter pack> <operator> ...)                //  unary right fold
+      (... <operator> <parameter pack>)                //  unary left fold
+      (<parameter pack> <operator> ... <operator> <init>)    //  binary right fold
+      (<init> <operator> ... <operator> <parameter pack>)    //  binary left fold
 
       operator : binary operator,but in a binary fold,both operators must be the same.
       init : an expression that does not contain an unexpanded parameter pack and does not contain
-      	     an operator with precedence lower than cast at the top level.
+               an operator with precedence lower than cast at the top level.
 
     unary right fold expand to :
       (E1 op (E2 op (E3 op (... op (En-1 op En)))))
@@ -362,8 +362,8 @@ Deprecated :
 
     //  when a unary fold is used with a pack expansion of length zero,only the following operators are allowed :
           &&, the value for the empty pack is true
-	  ||, the value for the empty pack is false
-	  the comma operator(,), the value for the empty pack is void()
+      ||, the value for the empty pack is false
+      the comma operator(,), the value for the empty pack is void()
     
     example :
       Args... args
@@ -371,12 +371,12 @@ Deprecated :
 
       //  before c++17,parameter pack expansion only allowed to be expanded with the comma separate form :
             void func() { }
-	    template<class ...Args>
-	    void func(auto &t, Args... args)
-	    {
-	      std::cout<<t<<std::endl;
-	      func(args...);
-	    }
+        template<class ...Args>
+        void func(auto &t, Args... args)
+        {
+          std::cout<<t<<std::endl;
+          func(args...);
+        }
 
 
 > class template argument deducation(CTAD)
@@ -388,21 +388,21 @@ Deprecated :
       <  new-expressions.
       <  function-style cast expressions.
       <  the type of a non-type template parameter.
-      	e.g.
-  	  template<class T>
- 	  struct X {
-	    constexpr X(T) {}
-	    auto operator<=>(const X&) const = default;
-	  };
-	  template<X x>
-	  struct Y {};
-	  Y<0> y;  //  OK, Y<X<int>(0)>
+          e.g.
+        template<class T>
+       struct X {
+        constexpr X(T) {}
+        auto operator<=>(const X&) const = default;
+      };
+      template<X x>
+      struct Y {};
+      Y<0> y;  //  OK, Y<X<int>(0)>
 
     user-defined deduction guides :
       syntax :
         explicit-specifier(optional) template-name(parameter-declaration-clause) -> simple-template-id;
 
-	//  it is same as trailing return type syntax but uses template-name as function-name.
+    //  it is same as trailing return type syntax but uses template-name as function-name.
 
       user-defined deduction guides must name a class template and must be introduced within the same semantic scope of 
       the class template and,for a member class template,must have the same access,but deduction guides do not become
@@ -410,19 +410,19 @@ Deprecated :
 
       //  a deduction guide is not a function and does not have a body.
       //  deduction guides are not found by name lookup and do not participate in overload resolution except for the
-      	  overload resolution against other deduction guides when deducing class template argumnets.
+            overload resolution against other deduction guides when deducing class template argumnets.
       //  deduction guides cannot be redeclared in the same translation unit for the same class template.
 
       e.g.
         template<class T>
-	struct container {
-	  container(T t) {}
-	  template<class Iter>
-	  container(Iter beg, Iter end);
-	};
+    struct container {
+      container(T t) {}
+      template<class Iter>
+      container(Iter beg, Iter end);
+    };
 
-	template<class Iter>
-	container(Iter beg, Iter end) -> container<typename std::iterator_traits<Iter>::value_type>;
+    template<class Iter>
+    container(Iter beg, Iter end) -> container<typename std::iterator_traits<Iter>::value_type>;
 
     note :
       class template argument deduction is only performed if no template argument list is present.
@@ -430,11 +430,11 @@ Deprecated :
 
       user-defined deduction guides do not have to be templates.
         e.g.
-	  template<class T>
-	  struct S {
-	    S(T);
-	  };
-	  S(char const*) -> S<std::string>;
+      template<class T>
+      struct S {
+        S(T);
+      };
+      S(char const*) -> S<std::string>;
 
 
 > non-type template parameters declared with auto
@@ -448,26 +448,26 @@ Deprecated :
       2>  a non-type template parameter with an optional name and a default value
       3>  a non-type template parameter pack with an optional name
       4>  a non-type template parameter with a placeholder type.
-      	  placeholder may be any type that includes the placeholder auto,a placeholder for a deduced class
-	  type(since c++20),or decltype(auto).
+            placeholder may be any type that includes the placeholder auto,a placeholder for a deduced class
+      type(since c++20),or decltype(auto).
 
       a non-type template parameter must have a structural type,which is one of the following types :
         lvalue reference type
-	an integral type
-	a pointer type
-	a pointer to member type
-	an enumeration type
-	std::nullptr_t
-	a floating-point type  (since c++20)
-	a literal class type with the following properties :  (since c++20)
-	  all base classes and non-static data members are public and non-mutable and
-	  type types of all base classes and non-static data members are structural types or array thereof
+    an integral type
+    a pointer type
+    a pointer to member type
+    an enumeration type
+    std::nullptr_t
+    a floating-point type  (since c++20)
+    a literal class type with the following properties :  (since c++20)
+      all base classes and non-static data members are public and non-mutable and
+      type types of all base classes and non-static data members are structural types or array thereof
 
     //  the type of a non-type template parameter may be deduced if it includes a placeholder type.
-    	the deduction is performed as if by deducing the type of the variable x in the invented declaration
-	T x = template-argument;
-	where T is the declared type of the template parameter.
-	if the deduced type is not permitted for a non-type template parameter,the program is ill-formed.
+        the deduction is performed as if by deducing the type of the variable x in the invented declaration
+    T x = template-argument;
+    where T is the declared type of the template parameter.
+    if the deduced type is not permitted for a non-type template parameter,the program is ill-formed.
     
     
 > simplified nested namespaces
@@ -477,22 +477,22 @@ Deprecated :
 
       for example :
         namespace A :: B :: C { ... } is equivalent to
-	  namespace A {
-	    namespace B {
-	      namespace C {
-	        ...
-	      }
-	    }
-	  }
+      namespace A {
+        namespace B {
+          namespace C {
+            ...
+          }
+        }
+      }
 
     //  inline namespace definition(since c++11)
-    	  inline namespace <ns-name> { <declarations> }
-	    inline namespace definition for the namespace <ns-name>.
-	    declarations inside <ns-name> will be visible in its enclosing namespace.
+          inline namespace <ns-name> { <declarations> }
+        inline namespace definition for the namespace <ns-name>.
+        declarations inside <ns-name> will be visible in its enclosing namespace.
 
     //  namespace alias definition
-    	  namespace <name> = <qualified-namespace>;
-	    namespace-alias-definition makes name a synonym for another namespace.
+          namespace <name> = <qualified-namespace>;
+        namespace-alias-definition makes name a synonym for another namespace.
 
 
 > using-declaration declaring multiple names
@@ -501,19 +501,19 @@ Deprecated :
       using <declarator-list>;
       
       declarators-list : comma-separated list of one or more declarators of the typename(optional)
-      		       	 nested-name-specifier unqualified-id.
-			 soem or all of the declarators may be followed by an ellipsis ...
-			 to indicate pack expansion.
+                          nested-name-specifier unqualified-id.
+             soem or all of the declarators may be followed by an ellipsis ...
+             to indicate pack expansion.
 
     e.g.
       namespace A {
         int a;
-	int b;
-	char c;
-	
-	name space B {
-	  float d;
-	}
+    int b;
+    char c;
+    
+    name space B {
+      float d;
+    }
       }
 
       using A::a, A::b, A::c, A::B::d;
@@ -521,8 +521,8 @@ Deprecated :
       //  multiple names
       using funcP1 = void (*)(void);
       using funcP2 = void (*)(void);
-					//  funcP1 == funcP2 a function pointer points to a function
-					//  that no return and no parameter.
+                    //  funcP1 == funcP2 a function pointer points to a function
+                    //  that no return and no parameter.
 
 
 > attribute namespaces dont have to repeat
@@ -566,7 +566,7 @@ Deprecated :
     the compiler is encouraged to issue a warning.
 
     //  a discarded-value expression is an expression that is used for its side-effects only,the value calculated from
-    	such expression is discarded.
+        such expression is discarded.
 
 
 > __has_include
@@ -576,13 +576,13 @@ Deprecated :
     (A)
       __has_include("q-char-sequence")
       __has_include(<h-char-sequence>)
-					//  checks whether a header or source file is avaiable for inclusion.
-    (B)					
+                    //  checks whether a header or source file is avaiable for inclusion.
+    (B)                    
       __has_include(string-literal)
       __has_include(<h-pp-tokens>)
-					//  if (A) is not matched,h-pp-tokens will undergo macro
-					    replacement.the directive after replacement will be tried to match 
-					    with (A) again.
+                    //  if (A) is not matched,h-pp-tokens will undergo macro
+                        replacement.the directive after replacement will be tried to match 
+                        with (A) again.
 
     e.g.
       #if __has_include(<sys/socket.h>)

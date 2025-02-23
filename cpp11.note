@@ -1,1677 +1,1677 @@
 cpp11>
 
-	features merged into c++11:
-		 All of TR1 except Special Functions
-		     	(technical report 1)
-		 Boost:
-			the thread library,
-			exception_ptr,
-			error_code,
-			error_condition,
-			iterator improvements(begin, end, next, prev),
-		C-style Unicode conversion functions
-
-	c++11 features:
-	      auto | decltype
-		for variables:
-		    specifies that the type of the variable that is beging
-		    declared will be automatically deduced from its initializer.
-
-		for functions:
-		    specifies that the return type will be deduced from its return
-		    statements.
-
-		for non-type template parameters:
-		    specifies that the type will be deduced from the argument.
-
-		syntax:
-			type-constraint(optional) auto
-			type-constraint(optional) decltype(auto)
-			
-			type-constraint:
-				conceptname,
-				optionally qualified,
-				optionally followed by a template argument list enclosed in <>
-		
-		Usage:
-
-			decltype(expr) h, k;		 //  type of h and k is same as type or expr.
-			decltype(auto) func1(arg-list);  //  type of func1 is same as the expr it would be returned.
-
-
-
-
-			decltype(auto) c = h;		 //  type of c is same as h.
-			decltype(auto) c1 = (h);	 //  type of c1 is same as h but it is a reference.
-
-			auto i = expr;
-			const auto i = expr;
-			auto i = 1, j = 2;
-			auto i = 1, j = 0.0;  //  ERROR
-			const auto &i = expr; //  i is T type reference,
-			      	      	      //  T = the exactly type of expr.
-					      //  const,readonly.
-			auto func1(arg-list)  //  T = the exactly type of expr would be returned.
-			{    		      
-				...
-				return expr;
-			}
-			auto func1(auto a)    //  T is type of func1, T = the exactly type of expr.
-			{    		      //  T is type of a, T = int if somewhere invoke func1(13);
-				...	      //  T is type of a, T = double if somewhere invoke func1(1.3);
-				return expr;	
-			}
-
-			decltype(auto) must be the sole constituent of the declared type.
-			a function call must use decltype(auto) in case the function it calls returns by reference.
-
-			auto &func1(arg-list);//  T is type of func1, T = reference to the exactly type of expr
-			     		      //  which would be returned.
-			
-			auto && maybe deduced either as an lv reference or rv reference according to the
-			initializer,which is used in range-based for loop.
-
-			template<class T, auto I>  //  auto would be deduced to the type of a non-type 
-			struct | class ...     	   //  template parameter.
-
-			The auto specifier may also appear in the simple type specifier of an explicit type
-			    auto(expr) and auto{expr}
-			Its type is deduced from the expr.
-
-			if type-constraint is Concept<A1, ..., An>, then the constrain expression is
-			Concept<T, A1, ..., An>  //  (T from deduced by auto)
-			otherwise,Concept<T>;  //  no arg-list
-
-			auto cant deduce from brace-init-list.
-			     template<auto n>
-			     auto f() -> std::pair<decltype(n), decltype(n)> { ... }
-			     	      	 	//  cant use auto instead to decltype be there.     	      	 
-
-	       =default | =delete
-		 special syntax for define member functions.
-		 Usage:
-			struct a {
-			       a(auto c) =default;
-			       void func2(void) =delete;
-			};		
-	      		struct a i;	//  ERROR,because the default constructor is a::a(auto c).
-			struct a j(3);	//  RIGHT,will invoke a::a(auto c).
-			j.func2();	//  ERROR,because func2() was defined as deleted.
-		
-	       final | override
-	         final specifier:
-		     specifies that a virtual function cant be overridden in a derived class or that
-		     a class cant be derived from.
-		     Usage:
-				struct A final {
-				       ...
-				};
-				struct B : A { ... };  //  ERROR,because A cant be derived.
-
-				struct C {
-				       ...
-				       virtual void func1(void) final;
-				};
-				struct D : C {
-				       ...
-				       virtual void func1(void) { ... }  //  ERROR,because C::func1()
-				       	       	    		      	 //  cant be overriden.
-				};
-
-
-		 override specifier:
-		     specifies that a virtual function overrides another virtual function.
-		     Usage:
-				struct A {	//  virtual void A::func1(void) isnt existed.
-				       ...
-				};
-				struct B : A {
-				       virtual void func1(void) override;  //  ERROR,because func1() doesnt
-				       	       	    			   //  overrides anything.
-				};
-
-				struct C {
-				       virtual void func1(void);
-				       ...
-				};
-				struct D : C { virtual void func1(void) override;
-				       	     //  RIGHT,virtual void D::func1(void) overrides
-					     //  virtual void C::func1(void).
-				
-
-	       trailing return type
-	       		new style for function definition similar with lambda expression.
-			Legacy :
-				<return type> <function-name>(<arg-list>) {<body>}
-
-			trailing return :
-				 auto <function-name>(<arg-list>) -> <return type> {<body>}
-				 //  must use auto keyword.
-
-			Usage:
-				//  legacy
-				template<class T, auto N>
-				int ClassA::func1(void) { ... }
-
-				//  trailing return
-				template<class T, auto N>
-				auto ClassA::func1(void) -> int { ... }
-
-			#  Attention: it isnt supported in all compiler!
-
-	       
-	       reference declaration
-	       		 declares a named variable as a reference,that is,an alias to an already-existing
-			 object or function.
-
-			 &	//  lvalue reference
-			 &&	//  rvalue reference
-
-			 Usage:
-				int i = 3;
-				int &j = i;	//  j is an alias to i.
-
-				auto &&p = std::move(std::make_unique<char>(2));
-						//  p is an alias to an anonymous memory
-						//  applied by std::make_unique.
-
-	       move constructor | move assignment operator
-	       	    a move constructor of class T is a non-template constructor whose first parameter is T &&,
-		    const T &&,volatile T &&,or const volatile T &&,and either there are no other parameters,or
-		    the rest of the parameters all have default values.
-
-		    struct A {
-		    	   ...
-			   A(struct A &&a);  //  move contructor.
-		    };
-
-		    Usage:
-			struct A a;
-			struct A b(std::move(a));  //  std::move can transform lv to rv.
-			       	 		   //  after move,dont use struct A a as well,
-						   //  because its state is unsure.
-
-		    a move assignment operator of class T is a non-template non-static member function with
-		    the name operator= that takes exactly one parameter of type T &&,const T &&,volatile T &&,
-		    or const volatile T &&.
-
-		    struct A {
-		    	   ...
-			   struct A &operator=(struct A &&a);  //  move assignment operator
-		    };
-
-		    Usage:
-			struct A a;
-			struct A b = std::move(a);  //  after move,dont use struct A a as well,
-			       	     		    //  because its state is unsure.
-
-		    #  move semantics provides a solution to such issues:
-		       	    move constructors/assignment operators typically 'steal' the resources of
-			    the argument.
-			    leave the argument in a valid but indeterminate state.
-			    greatly enhances performance in some cases.
-		    
-		    #  compiler provides
-		       		a> copy-constructor
-				b> copy-assignment operator
-				c> move constructor
-				d> move assignment operator
-				e> constructor
-				f> destructor
-
-		       		E(x): x is existed.				
-				E(c)->notE(a) and notE(b) and notE(d) and notE(f)
-				E(d)->notE(a) and notE(b) and notE(c) and notE(f)
-
-		       if wantnt compiler provides move constructor or assignment operator,
-		       should define it as =delete.
-
-		       implicitly-defined move constructor:
-		         For union type:
-			     it copies the object representation (as by std::memmove)
-			 For non-union class type:
-			     it performs full member-wise move of the object's bases and non-static
-			     members,in their initialization order,using direct initialization with
-			     an xvalue(l | r) argument
-		       implicitly-defined move assignment operator:
-		         For union type:
-			     it copies the object representation (as by std::memove)
-			 For non-union type:
-			     it performs full member-wise move assignment of the object's direct bases
-			     and immediate non-static members,in their declaration order,using built-in
-			     assignment for the scalars,memverwise move-assignment for arrays,and
-			     move assignment operator for class types
-
-			 it for a class T is constexpr if
-			    T is a literal-type,and
-			    the assignment operator selected to move each direct base class subobject is a
-			    constexpr function,and
-			    for each non-static data member of T that is of class type(or array etc.),the
-			    assignment operator selected to move that member is a constexpr function
-
-
-		    #  move-constructor will be defined as =delete: (any is true)
-		            T has non-static data members that cant be moved
-			    T has direct or virtual base class that cant be moved
-			    T has direct or virtual base class or a non-static data member with
-			    a deleted or inaccessiable destructor
-			    T is a union-like class and has a variant member with non-trivial move
-			    constructor
-		    #  move-assignment operator will be defined as =delete: (any is true)
-		       	    T has a non-static data member that is const
-			    T has a non-static data member of a reference type
-			    T has a non-static data member or a direct base class that cant be
-			    move-assigned
-
-
-		    #  trivial move constructor (also trivial move assignment operator)
-		         trivial move constructor is a constructor that performs the same action as the
-			 trivial copy constructor,that is,makes a copy of the object representation as
-			 if by std::memmove.
-		         the move constructor for class T is trivial if all of the following is true:
-			    it is not user-provided
-			    T has no virtual member functions
-			    T has no virtual base classes
-			    the move constructor selected for every direct base of T is trivial
-			    the move constructor selected for every non-static class type(or array of class type)
-			    member of T is trivial
-
-		    #  eligible move constructor
-		         a move constructor is eligible if it is not deleted.
-			 a move constructor is eligible if
-			   it is not deleted,and
-			   its associated constraints,if any,are satisfied,and
-			   no move constructor with the same first parameter type
-			   is more constrained than it
-
-		    #  eligible move assignment operator
-		         a move assignment operator is eligible if it is not deleted
-			 a move assignment operator is eligible if
-			   it is not deleted,and
-			   its associated constraints,if any,are satisfied,and
-			   no move assignment operator with the same first parameter type
-			   and the same cv/ref-qualifiers(if any) is more constrained than it
-
-	       
-	       scoped enum
-	       	      syntax:
-			enum struct | class <name> {enumerator = constexpr, enumerator = constexpr, ...};
-			enum struct | class <name> : <type> {enumerator = constexpr, enumerator = const expr, ...};
-			enum struct | class <name>;
-			enum struct | class <name> : <type>;
-			
-			syntax1>
-				declares a scoped enumeration type whose underlying type is int (the keywords class
-				and struct are exactly equivalent)
-
-			syntax2>
-				declares a scoped enumeration type whose underlying type is <type>
-			
-			syntax3>
-				opaque enum declaration for a scoped enumeration whose underlying type is int
-				
-			syntax4>
-				opaque enum declaration for a scoped enumeration whose underlying type is <type>
-
-		      each enumerator becomes a named constant of the enumeration's type(the <name>),which is contained
-		      within the scope of the enumeration,and can be accessed using scope resolution operator.there are
-		      no implicit conversions from the values of a scoped enumerator to integral types,although 
-		      static_cast may be used to obtain the numberic value of the enumerator.
-
-		      Usage:
-			enum class Color { red, green, blue };	
-			Color c = Color::red;
-			switch (c) {
-			case Color::red   :  ...
-			case Color::green :  ...
-			case Color::blue  :  ...
-			}			
-
-		      an enumeration can be initialized from an integer without a cast,using list initialization,if all of
-		      the following are true:
-		      	  the initialization is direct-list-initialization
-			  the initializer list has only a single element
-			  the enumeration is either scoped or unscoped with underlying type fixed
-			  the conversion is non-narrowing
-
-		      Usage:
-			enum class byte : unsigned char { };
-			byte a{4}; 	  	//  OK   
-			byte b{byte{4}};	//  OK
-			byte c = {42};		//  ERROR
-
-		      #  unscoped enumerations
-		      	   legacy C enumeration:
-			   	  enum <name> { enumeration = constexpr, enumeration = constexpr, ... };
-				  enum <name> : <type> { enumeration = constexpr, enumeration = constexpr, ... };
-				  enum <name> : <type>;
-
-		      #  difference between scoped and unscoped:
-		      	   values of unscoped enumeration type are implicitly-convertible to integral types.
-			   but scoped cant be implicitly-converted.
-			   scoped enumberation is used to make a class which has members of constants. (make a new type)
-
-		      #  using enum declaration
-		      	   using enum <nested-name-specifier>(optional) <name>;
-			   
-			   where <nested-name-specifier> <name> must not name a dependent type and must name an
-			   enumeration type
-
-			   Usage:
-				enum class E1 : int { a = 3, b };
-				enum class E2 : int { c = 9, a };
-
-				struct A {
-				       using enum E1;
-				       //  using enum E2;  //  enumeration conflict between E1::a and E2::a
-				};		
-
-				struct A a;
-				a.a;		//  OK
-				a::a;		//  OK
-			
-
-	       constexpr
-			constexpr - specifies that the value of a variable or function can appear in constant expressions.
-			that means,it is possible to evaluate the value of the function or variable at compile time.
-
-			a constexpr specifier used in an object declaration or non-static member function implies const.
-			a constexpr specifier used in a function or static data member declaration implies inline.
-
-			constexpr variable:
-			  a constexpr variable must satisfy the following requirements:
-			    its type must be a LiteralType
-			    it must be immediately initialized
-			    the full-expression of its initialization,including all implicit conversions,
-			    constructors calls,etc,must be a constant expression
-			    it must have constant destruction,
-			       either:
-				 it is not of class type nor array thereof,or
-				 it is of class type or array thereof,that class type has a constexpr destructor,and
-				 for a hypothetical expression whose only effect is to destroy the object,would be a
-				 core constant expression if the lifetime of the object and its non-mutable subobjects
-				 were considered to start within
-
-			  # if a constexpr variable is not translation-unit-local(c++20),it should not be
-			    initialized to point to,or refer to,or have a (possibly recursive)subobject 
-			    that points to or refers to,a translation-unit-local entity that is usable in
-			    const expression.
-
-			constexpr function:
-			  a constexpr function must satisfy the following requirements:
-			    it must not be virtual
-			    it must not be a function-try-block
-			    it must not be a coroutine(c++20)
-			    for constructor and destructor,the class must have no virtual base classes
-			    its return value and each of its parameters must be of a LiteralType
-			    there exists at least one set of argument values such that an invocation of the function
-			    could be an evaluated subexpression of a core constant expression,No diagnostic is required
-			    for a violation of this bullet
-			    the function body must be either deleted or default or contain only the following:
-			    	null statements
-				static_assert
-				typedef declarations and alias declarations that dont define classes or enumerations
-				using declarations
-				using directives
-				if the function is not a constructor,exactly one return statement
-			    the function body must not contain:
-			    	a goto statement
-				a statement with a label other than case and default
-				a try-block(for exception)
-				a definition of a variable for which no initialization is performed
-				a defintion of a variable of non-literal type
-				a definition of a variable of static or thread storage duration
-
-
-			    Usage:
-				struct A {
-				       constexpr int func1(int a, int b)
-				       {
-						int c(30);
-						//  std::istream *pIstream(&std::cin);  //  ERROR
-						    		 			//  std::istream is not a
-											//  literal type
-						/*  ERROR try-block					
-						try {
-						    ...
-						} catch (...) {
-						    ...
-						}*/						
-						return a + b + c;
-				       } 
-				};
-
-			constexpr constructor:
-			  a constexpr constructor whose function body is not =delete,must satisfy the following additional
-			  requirements:
-				for the constructor of a class or struct,every base class sub-object and every non-variant
-				non-static data member must be initialized,if the class is a union-like class,for each of 
-				its non-empty anonymous union members,exactly one variant member must be initialized
-				for the constructor of a non-empty union,exactly one non-static data member must be initialized
-				every constructor selected to initializing non-static data members and base class must be a
-				constexpr constructor
-
-			constexpr destructor:
-			  a constexpr destructor whose function body is not =delete,must satisfy the following additional
-			  requirements:
-				every destructor used to destroy non-static data members and base class must be constexpr
-				destructor
-
-			#  for template function,at least one specialization must satisfy the constexpr requirements.
-			   other specializations are still considered as constexpr,even though a call to such a function
-			   cant appear in a constant expression.
-			   if no specialization satisfy to requirements while try to make a instant of template function,
-			   the template is ill-formed,no diagnostic required.
-
-
-	       LiteralType
-			specifies that a type is a literal type,LiteralType are the types of constexpr variables and they
-			can be constructed,manipulated,and returned from constexpr functions.
-
-			a literal type is any of the following:
-			  possibly cv-qualified void (so that constexpr functions can return void);
-			  scalar type;
-			  reference type;
-			  an array of literal type;
-			  possibly cv-qualified class type that has all of the following properties:
-			  	   has a trivial constexpr destructor
-				   is one of
-				      an aggregate type
-				      a type with at least one constexpr constructor that is not a copy or move
-				      constructor
-				      a closure type(c++17)
-				   for unions,at least one non-static data member is of non-volatile literal type
-				   for non-unions,all non-static data members and base classes are of non-volatile literal type
-
-			Usage:
-				struct conststr {
-				       template<std::size_t N>
-				       constexpr conststr(const char (&a)[N], std::size_t size) : m_str(a), m_size(size)
-				       {
-				       }
-				       constexpr char operator[](std::size_t n) const
-				       {
-						return n < m_size ? m_str[n] : throw std::out_of_range("");
-				       }
-
-				       const char *m_str;
-				       std::size_t m_size;
-				};
-
-				constexpr std::size_t countlower(struct conststr s, std::size_t n=0, std::size_t c = 0)
-				{
-					return n == s.m_size ? c :
-					       s[n] >= 'a' && s[n] <= 'z' ? countlower(s, n + 1, c + 1) :
-					       	    countlower(s, n + 1, c);
-				}
-
-				std::cout<<countlower("hello world")<<std::endl;
-					//  there would cause implicitly convert (&a)[sizeof("hello world")] = "hello world"
-
-
-	       list-initialization
-			initializes an object from braced-init-list.
-			syntax:
-				direct-list-initialization>
-					T object{arg1, arg2, arg3, ..., argN};
-					T{arg1, arg2, arg3, ..., argN};
-					new T{arg1, arg2, arg3, ..., argN};
-					Class{T member{arg1, arg2, ...};};
-					Class::Class() : member{arg1, arg2, ...} {...}
-			direct-list-initialization:
-				initialization of a named variable with a braced-init-list(empty or nested are allowed)
-				initialization of an unnamed temporary with a braced-init-list
-				initialization of an object with dynamic storage duration with a new-expression,where the
-				initializer is a braced-init-list
-				in a non-static data member initializer that doesnt use equals sign
-				in a member initializer list of a constructor if braced-init-list is used
-
-				copy-list-initialization>
-					T object = {arg1, arg2, ...};
-					function({arg1, arg2, ...});
-					return {arg1, arg2, ...};
-					object[{arg1, arg2, ...}]
-					object = {arg1, arg2, ...}
-					U({arg1, arg2, ...})		
-					Class{T member = {arg1, arg2, ...};};
-			copy-list-initialization:
-				initialization of a named variable with a braced-init-list after an equals sign
-				in a function call expression,with braced-init-list used as an argument and 
-				list-initialization initializes the function parameter
-				in a return statement with braced-init-list used as the return expression and 
-				list-initialization initializes the returned object
-				in a subscript expression with a user-defined operator[],where list-initialization
-				initializes the parameter of the overloaded operator
-				in an assignment expression,where list-initialization initializes the parameter of
-				the overloaded operator
-				functional cast expression or other constructor invocations,where braced-init-list
-				is used in place of a constructor argument,copy-list-initialization initializes the
-				constructor's parameter(the type U isnt the type that is being list-initialized,U is
-				constructor's parameter is. typeof(U) != typeof(argI).)
-				in a non-static data member initializer that uses the equals sign
-
-			#  if the braced-init-list has no elements,T is value-initialized
-			      value-initialized - syntax:
-			      	T()
-				new T()
-				Class::Class(...) : member() {...}
-				T object{};
-				T{}
-				new T{}
-				Class::Class(...) : member{} {...}
-
-				#  T object(); doesnt initialize an object,it declares a function that takes no arguments
-				   and returns T(T object = T(); before c++11)
-				#  if none of value in initialization list,zero would as the value by compiler implicitly,
-				#  although that isnt zero-initialization.
-
-	       delegating constructor
-	       		  if the name of the class itself appears as class-or-identifier in the member initializer list,then
-			  the list must consist of that one member initializer only;such a constructor is known as the delegating
-			  constructor,and the constructor selected by the only member of the initializer list is the target constructor.
-			  in this case,the target constructor is selected by overload resolution and executed first,then the control
-			  returns to the delegating constructor and its body is executed.
-			  delegating constructors cannt be recursive.
-
-			  Usage:
-				class A {
-				public:
-					A() =delete;
-					A(int x) =default : A('a', 'b') { ... }
-					A(char a1, char a2) { ... }
-				};
-				//  A(int x) delegates to A(char a1, char a2)
-				//  A(int x) is the delegaing constructor,A(char a1, char a2) is the target constructor
-
-
-	       inheriting constructors
-	       		  using-declaration can make inheriting constructors.
-
-			  syntax of using-declaration:
-			  	 using typename(optional) <nested-name-specifier> <unqualified-id>;
-				 using <declarator-list>;
-
-				 typename :
-				 	   keyword,may be used as necessary to resolve dependent names when the
-				 	   using-declaration introduces a member type from a base class template.
-				 nested-name-specifier : 
-				           a sequence of names and scope resolution operators :: ,ending with a
-					   scope resolution operator.A signle :: refers to the global namespace.
-				 unqualified-id:
-					   an id-expression.
-				 declarator-list:
-					   comma-separated list of one or more declarators of the
-					   typename(optional) nested-name-specifier unqualified-id
-					   Some or all of the declarators may be followed by an ellipsis ... to
-					   indicate pack expansion.
-				 
-
-			  if the using-declaration refers to a constructor of a direct base of the class being defined(e.g. using base::base),
-			  all constructors of that base(ignoring member access) are made visible to overload resolution when initializing the
-			  derived class.
-
-			  overload resolution for construct derived class -
-			  	   an inherited constructor was selected for construct base :
-				      this inherited constructor would be accessible when used to construct an object
-				      of the corresponding base class,and the accessibility of the using-declaration
-				      that introduced it is ignored.
-				   
-				   an inherited constructor was selected for construct derived :
-				      the base subobject from which the constructor was inherited is initialized using
-				      the inherited constructor,and all other bases and member of derived class are
-				      initialized as if by the defaulted default constructor(default member initializers
-				      are used if provided,otherwise default initialization takes place).
-
-			  #  the entire initialization is treated as a single function call,
-			     all bases and members of derived class would be initialized after
-			     base subobject finishes initialization
-			     
-			  Usage:
-				struct A { A(int, ...) { ... } };
-				struct B { B(double) { ... } };
-
-				struct D : A {
-				       using A::A;
-				       int x;
- 				       int y = random();
-				};
-
-				struct E : B {
-				       using B::B;
-				       A a;
-				}
-
-				D d(1, 2, 3);  //  OK,invoke inherited constructor A::A(), A::A(1, 2, 3)
-				       	       //  x isnt initialized, y was initialized with a random value
-
-				E e(3.2);      //  ERROR, struct A has no default constructor
-
-			  #  if the constructor was inherited from multiple base class subobjects of type B,
-			     the program is ill-formed,similar to multiply-inherited non-static member functions.
-			     E.g.
-				struct A { ... };
-				struct B : A { ... };
-				struct C : A { ... };
-				struct D : B, C { ... };  //  ERROR,subobject of type A too many than one.
-
-				struct A { A(int, ...) { ... } };
-				struct B : A { using A::A; };
-				struct C1 : B { using B::B; };
-				struct C2 : B { using B::B; };
-				struct D : C1, C2 { using C1::C1; using C2::C2; };
-				D d0(0);  //  ERROR,ill-formed because the constructor A::A() was inherited than once.
-
-			  #  as with using-declarations for any other non-static member functions,
-			     if an inherited constructor matches the signature of one of the constructors
-			     of derived class,it is hidden from lookup by the version found in derived clas.
-			     if one of the inherited constructors of base happens to have the signature that
-			     matches a copy/move constructor of the derived class,it doesnt prevent implicit
-			     generation of derived class copy/move constructor.(inherited version would be hidden)
-
-			  #  inherited constructors within a template-class:
-			       if a using-declaration refers to a dependent name,it considered to name a constructor
-			       if the nested-name-specifier has a terminal name that is the same as the unqualified-id
-			       E.g.
-				template<class T>
-				struct A : T { using T::T; };
-				
-				template<class T, class U>
-				struct B : T, A<U> {
-				       using A<U>::A;  //  OK,inherits constructors of A<U>
-				       using T::A;     //  doesnt inherit constructors of T,even though T may be a specialization of A<>
-				};
-
-
-	       nullptr
-			the keyword nullptr denotes the pointer literal.it is a prvalue of type std::nullptr_t.
-			there exist implicit conversions from nullptr to null pointer value of any pointer type
-			and any pointer to member type.similar conversions exist for any null pointer constant,
-			which includes values of type std::nullptr_t as well as the macro NULL.
-
-	       char16_t and char32_t
-	       		char16_t -
-				    type for UTF-16 character representation,required to be large enough to
-				    represent any UTF-16 code unit(16 bits).it has the same size,signedness,
-				    and alignment as std::uint_least16_t,but is a distinct type.
-
-			char32_t -
-				    type for UTF-32 character representation,required to be large enough to
-				    represent any UTF-32 code unit(32 bits).it has the same size,signedness,
-				    and alignment as std::uint_least32_t,but is a distinct type.
-
-	       type alias
-			type alias is a name that refers to a previously defined type(similar to typedef).
-			alias template is a name that refers to a family to types.
-
-			syntax:
-				using <identifier> <attr>(optional) = <type-id>;
-				template<template-parameters>
-				using <identifier> <attr>(optional) = <type-id>;
-
-			Usage:
-				using ipv4_address = struct sockaddr_in;
-				template<class T>
-				using key_value = std::pair<int, T>;
-
-				ipv4_address myaddr;			//  create an object of struct sockaddr_in 
-				key_value<std::string> v_s;		//  create an object of std::pair<int, std::string>
-
-			#  when the result of specializing an alias template is a dependent template-id,
-			   subsequent substitutions apply to that template-id.
-
-			#  the type produced when specializing an alias template is not allowed to directly or 
-			   indirectly make use of its own type.
-			   E.g.
-				template<class T>
-				struct A;
-				template<class T>
-				using B = typename A<T>::U;
-				template<class T>
-				struct A { typedef B<T> U; };   //  B<T> = A<T>::U
-				B<int> b;			//  ERROR
-				       				//  T = int with B<T> = A<int>::B<int> = A<int>::A<int>::U
-								//  cycle to resolve typename
-
-			#  alias template are never deduced by template-argument-deduction when deducing a template 
-			   template parameter.
-			   it is not possible to partially or explicitly specialize an alias template.
-
-			#  alias template can only be declared at class scope or namespace scope.
-
-
-	       attribute specifier sequence
-	       		 introduces implementation-defined attributes for types,objects,code, etc.
-			 
-			 syntax:
-				[[attribute-list]]
-				[[using atrribute-namespace: attribute-list]]
-
-				attribute-list is a comma-separated sequence of zero or more attributes
-				  identifier -
-				  	        simple attribute,such as [[noreturn]]
-				  attribute-namespace::identifier -
-				  		attribute with a namespace,such as [[gnu::unused]]
-				  identifier(argument-list) -
-				  		attribute with arguments,such as [[deprecated("because")]]
-				  attribute-namespace::identifier(argument-list) -
-				  		attribute with both a namespace and an argument list
-
-			 #  if using namespace: appears in the begining of an attribute list,no other attributes 
-			    in the attribute list can specify a namespace: the namespace specified in a using
-			    applies to them all.
-
-			 #  attribute often as the compiler extension such as __attribute__((...)) in gnu/gcc,
-			    use these extension can demand compiler do something when construct program.
-
-			 standard attributes :
-			 	  [[noreturn]]  indicates that the function doesnt return
-				  [[carries_dependency]]  indicates that dependency chain in release-consume
-				  			  std::memory_order propagates in and out of the function
-				  [[deprecated]]  
-				  [[deprecated("reason")]]  indicates that the use of the name or entity declared 
-				  			    with this attributes is allowed,but discouraged for
-							    some "reason"
-				  [[fallthrough]]  indicates that the fall through from the previous case label is
-				  		   intentional and should not be diagnosed by a compiler that warns
-						   on fall-through
-				  [[nodiscard]]
-				  [[nodiscard("reason")]]  encourages the compiler to issue a warning if the return value
-				  			   is discarded
-				  [[maybe_unused]]  suppresses compiler warnings on unused entities,if any
-				  [[likely]]
-				  [[unlikely]]  indicates that the compiler should optimize for the case where a path
-				  		of execution through a statement is more or less likely than any other
-						path of execution
-				  [[no_unique_address]]  indicates that a non-static data member need not have an address
-				  			 distinct from all other non-static data members of its class
-				  [[assume]]  specifies that an expression will always evaluate to true at a given point
-				  [[optimize_for_synchronized]]  indicates that the function definition should be optimized
-				  				 for invocation from a synchronized statement
-
-
-	       parameter pack
-	       		 a template parameter pack is a template parameter that accepts zero or more template arguments(
-			 non-types,types or templates)
-			 a function parameter pack is a function parameter that accepts zero or more function arguments
-			 a template with at least one parameter pack is called a variadic template
-
-			 syntax:
-				<1> <type> ... pack-name(optional)
-				    typename | class ... pack-name(optional)			  
-				    <type-constraint> ... pack-name(optional)				  c++20
-				    template<parameter-list> class ... pack-name(optional)		  c++17
-				    template<parameter-list> typename | class ... pack-name(optional) 	  c++17
-
-				function parameter pack
-					 <5> pack-name ... pack-param-name(optional)
-
-				parameter pack expansion
-					     pattern ...
-
-			 <1> a non-type template parameter pack with an optional name
-			     a type template parameter pack with an optional name
-			     a constrained type template parameter pack with an optional name
-			     a template template parameter pack with an optional name
-			 <5> a function parameter pack with an optional name
-			     parameter pack expansion:
-			       expands to comma-separated list of zero or more patterns.
-			       patterns must include at least one parameter pack.
-
-			 Usage:
-				template<unsigned short N, typename... Args>
-				unsigned short func1(Args... args)
-				{
-					return n * (args + ...);
-					//  args + is a pattern
-					//  it expands to E1 + E2 + ...
-				}
-
-				template<typename...>
-				struct Tuple {};
-				template<class T1, class T2> struct Pair {};
-				template<class... Args1>
-				struct zip {
-				       template<class... Args2>
-				       struct with {
-				       	      typedef Tuple<Pair<Args1, Args2>...> type;
-					      //  Args1 and Args2 are parameter pack
-					      //  Pair<Args1, Args2> is the pattern
-					      //  Pair<Args1, Args2>... is expand parameter-packs
-				       };
-				};
-
-				typedef zip<short, int>::with<unsigned short, unsigned>::type T1;
-				//  Pair<Args1, Args2>... expands to
-				//  Pair<short, unsigned short> and Pair<int, unsigned int>
-				//  T1 = Tuple<Pair<short, usnigned short>, Pair<int, unsigned>>
+    features merged into c++11:
+         All of TR1 except Special Functions
+                 (technical report 1)
+         Boost:
+            the thread library,
+            exception_ptr,
+            error_code,
+            error_condition,
+            iterator improvements(begin, end, next, prev),
+        C-style Unicode conversion functions
+
+    c++11 features:
+          auto | decltype
+        for variables:
+            specifies that the type of the variable that is beging
+            declared will be automatically deduced from its initializer.
+
+        for functions:
+            specifies that the return type will be deduced from its return
+            statements.
+
+        for non-type template parameters:
+            specifies that the type will be deduced from the argument.
+
+        syntax:
+            type-constraint(optional) auto
+            type-constraint(optional) decltype(auto)
+            
+            type-constraint:
+                conceptname,
+                optionally qualified,
+                optionally followed by a template argument list enclosed in <>
+        
+        Usage:
+
+            decltype(expr) h, k;         //  type of h and k is same as type or expr.
+            decltype(auto) func1(arg-list);  //  type of func1 is same as the expr it would be returned.
+
+
+
+
+            decltype(auto) c = h;         //  type of c is same as h.
+            decltype(auto) c1 = (h);     //  type of c1 is same as h but it is a reference.
+
+            auto i = expr;
+            const auto i = expr;
+            auto i = 1, j = 2;
+            auto i = 1, j = 0.0;  //  ERROR
+            const auto &i = expr; //  i is T type reference,
+                                      //  T = the exactly type of expr.
+                          //  const,readonly.
+            auto func1(arg-list)  //  T = the exactly type of expr would be returned.
+            {                  
+                ...
+                return expr;
+            }
+            auto func1(auto a)    //  T is type of func1, T = the exactly type of expr.
+            {                  //  T is type of a, T = int if somewhere invoke func1(13);
+                ...          //  T is type of a, T = double if somewhere invoke func1(1.3);
+                return expr;    
+            }
+
+            decltype(auto) must be the sole constituent of the declared type.
+            a function call must use decltype(auto) in case the function it calls returns by reference.
+
+            auto &func1(arg-list);//  T is type of func1, T = reference to the exactly type of expr
+                               //  which would be returned.
+            
+            auto && maybe deduced either as an lv reference or rv reference according to the
+            initializer,which is used in range-based for loop.
+
+            template<class T, auto I>  //  auto would be deduced to the type of a non-type 
+            struct | class ...            //  template parameter.
+
+            The auto specifier may also appear in the simple type specifier of an explicit type
+                auto(expr) and auto{expr}
+            Its type is deduced from the expr.
+
+            if type-constraint is Concept<A1, ..., An>, then the constrain expression is
+            Concept<T, A1, ..., An>  //  (T from deduced by auto)
+            otherwise,Concept<T>;  //  no arg-list
+
+            auto cant deduce from brace-init-list.
+                 template<auto n>
+                 auto f() -> std::pair<decltype(n), decltype(n)> { ... }
+                                    //  cant use auto instead to decltype be there.                    
+
+           =default | =delete
+         special syntax for define member functions.
+         Usage:
+            struct a {
+                   a(auto c) =default;
+                   void func2(void) =delete;
+            };        
+                  struct a i;    //  ERROR,because the default constructor is a::a(auto c).
+            struct a j(3);    //  RIGHT,will invoke a::a(auto c).
+            j.func2();    //  ERROR,because func2() was defined as deleted.
+        
+           final | override
+             final specifier:
+             specifies that a virtual function cant be overridden in a derived class or that
+             a class cant be derived from.
+             Usage:
+                struct A final {
+                       ...
+                };
+                struct B : A { ... };  //  ERROR,because A cant be derived.
+
+                struct C {
+                       ...
+                       virtual void func1(void) final;
+                };
+                struct D : C {
+                       ...
+                       virtual void func1(void) { ... }  //  ERROR,because C::func1()
+                                                             //  cant be overriden.
+                };
+
+
+         override specifier:
+             specifies that a virtual function overrides another virtual function.
+             Usage:
+                struct A {    //  virtual void A::func1(void) isnt existed.
+                       ...
+                };
+                struct B : A {
+                       virtual void func1(void) override;  //  ERROR,because func1() doesnt
+                                                         //  overrides anything.
+                };
+
+                struct C {
+                       virtual void func1(void);
+                       ...
+                };
+                struct D : C { virtual void func1(void) override;
+                                //  RIGHT,virtual void D::func1(void) overrides
+                         //  virtual void C::func1(void).
+                
+
+           trailing return type
+                   new style for function definition similar with lambda expression.
+            Legacy :
+                <return type> <function-name>(<arg-list>) {<body>}
+
+            trailing return :
+                 auto <function-name>(<arg-list>) -> <return type> {<body>}
+                 //  must use auto keyword.
+
+            Usage:
+                //  legacy
+                template<class T, auto N>
+                int ClassA::func1(void) { ... }
+
+                //  trailing return
+                template<class T, auto N>
+                auto ClassA::func1(void) -> int { ... }
+
+            #  Attention: it isnt supported in all compiler!
+
+           
+           reference declaration
+                    declares a named variable as a reference,that is,an alias to an already-existing
+             object or function.
+
+             &    //  lvalue reference
+             &&    //  rvalue reference
+
+             Usage:
+                int i = 3;
+                int &j = i;    //  j is an alias to i.
+
+                auto &&p = std::move(std::make_unique<char>(2));
+                        //  p is an alias to an anonymous memory
+                        //  applied by std::make_unique.
+
+           move constructor | move assignment operator
+                   a move constructor of class T is a non-template constructor whose first parameter is T &&,
+            const T &&,volatile T &&,or const volatile T &&,and either there are no other parameters,or
+            the rest of the parameters all have default values.
+
+            struct A {
+                   ...
+               A(struct A &&a);  //  move contructor.
+            };
+
+            Usage:
+            struct A a;
+            struct A b(std::move(a));  //  std::move can transform lv to rv.
+                                   //  after move,dont use struct A a as well,
+                           //  because its state is unsure.
+
+            a move assignment operator of class T is a non-template non-static member function with
+            the name operator= that takes exactly one parameter of type T &&,const T &&,volatile T &&,
+            or const volatile T &&.
+
+            struct A {
+                   ...
+               struct A &operator=(struct A &&a);  //  move assignment operator
+            };
+
+            Usage:
+            struct A a;
+            struct A b = std::move(a);  //  after move,dont use struct A a as well,
+                                        //  because its state is unsure.
+
+            #  move semantics provides a solution to such issues:
+                       move constructors/assignment operators typically 'steal' the resources of
+                the argument.
+                leave the argument in a valid but indeterminate state.
+                greatly enhances performance in some cases.
+            
+            #  compiler provides
+                       a> copy-constructor
+                b> copy-assignment operator
+                c> move constructor
+                d> move assignment operator
+                e> constructor
+                f> destructor
+
+                       E(x): x is existed.                
+                E(c)->notE(a) and notE(b) and notE(d) and notE(f)
+                E(d)->notE(a) and notE(b) and notE(c) and notE(f)
+
+               if wantnt compiler provides move constructor or assignment operator,
+               should define it as =delete.
+
+               implicitly-defined move constructor:
+                 For union type:
+                 it copies the object representation (as by std::memmove)
+             For non-union class type:
+                 it performs full member-wise move of the object's bases and non-static
+                 members,in their initialization order,using direct initialization with
+                 an xvalue(l | r) argument
+               implicitly-defined move assignment operator:
+                 For union type:
+                 it copies the object representation (as by std::memove)
+             For non-union type:
+                 it performs full member-wise move assignment of the object's direct bases
+                 and immediate non-static members,in their declaration order,using built-in
+                 assignment for the scalars,memverwise move-assignment for arrays,and
+                 move assignment operator for class types
+
+             it for a class T is constexpr if
+                T is a literal-type,and
+                the assignment operator selected to move each direct base class subobject is a
+                constexpr function,and
+                for each non-static data member of T that is of class type(or array etc.),the
+                assignment operator selected to move that member is a constexpr function
+
+
+            #  move-constructor will be defined as =delete: (any is true)
+                    T has non-static data members that cant be moved
+                T has direct or virtual base class that cant be moved
+                T has direct or virtual base class or a non-static data member with
+                a deleted or inaccessiable destructor
+                T is a union-like class and has a variant member with non-trivial move
+                constructor
+            #  move-assignment operator will be defined as =delete: (any is true)
+                       T has a non-static data member that is const
+                T has a non-static data member of a reference type
+                T has a non-static data member or a direct base class that cant be
+                move-assigned
+
+
+            #  trivial move constructor (also trivial move assignment operator)
+                 trivial move constructor is a constructor that performs the same action as the
+             trivial copy constructor,that is,makes a copy of the object representation as
+             if by std::memmove.
+                 the move constructor for class T is trivial if all of the following is true:
+                it is not user-provided
+                T has no virtual member functions
+                T has no virtual base classes
+                the move constructor selected for every direct base of T is trivial
+                the move constructor selected for every non-static class type(or array of class type)
+                member of T is trivial
+
+            #  eligible move constructor
+                 a move constructor is eligible if it is not deleted.
+             a move constructor is eligible if
+               it is not deleted,and
+               its associated constraints,if any,are satisfied,and
+               no move constructor with the same first parameter type
+               is more constrained than it
+
+            #  eligible move assignment operator
+                 a move assignment operator is eligible if it is not deleted
+             a move assignment operator is eligible if
+               it is not deleted,and
+               its associated constraints,if any,are satisfied,and
+               no move assignment operator with the same first parameter type
+               and the same cv/ref-qualifiers(if any) is more constrained than it
+
+           
+           scoped enum
+                     syntax:
+            enum struct | class <name> {enumerator = constexpr, enumerator = constexpr, ...};
+            enum struct | class <name> : <type> {enumerator = constexpr, enumerator = const expr, ...};
+            enum struct | class <name>;
+            enum struct | class <name> : <type>;
+            
+            syntax1>
+                declares a scoped enumeration type whose underlying type is int (the keywords class
+                and struct are exactly equivalent)
+
+            syntax2>
+                declares a scoped enumeration type whose underlying type is <type>
+            
+            syntax3>
+                opaque enum declaration for a scoped enumeration whose underlying type is int
+                
+            syntax4>
+                opaque enum declaration for a scoped enumeration whose underlying type is <type>
+
+              each enumerator becomes a named constant of the enumeration's type(the <name>),which is contained
+              within the scope of the enumeration,and can be accessed using scope resolution operator.there are
+              no implicit conversions from the values of a scoped enumerator to integral types,although 
+              static_cast may be used to obtain the numberic value of the enumerator.
+
+              Usage:
+            enum class Color { red, green, blue };    
+            Color c = Color::red;
+            switch (c) {
+            case Color::red   :  ...
+            case Color::green :  ...
+            case Color::blue  :  ...
+            }            
+
+              an enumeration can be initialized from an integer without a cast,using list initialization,if all of
+              the following are true:
+                    the initialization is direct-list-initialization
+              the initializer list has only a single element
+              the enumeration is either scoped or unscoped with underlying type fixed
+              the conversion is non-narrowing
+
+              Usage:
+            enum class byte : unsigned char { };
+            byte a{4};           //  OK   
+            byte b{byte{4}};    //  OK
+            byte c = {42};        //  ERROR
+
+              #  unscoped enumerations
+                     legacy C enumeration:
+                     enum <name> { enumeration = constexpr, enumeration = constexpr, ... };
+                  enum <name> : <type> { enumeration = constexpr, enumeration = constexpr, ... };
+                  enum <name> : <type>;
+
+              #  difference between scoped and unscoped:
+                     values of unscoped enumeration type are implicitly-convertible to integral types.
+               but scoped cant be implicitly-converted.
+               scoped enumberation is used to make a class which has members of constants. (make a new type)
+
+              #  using enum declaration
+                     using enum <nested-name-specifier>(optional) <name>;
+               
+               where <nested-name-specifier> <name> must not name a dependent type and must name an
+               enumeration type
+
+               Usage:
+                enum class E1 : int { a = 3, b };
+                enum class E2 : int { c = 9, a };
+
+                struct A {
+                       using enum E1;
+                       //  using enum E2;  //  enumeration conflict between E1::a and E2::a
+                };        
+
+                struct A a;
+                a.a;        //  OK
+                a::a;        //  OK
+            
+
+           constexpr
+            constexpr - specifies that the value of a variable or function can appear in constant expressions.
+            that means,it is possible to evaluate the value of the function or variable at compile time.
+
+            a constexpr specifier used in an object declaration or non-static member function implies const.
+            a constexpr specifier used in a function or static data member declaration implies inline.
+
+            constexpr variable:
+              a constexpr variable must satisfy the following requirements:
+                its type must be a LiteralType
+                it must be immediately initialized
+                the full-expression of its initialization,including all implicit conversions,
+                constructors calls,etc,must be a constant expression
+                it must have constant destruction,
+                   either:
+                 it is not of class type nor array thereof,or
+                 it is of class type or array thereof,that class type has a constexpr destructor,and
+                 for a hypothetical expression whose only effect is to destroy the object,would be a
+                 core constant expression if the lifetime of the object and its non-mutable subobjects
+                 were considered to start within
+
+              # if a constexpr variable is not translation-unit-local(c++20),it should not be
+                initialized to point to,or refer to,or have a (possibly recursive)subobject 
+                that points to or refers to,a translation-unit-local entity that is usable in
+                const expression.
+
+            constexpr function:
+              a constexpr function must satisfy the following requirements:
+                it must not be virtual
+                it must not be a function-try-block
+                it must not be a coroutine(c++20)
+                for constructor and destructor,the class must have no virtual base classes
+                its return value and each of its parameters must be of a LiteralType
+                there exists at least one set of argument values such that an invocation of the function
+                could be an evaluated subexpression of a core constant expression,No diagnostic is required
+                for a violation of this bullet
+                the function body must be either deleted or default or contain only the following:
+                    null statements
+                static_assert
+                typedef declarations and alias declarations that dont define classes or enumerations
+                using declarations
+                using directives
+                if the function is not a constructor,exactly one return statement
+                the function body must not contain:
+                    a goto statement
+                a statement with a label other than case and default
+                a try-block(for exception)
+                a definition of a variable for which no initialization is performed
+                a defintion of a variable of non-literal type
+                a definition of a variable of static or thread storage duration
+
+
+                Usage:
+                struct A {
+                       constexpr int func1(int a, int b)
+                       {
+                        int c(30);
+                        //  std::istream *pIstream(&std::cin);  //  ERROR
+                                                 //  std::istream is not a
+                                            //  literal type
+                        /*  ERROR try-block                    
+                        try {
+                            ...
+                        } catch (...) {
+                            ...
+                        }*/                        
+                        return a + b + c;
+                       } 
+                };
+
+            constexpr constructor:
+              a constexpr constructor whose function body is not =delete,must satisfy the following additional
+              requirements:
+                for the constructor of a class or struct,every base class sub-object and every non-variant
+                non-static data member must be initialized,if the class is a union-like class,for each of 
+                its non-empty anonymous union members,exactly one variant member must be initialized
+                for the constructor of a non-empty union,exactly one non-static data member must be initialized
+                every constructor selected to initializing non-static data members and base class must be a
+                constexpr constructor
+
+            constexpr destructor:
+              a constexpr destructor whose function body is not =delete,must satisfy the following additional
+              requirements:
+                every destructor used to destroy non-static data members and base class must be constexpr
+                destructor
+
+            #  for template function,at least one specialization must satisfy the constexpr requirements.
+               other specializations are still considered as constexpr,even though a call to such a function
+               cant appear in a constant expression.
+               if no specialization satisfy to requirements while try to make a instant of template function,
+               the template is ill-formed,no diagnostic required.
+
+
+           LiteralType
+            specifies that a type is a literal type,LiteralType are the types of constexpr variables and they
+            can be constructed,manipulated,and returned from constexpr functions.
+
+            a literal type is any of the following:
+              possibly cv-qualified void (so that constexpr functions can return void);
+              scalar type;
+              reference type;
+              an array of literal type;
+              possibly cv-qualified class type that has all of the following properties:
+                     has a trivial constexpr destructor
+                   is one of
+                      an aggregate type
+                      a type with at least one constexpr constructor that is not a copy or move
+                      constructor
+                      a closure type(c++17)
+                   for unions,at least one non-static data member is of non-volatile literal type
+                   for non-unions,all non-static data members and base classes are of non-volatile literal type
+
+            Usage:
+                struct conststr {
+                       template<std::size_t N>
+                       constexpr conststr(const char (&a)[N], std::size_t size) : m_str(a), m_size(size)
+                       {
+                       }
+                       constexpr char operator[](std::size_t n) const
+                       {
+                        return n < m_size ? m_str[n] : throw std::out_of_range("");
+                       }
+
+                       const char *m_str;
+                       std::size_t m_size;
+                };
+
+                constexpr std::size_t countlower(struct conststr s, std::size_t n=0, std::size_t c = 0)
+                {
+                    return n == s.m_size ? c :
+                           s[n] >= 'a' && s[n] <= 'z' ? countlower(s, n + 1, c + 1) :
+                                   countlower(s, n + 1, c);
+                }
+
+                std::cout<<countlower("hello world")<<std::endl;
+                    //  there would cause implicitly convert (&a)[sizeof("hello world")] = "hello world"
+
+
+           list-initialization
+            initializes an object from braced-init-list.
+            syntax:
+                direct-list-initialization>
+                    T object{arg1, arg2, arg3, ..., argN};
+                    T{arg1, arg2, arg3, ..., argN};
+                    new T{arg1, arg2, arg3, ..., argN};
+                    Class{T member{arg1, arg2, ...};};
+                    Class::Class() : member{arg1, arg2, ...} {...}
+            direct-list-initialization:
+                initialization of a named variable with a braced-init-list(empty or nested are allowed)
+                initialization of an unnamed temporary with a braced-init-list
+                initialization of an object with dynamic storage duration with a new-expression,where the
+                initializer is a braced-init-list
+                in a non-static data member initializer that doesnt use equals sign
+                in a member initializer list of a constructor if braced-init-list is used
+
+                copy-list-initialization>
+                    T object = {arg1, arg2, ...};
+                    function({arg1, arg2, ...});
+                    return {arg1, arg2, ...};
+                    object[{arg1, arg2, ...}]
+                    object = {arg1, arg2, ...}
+                    U({arg1, arg2, ...})        
+                    Class{T member = {arg1, arg2, ...};};
+            copy-list-initialization:
+                initialization of a named variable with a braced-init-list after an equals sign
+                in a function call expression,with braced-init-list used as an argument and 
+                list-initialization initializes the function parameter
+                in a return statement with braced-init-list used as the return expression and 
+                list-initialization initializes the returned object
+                in a subscript expression with a user-defined operator[],where list-initialization
+                initializes the parameter of the overloaded operator
+                in an assignment expression,where list-initialization initializes the parameter of
+                the overloaded operator
+                functional cast expression or other constructor invocations,where braced-init-list
+                is used in place of a constructor argument,copy-list-initialization initializes the
+                constructor's parameter(the type U isnt the type that is being list-initialized,U is
+                constructor's parameter is. typeof(U) != typeof(argI).)
+                in a non-static data member initializer that uses the equals sign
+
+            #  if the braced-init-list has no elements,T is value-initialized
+                  value-initialized - syntax:
+                      T()
+                new T()
+                Class::Class(...) : member() {...}
+                T object{};
+                T{}
+                new T{}
+                Class::Class(...) : member{} {...}
+
+                #  T object(); doesnt initialize an object,it declares a function that takes no arguments
+                   and returns T(T object = T(); before c++11)
+                #  if none of value in initialization list,zero would as the value by compiler implicitly,
+                #  although that isnt zero-initialization.
+
+           delegating constructor
+                     if the name of the class itself appears as class-or-identifier in the member initializer list,then
+              the list must consist of that one member initializer only;such a constructor is known as the delegating
+              constructor,and the constructor selected by the only member of the initializer list is the target constructor.
+              in this case,the target constructor is selected by overload resolution and executed first,then the control
+              returns to the delegating constructor and its body is executed.
+              delegating constructors cannt be recursive.
+
+              Usage:
+                class A {
+                public:
+                    A() =delete;
+                    A(int x) =default : A('a', 'b') { ... }
+                    A(char a1, char a2) { ... }
+                };
+                //  A(int x) delegates to A(char a1, char a2)
+                //  A(int x) is the delegaing constructor,A(char a1, char a2) is the target constructor
+
+
+           inheriting constructors
+                     using-declaration can make inheriting constructors.
+
+              syntax of using-declaration:
+                   using typename(optional) <nested-name-specifier> <unqualified-id>;
+                 using <declarator-list>;
+
+                 typename :
+                        keyword,may be used as necessary to resolve dependent names when the
+                        using-declaration introduces a member type from a base class template.
+                 nested-name-specifier : 
+                           a sequence of names and scope resolution operators :: ,ending with a
+                       scope resolution operator.A signle :: refers to the global namespace.
+                 unqualified-id:
+                       an id-expression.
+                 declarator-list:
+                       comma-separated list of one or more declarators of the
+                       typename(optional) nested-name-specifier unqualified-id
+                       Some or all of the declarators may be followed by an ellipsis ... to
+                       indicate pack expansion.
+                 
+
+              if the using-declaration refers to a constructor of a direct base of the class being defined(e.g. using base::base),
+              all constructors of that base(ignoring member access) are made visible to overload resolution when initializing the
+              derived class.
+
+              overload resolution for construct derived class -
+                     an inherited constructor was selected for construct base :
+                      this inherited constructor would be accessible when used to construct an object
+                      of the corresponding base class,and the accessibility of the using-declaration
+                      that introduced it is ignored.
+                   
+                   an inherited constructor was selected for construct derived :
+                      the base subobject from which the constructor was inherited is initialized using
+                      the inherited constructor,and all other bases and member of derived class are
+                      initialized as if by the defaulted default constructor(default member initializers
+                      are used if provided,otherwise default initialization takes place).
+
+              #  the entire initialization is treated as a single function call,
+                 all bases and members of derived class would be initialized after
+                 base subobject finishes initialization
+                 
+              Usage:
+                struct A { A(int, ...) { ... } };
+                struct B { B(double) { ... } };
+
+                struct D : A {
+                       using A::A;
+                       int x;
+                        int y = random();
+                };
+
+                struct E : B {
+                       using B::B;
+                       A a;
+                }
+
+                D d(1, 2, 3);  //  OK,invoke inherited constructor A::A(), A::A(1, 2, 3)
+                                  //  x isnt initialized, y was initialized with a random value
+
+                E e(3.2);      //  ERROR, struct A has no default constructor
+
+              #  if the constructor was inherited from multiple base class subobjects of type B,
+                 the program is ill-formed,similar to multiply-inherited non-static member functions.
+                 E.g.
+                struct A { ... };
+                struct B : A { ... };
+                struct C : A { ... };
+                struct D : B, C { ... };  //  ERROR,subobject of type A too many than one.
+
+                struct A { A(int, ...) { ... } };
+                struct B : A { using A::A; };
+                struct C1 : B { using B::B; };
+                struct C2 : B { using B::B; };
+                struct D : C1, C2 { using C1::C1; using C2::C2; };
+                D d0(0);  //  ERROR,ill-formed because the constructor A::A() was inherited than once.
+
+              #  as with using-declarations for any other non-static member functions,
+                 if an inherited constructor matches the signature of one of the constructors
+                 of derived class,it is hidden from lookup by the version found in derived clas.
+                 if one of the inherited constructors of base happens to have the signature that
+                 matches a copy/move constructor of the derived class,it doesnt prevent implicit
+                 generation of derived class copy/move constructor.(inherited version would be hidden)
+
+              #  inherited constructors within a template-class:
+                   if a using-declaration refers to a dependent name,it considered to name a constructor
+                   if the nested-name-specifier has a terminal name that is the same as the unqualified-id
+                   E.g.
+                template<class T>
+                struct A : T { using T::T; };
+                
+                template<class T, class U>
+                struct B : T, A<U> {
+                       using A<U>::A;  //  OK,inherits constructors of A<U>
+                       using T::A;     //  doesnt inherit constructors of T,even though T may be a specialization of A<>
+                };
+
+
+           nullptr
+            the keyword nullptr denotes the pointer literal.it is a prvalue of type std::nullptr_t.
+            there exist implicit conversions from nullptr to null pointer value of any pointer type
+            and any pointer to member type.similar conversions exist for any null pointer constant,
+            which includes values of type std::nullptr_t as well as the macro NULL.
+
+           char16_t and char32_t
+                   char16_t -
+                    type for UTF-16 character representation,required to be large enough to
+                    represent any UTF-16 code unit(16 bits).it has the same size,signedness,
+                    and alignment as std::uint_least16_t,but is a distinct type.
+
+            char32_t -
+                    type for UTF-32 character representation,required to be large enough to
+                    represent any UTF-32 code unit(32 bits).it has the same size,signedness,
+                    and alignment as std::uint_least32_t,but is a distinct type.
+
+           type alias
+            type alias is a name that refers to a previously defined type(similar to typedef).
+            alias template is a name that refers to a family to types.
+
+            syntax:
+                using <identifier> <attr>(optional) = <type-id>;
+                template<template-parameters>
+                using <identifier> <attr>(optional) = <type-id>;
+
+            Usage:
+                using ipv4_address = struct sockaddr_in;
+                template<class T>
+                using key_value = std::pair<int, T>;
+
+                ipv4_address myaddr;            //  create an object of struct sockaddr_in 
+                key_value<std::string> v_s;        //  create an object of std::pair<int, std::string>
+
+            #  when the result of specializing an alias template is a dependent template-id,
+               subsequent substitutions apply to that template-id.
+
+            #  the type produced when specializing an alias template is not allowed to directly or 
+               indirectly make use of its own type.
+               E.g.
+                template<class T>
+                struct A;
+                template<class T>
+                using B = typename A<T>::U;
+                template<class T>
+                struct A { typedef B<T> U; };   //  B<T> = A<T>::U
+                B<int> b;            //  ERROR
+                                       //  T = int with B<T> = A<int>::B<int> = A<int>::A<int>::U
+                                //  cycle to resolve typename
+
+            #  alias template are never deduced by template-argument-deduction when deducing a template 
+               template parameter.
+               it is not possible to partially or explicitly specialize an alias template.
+
+            #  alias template can only be declared at class scope or namespace scope.
+
+
+           attribute specifier sequence
+                    introduces implementation-defined attributes for types,objects,code, etc.
+             
+             syntax:
+                [[attribute-list]]
+                [[using atrribute-namespace: attribute-list]]
+
+                attribute-list is a comma-separated sequence of zero or more attributes
+                  identifier -
+                              simple attribute,such as [[noreturn]]
+                  attribute-namespace::identifier -
+                          attribute with a namespace,such as [[gnu::unused]]
+                  identifier(argument-list) -
+                          attribute with arguments,such as [[deprecated("because")]]
+                  attribute-namespace::identifier(argument-list) -
+                          attribute with both a namespace and an argument list
+
+             #  if using namespace: appears in the begining of an attribute list,no other attributes 
+                in the attribute list can specify a namespace: the namespace specified in a using
+                applies to them all.
+
+             #  attribute often as the compiler extension such as __attribute__((...)) in gnu/gcc,
+                use these extension can demand compiler do something when construct program.
+
+             standard attributes :
+                   [[noreturn]]  indicates that the function doesnt return
+                  [[carries_dependency]]  indicates that dependency chain in release-consume
+                                std::memory_order propagates in and out of the function
+                  [[deprecated]]  
+                  [[deprecated("reason")]]  indicates that the use of the name or entity declared 
+                                  with this attributes is allowed,but discouraged for
+                                some "reason"
+                  [[fallthrough]]  indicates that the fall through from the previous case label is
+                             intentional and should not be diagnosed by a compiler that warns
+                           on fall-through
+                  [[nodiscard]]
+                  [[nodiscard("reason")]]  encourages the compiler to issue a warning if the return value
+                                 is discarded
+                  [[maybe_unused]]  suppresses compiler warnings on unused entities,if any
+                  [[likely]]
+                  [[unlikely]]  indicates that the compiler should optimize for the case where a path
+                          of execution through a statement is more or less likely than any other
+                        path of execution
+                  [[no_unique_address]]  indicates that a non-static data member need not have an address
+                               distinct from all other non-static data members of its class
+                  [[assume]]  specifies that an expression will always evaluate to true at a given point
+                  [[optimize_for_synchronized]]  indicates that the function definition should be optimized
+                                   for invocation from a synchronized statement
+
+
+           parameter pack
+                    a template parameter pack is a template parameter that accepts zero or more template arguments(
+             non-types,types or templates)
+             a function parameter pack is a function parameter that accepts zero or more function arguments
+             a template with at least one parameter pack is called a variadic template
+
+             syntax:
+                <1> <type> ... pack-name(optional)
+                    typename | class ... pack-name(optional)              
+                    <type-constraint> ... pack-name(optional)                  c++20
+                    template<parameter-list> class ... pack-name(optional)          c++17
+                    template<parameter-list> typename | class ... pack-name(optional)       c++17
+
+                function parameter pack
+                     <5> pack-name ... pack-param-name(optional)
+
+                parameter pack expansion
+                         pattern ...
+
+             <1> a non-type template parameter pack with an optional name
+                 a type template parameter pack with an optional name
+                 a constrained type template parameter pack with an optional name
+                 a template template parameter pack with an optional name
+             <5> a function parameter pack with an optional name
+                 parameter pack expansion:
+                   expands to comma-separated list of zero or more patterns.
+                   patterns must include at least one parameter pack.
+
+             Usage:
+                template<unsigned short N, typename... Args>
+                unsigned short func1(Args... args)
+                {
+                    return n * (args + ...);
+                    //  args + is a pattern
+                    //  it expands to E1 + E2 + ...
+                }
+
+                template<typename...>
+                struct Tuple {};
+                template<class T1, class T2> struct Pair {};
+                template<class... Args1>
+                struct zip {
+                       template<class... Args2>
+                       struct with {
+                                 typedef Tuple<Pair<Args1, Args2>...> type;
+                          //  Args1 and Args2 are parameter pack
+                          //  Pair<Args1, Args2> is the pattern
+                          //  Pair<Args1, Args2>... is expand parameter-packs
+                       };
+                };
+
+                typedef zip<short, int>::with<unsigned short, unsigned>::type T1;
+                //  Pair<Args1, Args2>... expands to
+                //  Pair<short, unsigned short> and Pair<int, unsigned int>
+                //  T1 = Tuple<Pair<short, usnigned short>, Pair<int, unsigned>>
        
-			 #  &args...  //  pack expands to &e1, &e2, ..., &eN
-			 #  args...   //  pack expands to e1, e2, ..., eN
-			 #  ++args... //  pack expands to ++e1, ++e2, ..., ++eN
-
-			 #  if the names of two parameter packs appear in the same pattern,they are expanded
-			    simultaneously,and they must have the same length.	
-
-			 #  if a pack expansion is nested with in another pack expansion, the parameter packs that
-			    appear inside the innermost pack expansion are expanded by it,and there must be another
-			    pack mentioned in the enclosing pack expansion,but not in the innermost one
-			      E.g.
-				template<class... Args>
-				void func1(Args... args)
-				{
-					f(const_cast<const Args *>(&args)...);
-					//  const_cast<const Args *>(&args) is a pattern
-					//  it expands to const_cast<const TYPE1 *>(&E1), const_cast<const TYPE2 *>(&E2), ...
-
-					f(h(args...) + args...);
-					//  args is a pattern,it expands to E1, E2, E3, ...
-					//  h(args...) + args is a pattern,
-					//  it expands to h(args...) + E1, h(args...) + E2, ...
-					//  == h(E1, E2, ...) + E1, h(E1, E2, ...) + E2, ...
-				}
-
-			 #  expansion loci :
-			      depending on where the expansion takes place,the resulting comma-separated list is a
-			      different kind of list: function parameter list,member initializer list,attribute list, etc.
-
-			 #  function parameter list :
-			      in a function parameter list,if an ellipsis appears in a parameter declaration(whether
-			      it names a function parameter pack(as in, Args... args) or not),the parameter declaration
-			      is the pattern.
-
-			      template<typename... Ts, int... N>
-			      void g(Ts (&...ts)[N]) {}
-
-			      int n[1];
-			      g<const char, int>("a", n);  //  Ts (&...ts)[N] => const char(&)[2], int(&)[1]
-			      	      	    	      	   //  NE1 is 2 because that "a" has two elements,
-							   //  NE2 is 1 because that n has one element.
-
-			      note : Ts (&...)[N] is not allowed because the C++11 grammar requires the parenthesized
-			      	     ellipsis to have a name.
-			      
-			 #  base specifiers and member initializer lists :
-			      a pack expansion may designate the list of base classes in a class declaration.
-			      typically,this also means that the constructor needs to use a pack expansion in 
-			      the member initializer list to call the constructors of the these base classes.
-			        E.g.
-				  template<class... Bases>
-				  class A : public Bases... {
-				  public:
-					A(const Bases&... bc) : Bases(bc)...
-					{
-						...
-					}
-					//  Bases(bc) is a pattern expands to BaseClass1(E1), BaseClass2(E2), ...
-				  };
-
-			 #  the sizeof... operator
-			      the sizeof... operator is classified as a pack expansion as well.
-			      E.g.
-			        template<class... Args>
-				size_t howManyArgs(Args...)
-				{
-					return sizeof...(Args);  //  sizeof...(Args) will count number of types in pack
-				}
-
-			 #  using-declarations
-			      in using declaration,ellipsis may appear in the list of declarators,this is useful when
-			      deriving from a parameter pack.
-			      E.g.
-			        template<typename... bases>
-				struct X : bases... {
-				       using bases::g...;
-				};
-				X<B, D> x;  //  using B::g, D::g;
-
-			 #  pack expansions are allowed in the lists of attributes,if permitted by the attibute's
-			    specification.
-			    e.g.
-			      template<int... args>
-			      [[vendor::attr(args)...]] void *f();
-
-
-	       union in c++
-	       	     	declare syntax:
-				union <attr> <class-head-name> { ... };
-
-			a union can have member functions,but not virtual functions
-			a union cant have base classes and cant be used as a base class
-			a union cant have non-static data members of reference types
-			unions cant contain a non-static data member with a non-trivial special member function(
-			copy constructor,copy-assignment operator or destructor).
-			if a union contains a non-static data member with a non-trivial special member function(
-			copy/move constructor/assignment,destructor),that function is deleted by default in the
-			union and needs to be defined explicitly.
-			if a union contains a non-static data member with a non-trivial default constructor,the
-			default constructor of the union is deleted by default unless a variant member of the 
-			union has a default member initializer.
-			at most one variant member can have a default member initializer
-			just like in struct declaration,the default member access in a union is public
-
-	       
-	       union-like classes
-	       		a union-like class is either a union,or a class(non-union) that has at least one anonymous
-			union as a member
-			a union-like class has a set of variant members:
-			  the non-static data members of its member anonymous unions
-			  in addition,if the union-like class is a union,its non-static data members that are not
-			  anonymous unions
-
-			Usage:
-				struct union_like {
-				       union {
-				       	     int x;
-					     float y;
-					     char z;
-				       };
-				       //  int j;  //  ERROR,non-static data members should in anonymous union
-				};
-				union union_like_x {
-				      int x;
-				      float y;
-				      char z;
-				};      
-
-
-	       PODs
-			PODType is plain old data type,this means the type is compatible with the types used in
-			C programming language,that is,can be exchanged with C libraries directly,in its binary form.
-			(PODType is deprecated in c++20)
-			POD types :
-			    scalar types :
-			    	   arithmetic types
-				   enumeration types
-				   pointer types
-				   pointer-to-member types (&Class::member)
-				   std::nullptr_t
-				   
-			    POD classes : 	   
-			    	   a POD class is a class that
-				     is an aggregate,
-				     has no user-declared copy assignment operator,
-				     has no user-declared destructor,and
-				     has no non-static data members of type non-POD class or reference,
-				     is a trivial class,
-				     is a standard-layout class,and
-				     has no non-static data members of type non-POD class
-
-			    #  a POD struct is a non-union POD class,a POD union is a union that is a POD class
-
-			    arrays of such types
-			    
-			    cv-qualified versions of these types
-
-			E.g.
-				struct c_struct {
-				       int x;
-				       char y;
-				       float z;
-				       struct c_struct *next;
-				};  //  c_struct just a POD type struct
-
-
-	       unicode string literals
-	       	       	      syntax:
-					"<s-char-sequence>(optional)";		//  ordinary string literal,type is const char[LENGTH]
-					L"<s-char-sequence>(optional)";		//  wide string literal,type is const wchar_t[LENGTH]
-					u8"<s-char-sequence>(optional)";	//  utf-8 string literal,type is const char[LENGTH]
-					u"<s-char-sequence>(optional)";		//  utf-16 string literal,type is const char16_t[LENGTH]
-					U"<s-char-sequence>(optional)";		//  utf-32 string literal,type is const char32_t[LENGTH]
-					<prefix>(optional)R"<d-char-sequence>(optional)
-					(<r-char-sequence>(optional))<d-char-sequence>(optional)"
-										//  raw string literal,used to avoid escaping of any
-										//  character.anything between the delimiters becomes
-										//  part of the string.
-										//  prefix,if present,has the same meaning as prefix
-										//  descriptions.the terminating d-char-sequence is the
-										//  same sequence of characters as the initial d-char-sequence.
-										
-
-					#  prefix : L | u8 | u | U
-					#  d-char-sequence : a sequence of one or more d-chars,at most 16 characters long
-					#  d-char : a character from the "basic source character set"(c++23)
-					            "basic character set"(c++23),except parentheses,backslash and spaces
-					#  r-char-sequence : a sequence of one or more r-chars,except that it must not 
-					   		     contain the closing sequence   )d-char-sequence"
-					#  r-char : a character from the "source character set"(c++23)
-					   	    "translation character set"(c++23)
-
-				#  if a character lacks representation in the associated character encoding:
-				      if the string literal is an ordinary string literal or wide string literal,it is
-				      conditionally-supported and an implementation-defined code unit sequence is encoded
-				      otherwise,the string literal is ill-formed
-
-	       
-	       user defined literals
-	       	    	    allows integer,floating-point,character,and string literals to produce objects of user-defined
-			    type by defining a user-defined suffix.
-			    (it is a feature to custom suffix in c++)
-
-			    syntax:
-				<decimal-literal><ud-suffix>			//  integer
-				<octal-literal><ud-suffix>			//  integer
-				<hex-literal><ud-suffix>			//  integer
-				<binary-literal><ud-suffix>			//  integer
-				<fractional-constant exponent-part><ud-suffix>	//  floating-point
-				<digit-sequence exponent-part><ud-suffix>	//  floating-point
-				<character-literal><ud-suffix>			//  character
-				<string-literal><ud-suffix>			//  string
-
-				ud-suffix : an identifier,introduced by a literal operator or a literal operator template
-					    declaration.all ud-suffixes introduced by a program must begin with the underscore
-					    character _ ,the standard library ud-suffixes do not begin with underscores.
-
-				#  in the integer and floating-point digit sequences,optional separators ' are allowed
-				   between any two digits and are ignored.
-				#  if a token matches a user-defined literal syntax and a regular literal syntax,it is assumed to
-				   be a regular literal(cant overload LL in 123LL)
-				#  when the compiler encounters a user-defined literal with ud-suffix <X>,it performs unqualified 
-				   name lookup,looking for a function with the name operator""<X> ,if the lookup doesnt find a 
-				   declaration,the program is ill-formed
-
-				for user-defined integer literals :
-				    a>  parameter type is unsigned long long,the user-defined literal expression is treated as
-				        a function call operator""<ud-suffix>(nULL), n is the literal without ud-suffix
-				    b>  not a>
-				    	  1> a raw literal operator was included into overload set,the user-defined literal
-					     expression is treated as a function call operator""<X>("n")
-					  2> a numeric literal operator template was included into overload set,the expression
-					     is treated as a function call operator""<X><'c1', 'c2', ..., 'ck'>(),
-					     c1, ..., ck are the individual characters of n and all of them are from the
-					     basic source character set or basic character set.
-
-				for user-defined floating-point literals :
-				    it is treated alike in user-defined integer literals,but it is a floating-point value.
-				    (type of long double will be operator""<X>(fL).)
-
-				for user-defined string literals,let str be the literal without ud-suffix : 
-				    a>  if the overload set includes a string literal operator template with a non-type
-				        template parameter for which str is a well-formed template argument,then the 
-					user-defined literal expression is treated as a function call operator""<X><str>()
-				    b>  not a>,the user-defined literal expression is treated as a function call
-				    	operator""<X>(str,length_of_str),it is excluding '\0'
-
-				for user-defined character literals : 
-				    the user-defined literal expression is treated as a function call operator""<X>(the_char),
-				    where the_char is the literal without ud-suffix
-
-			    literal operators : 
-			    	    the function called by a user-defined literal is known as literal operator,
-				    it is declared just like any other function or function template at namespace scope,
-				    except for the following restrictions.
-				    
-				    name of the function can have one of the two forms : 
-				    	 operator""<identifier>
-					 operator <user-defined-string-literal>
-
-				    only the following parameter lists are allowed on literal operators : 
-				    	 (const char *)
-					 (using long long int)
-					 (long double)
-					 (char)
-					 (wchar_t)
-					 (char8_t)
-					 (char16_t)
-					 (char32_t)
-					 (const char *, std::size_t)
-					 (const wchar_t *, std::size_t)
-					 (const char8_t *, std::size_t)
-					 (const char16_t *, std::size_t)
-					 (const char32_t *, std::size_t)
-
-			    Usage :
-				std::string operator""_S(const char *,std::size_t);
-				unsigned long long int operator""_km(unsigned long long int);
-				char operator""_c(char i)
-				{
-					//  can has more statements to do something
-					return i - 1;
-				}
-				
-
-				256_km;	      	   //  operator""_km ull literal 256
-				"hello world"_S;   //  operator""_S  string literal std::string{"hello world"}
-				'k'_c; 		   //  operator""_c  char literal 'k' - 1 = 'j'
-
-
-	       lambda expressions
-			constructs a closure: an unnamed function object capable of capturing variables in scope.
-
-			syntax:
-				[captures](parameters) <specifiers> -> <ret> { <body> };
-				//  full form
-
-				[captures]<specifiers> { <body> };
-				//  omitted parameter list,no return,no argument taken.
-
-				[captures]<tparameters> requires(optional) (parameters) -> <ret> <specifiers> { <body> };
-				[captures]<tparameters> requires(optional) -> <ret> <specifiers> { <body> };
-				//  generic lambda and explicitly provides a list of template parameters
-
-				captures :
-					 [= | & , <variables accessible>]
-					 = - access object by-copy (default)
-					 & - access object by-reference 
-
-					 !!  if captures list is null = [],that is cant access external object from body.
-					 !!  if captures list is capture by-reference equal to [&],that is all external object
-					     can be accessed from body.
-					 !!  if captures list is capture by-copy equal to [=],that is all changes on external object
-					     just change the copy version.
-					 !!  E.g.
-					     [&, a, b] { ... return k += 3; };
-					     //  default capture-mode is by-reference
-					     //  but a and b is captured by-copy,other objects in body would captured by-reference
-					     //  k is captured by-reference
-
-					 v is a non-local variable or has static or thread local storage duration
-					 or a reference that has been initialized with a constant expression,
-					 then v can be used even it is not in capture-list.
-
-					 v is a variable has const non-volatile integral or enumeration type and
-					 has been initialized with a constant expression or constexpr and has
-					 no mutable members,then v can be readed even it is not in capture-list.
-				
-				tparameters :
-					      a non-empty comma-separated list of template parameters,used to provide
-					      names to the template parameters of a generic lambda.
-				parameters :
-					   function argument list.
-				<ret> :
-				      type to returns.
-				<specifiers> :
-					     mutable | constexpr | consteval | static
-
-					     mutable :
-					     	     allow to modify the objects captured by copy,and to call their
-						     non-const member functions.
-					     
-					     consteval :
-					     	       specifies that the function call operator or any given operator
-						       themplate specialization is an immediate function,consteval and
-						       constexpr will conflicts to each other.
-
-			#  if auto is used as a type of a parameter or an explicit template parameter list is provided,
-			   the lambda is a generic lambda.
-			#  a vairable __func__ is implicitly defined at the begining of body,with semantics as described
-			   like this :
-			   	static const char __func__[] = "function-name";
-				//  this variable has block scope and tatic storage duration.
-				//  can use std::cout to print this char array.
-
-		 	#  the lambda expression is a prvalue expression of unique unnamed non-union non-aggregate class type,
-			   known as closure type,which is declared in the smallest block scope { ... },class scope,or namespace
-			   scope that contains the lambda expression.
-			   E.g.
-				void func(void)
-				{
-					auto internal_func = [] -> void { return; };
-					//  func::internal_func
-				}
-
-			   the closure type cannt be explicitly instantiated,explicitly specialized,or named in a friend declaration.
-			   ret ClosureType::operator()(parameters) { <body> }
-			   template<template-parameters>
-			   ret ClosureType::operator()(parameters) { <body> }
-
-			   ClosureType::operator ret(*)(params)()
-			   using F = ret(*)(params);
-			   operator F() const nonexcept;
-			   using F = ret(*)(params);
-			   constexpr operator F() const noexcept;
-
-			   using F = int(*)(const int &);
-			   operator F() const noexcept;
-
-			   template<tparams> using fptr_t = ret| tparams (*)(tparams fparams);
-			   template<tparams> operator fptr_t<tparams>() const noexcept;
-			   template<tparams> using fptr_t = ret | tparams (*)(tparams fparams);
-			   template<tparams> constexpr operator fptr_t<tparams>() const noexcept;
-
-			   template<class T> using fptr_t = T (*)(const T &);
-			   template<class T> operator fptr_t<T>() const noexcept;
-
-			   #  this user-defined conversion function is only defined if the capture list of the lambda-expression
-			      is empty,it is a public,constexpr,non-virtual,non-explicit,const noexcept member function of the 
-			      closure object.
-
-			      user-defined conversion function :
-			      		   enables implicit conversion or explicit conversion from a class type to another type.
-					   syntax : 
-					   	  conversion function is declared like a non-static member function or member 
-						  function template with no parameters,no explicit return type,and with the name
-						  of the form: 
-
-					   	  operator <conversion-type-id>
-						  explicit operator <conversion-type-id>
-						  explicit (<expression>) operator <conversion-type-id>
-
-			Usage:
-				auto func1 = []<class T> requires std::integral<T> (T a, T b) -> T {
-				     	   return a + b * 2;
-					   };
-
-				int main(void)
-				{
-					int a(1), b(2);
-					auto func2 = [a, b](void) -> decltype(a) {
-					     return func1(a, b);
-					     };
-					return func2();     
-				}
-
-			#  for the purpose of name lookup,determining the type and value of the this pointer and for accessing
-			   non-static class members,the body of the closure types's function call operator or operator template
-			   is considered in the context of the lambda-expression.
-			   E.g.
-				struct X {
-				       int x, y;
-				       int operator()(int);
-				       void f()
-				       {
-						//  the context of the following lambda is the member function X::f
-						[=]() -> int
-						{
-							return operator()(this->x + y);
-							//  X::operator()(this->x + (*this).y)
-							//  this has type X *
-						};
-				       }
-
-
-	       noexcept specifier
-			specifies whether a function could throw exceptions.
-
-			syntax :
-			       noexcept
-			       noexcept()
-			       throw()			//  removed in c++20,deprecated in c++17
-
-			       noexcept is same as noexcept(true)
-			       if the expression evaluates to true,the function is declared not to throw any
-			       exceptions.
-
-			       noexcept-specification is not a part of the function type and can only appear as
-			       a part of a lambda declarator or a top-level function declarator.
-			       it cant appear in a typedef or type alias declaration.
-			       noexcept-specification can nest.
-
-			       potentially-throwing :
-			       			    'noexcept(flase)' follows a function declarator.
-						    or none of except-specifier follows a function declarator.
-
-			       non-throwing :
-			       		    'noexcept' or 'noexcept(true)' follows a function declarator.
-
-			       #  for constructor,destructor,copy/move constructor,copy/move assignment operator,
-			          comparison operator,any function in these is implicitly declared or is defaulted,it will
-				  be a non-throwing function unless a invocation in it or a base or member (if existing)
-				  is potentially-throwing.(base destructor is potentially throwing or base constructor is
-				  potentially-throwing,or a subexpression is potentially-throwing)
-
-			          #  for default constructor,if a default member initializer is potentially-throwing,then
-				     this default constructor is also potentially-throwing.
-
-			       #  deallocation functions are non-throwing
-				  
-
-			Usage:
-				void func(void) noexcept(false);
-				void func1(void);
-
-				void func2(void) noexcept;
-				void func3(void) noexcept(true);
-
-				void (&)(void) noexcept func4(int (*)(int) noexcept) noexcept;
-
-
-		        #  if a function is noexcept but throws an exception,then std::terminate will be called.
-			#  the exception specification of a function template specialization is not instantiated along
-			   with the function declaration;it is instantiated only when needed.
-			#  an overrider of a non-throwing virtual cant be potentially-throwing.
-
-
-	       alignof operator AND alignas specifier
-			queries alignment requirements of a type.
-			syntax:
-				alignof(<type-id>)
-				//  returns a value of type std::size_t
-
-				operand of alignof() could be complete object type,an array type whose element type is complete,
-				or a reference type to one of those types.
-
-			#  type-id = reference,returns the alignment of referenced type
-			#  type-id = array type,returns the alignment of the element
-
-			specifies the alignment requirement of a type or an object.
-			syntax:
-				alignas(<expression>)
-				alignas(<type-id>)
-				alignas(<pack...>)
-
-				expression must be an integral constant expression that evaluates to zero,or to a valid value 
-				for an alignment or extended alignment.
-
-				alignas(<pack...>) <=> alignas(e1), alignas(e2), ...
-				//  pack could be type parameter pack or non-type parameter pack.
-				
-
-			#  alignas cant applies a function parameter or the exception parameter of a catch clause.
-			   and also cant applies a bitfield class data member.
-			   E.g.
-				void func(int alignas(int) a);  //  ERROR
-				try {
-				    ...
-				} catch (int alignas(int) x) {  //  ERROR
-
-				    ...
-				}
-				struct alignas(int) X {		//  OK
-				       int alignas(int) bits:2; //  ERROR
-				};
-
-			#  if the strictest(largest) alignas on a declaration is weaker than the alignment it would have
-			   without any alignas specifiers,the program is ill-formed.
-			   E.g.
-				struct alignas(8) X { };
-				struct alignas(1) Y { struct X x; };  //  ill-formed, 1 < 8
-			#  several alignas() in a declaration,would use the strictest(largest) alignas(),unless it would 
-			   weaken the natural alignment of the type.
-			   E.g.
-				struct alignas(1) X {
-				       int x;
-				       char c;
-				       double f;
-				};  //  alignment would be alignas(double)
-
-				int alignas(2) a(13);  //  ill-formed
-
-			#  alignas(0) is always ignored. (invalid non-zero expression such as 3, 5, 7, a + b = 9)
-
-
-	       multithreaded memory model
-	       		     a thread of execution is a flow of control within a program that begins with the invocation of a 
-			     top-level function by std::thread::thread,std::async,or other means.
-
-			     method for avoid conflicting evaluations:
-			     	    conflicting evaluations execute on the same thread or in the same signal handler.
-				    conflicting evaluations are atomic operations,or one of the conflicting evaluations 
-				    happens-before another.(sync)
-
-			     memory order
-			     	    when a thread reads a value from a memory location,it may see the initial value,the value
-				    written in the same thread,or the value written in another thread.
-				    std::memory_order introduces how to access memory location.
-
-		             obstruction freedom
-			     	    when only one thread that is not blocked in a standard library function executes an 
-				    atomic function that is lock-free,that execution is guaranteed to complete.
-				    (local atomic operations)
-
-			     lock freedom
-			     	    when one or more lock-free atomic functions run concurrently,at least one of them is 
-				    guaranteed to complete.
-
-			     lock-free
-			            for a concurrent implementation,if running as enough time there at least has a process
-				    progressed or completed whatever state the implementation is.
-				    
-			     progress guarantee
-			     	    in a valid c++ program,every thread eventually does noe of the following:
-				       terminate,
-				       makes a call to an I/O library function,
-				       performs an access through a volatile glvalue,
-				       performs an atomic operation or a synchronization operation
-
-				    #  no thread of execution can execute forever without performing any of these 
-				       observable behaviors.
-				    #  a thread is said to make progress if it performs one of these executions.
-				       blocks in a std function,or calls an atomic lock-free function that does not
-				       complete because of a non-blocked concurrent thread.
-
-			     concurrent forward progress
-			            if a thread offers concurrent forward progress guarantee,it will make progress
-				    in finite amount of time,for as long as it has not terminated,regardless of 
-				    whether other threads are making progress.
-
-				    #  std encourages : 
-				       	   main thread and thread started by std::thread should offers
-					   concurrent forward progress.
-
-			     parallel forward progress
-			     	    if a thread offers parallel forward progress guarantee,the implementation is not
-				    required to ensure that the thread will eventually make progress if it has not
-				    yet executed any progress guarantee operation,but once this thread has executed
-				    such operation,it provides concurrent forward progress guarantees.
-
-			     weakly parallel forward progress
-			     	    if a thread offers weakly parallel forward progress guarantee,it does not guarantee
-				    to eventually make progress,regardless of whether other threads make progress or not.
-
-
-	       thread-local storage
-	       		    thread storage duration.
-			    The storage for the object is allocated when the thread begins and deallocated when the 
-			    thread ends.each thread has its own instance of the object.
-			    only objects declared thread_local have this storage duration.
-			    thread_local can appear together with static or extern to adjust linkage.
-
-			    Usage:
-				thread_local int x(3);
-			    	...
-
-	       module linkage
-	       	      the name can be referred to only from the scopes in the same module unit or in the other translation
-		      units of the same named module.
-		      names declared at namespace scope have module linkage if  their declarations are attached to a named
-		      module and are not exported,and dont have internal linkage.
-
-		      Usage:
-			file - xxx.c :
-			     namespace _xxx {
-			     	       int x(10);
-			     }
-
-			file - yyy.c :
-			     namespace _xxx {
-			     	       int y(x);
-			     }
-			     namespace _yyy {
-			     	       int z(_xxx::y);
-			     }
-
-
-	       GC interface(removed in C++23)
-	       	  Garbage collector support
-
-	       	  	header <memory> ; namespace std
-			[type] 		    [name]			[description]
-			<function> 	    declare_reachable		declares that an object cant be recycled
-			<function template> undeclare_reachable		declares that an object can be recycled
-			<function>  	    declare_no_pointers		declares that a memory area does not contain traceable pointers
-			<function> 	    undeclare_no_pointers	cancels the effect of std::declare_no_pointers
-			<enum> 		    pointer_safety		lists pointer safety models
-			<function> 	    get_pointer_safety		returns the current pointer safety model
-
-
-	       Range-based for loop (boost library)
-	         executes a for loop over a range.used as a more readable equivalent to the traditional for loop operating
-		 over a range of values,such as all elements in a containter.
-
-		 syntax:
-		   <attr(optional)> for (<init-statement(optional)> <range-declaration> : <range-expression>)
-		   		    	<loop-statement>
-
-		     attr - any number of attributes(C++ attr)
-		     init-statement - (since c++20) either an expression statement or a simple declaration(variable with initializer,...)
-		     		      (or be null, just a ";" can omit the symbol)
-
-		     range-declaration - a declaration of a named variable,whose type is the type of the element of the sequence
-		     		         represented by range-expression,or a reference to that type.
-					 often uses the auto specifier for automatic type deduction.
-		     range-expression - any expression that represents a suitable sequence or a braced-init-list.
-		     		      	(often use a container)
-		     loop-statement - any statement.(loop body)
-
-		     //  range-declaration may be a structed binding declaration:
-		     //  for (auto &&[first, second] : mymap) { ... }
-
-		 usage:
-			std::vector<int> y{1, 2, 3, 4, 5};
-			for (auto x : y) {
-			    ...
-			}
-
-		 attention:
-		   range for loop is a simplify version of for loop when it works on a sequence.
-		   the aboce syntax produces code equivalent to the following except for the lifetime expansion of
-		   temporaries of range-expression.
-		   {
-			<init-statement>
-			auto &&__range = <range-expression>;
-			auto __begin = <begin-expr>;
-			auto __end = <end-expr>;
-			for ( ; __begin != __end; ++__begin) {
-			    <range-declaration> = *__begin;
-			    <loop-statement>
-			}
-		   }
-
-		   so range-for use iterator of the sequence to traverses it.(c++17 no this request)
-		   __begin evaluate from container.begin()
-		   __end evaluate from container.end()
-		   if range-expression returns a temporary,its lifetime is extended until the end of the loop,
-		   as indicated by binding to the forwarding reference __range.lifetimes of all temporaries within
-		   range-expression are not extended if they would otherwise be destroyed at the end of range-expression.
-
-
-	       static_assert declaration (boost library)
-	         performs compile-time assertion checking.(not in running time)
-		 
-		 syntax:
-		   static_assert(<bool-constexpr>, <message>);
-		   static_assert(<bool-constexpr>);
-
-		   message - optional(since c++17) string literal that will appears as compiler error if bool-constexpr is fale,
-		   	     except that characters not in the basic source character set are not required to appear.
-
-		 a static assert declaration may appear at namespace and block scope and inside a class body.if bool-constexpr 
-		 is false,then a compiling error would be thrown out,if it is true,then no effect.
-
-		 usage:
-			class A {
-			  public:
-			    int i;
-			  private:
-			    enum { EA, EB};
-			    static_assert(EA >= 0, "bad enum EA");
-			};
-
-
-	       c++11 memory
-	         <memory>
-		 std::unique_ptr
-		 std::share_ptr
-		 std::weak_ptr
-		 std::auto_ptr  (deprecated in c++11,removed in c++17)
-
-		 std::unique_ptr :
-		   template<class T, class Deleter = std::default_deleter<T>>
-		   class unique_ptr;  //  for single object
-
-		   template<class T, class Deleter>
-		   class unique_ptr<T[], Deleter>;  //  for object array
-
-		   unique_ptr is a smart pointer that owns and manages another object through a pointer and disposes of that
-		   object when the unique_ptr goes out of scope.(via destructor to delete)
-		   
-		   //  unique_ptr object has its ownership,so cant copy pointer through copy-methods (copy-constructor or copy-assignment)
-		       e.g.
-		         std::unique_ptr<int> i = new int;
-			 std::unique_ptr<int> b(i);
-			 
-			 //  ownership of the anoymous memory would deliver to b,i would be set to NULLPTR.
-			     b points to the anoymous memory.
-
-		   member types :
-		     pointer  -  std::remove_reference<Deleter>::type::pointer if that type exists,otherwise T*.
-		     	      	 must satisfy nullablepointer.
-		     element_type  -  T,the type of the object managed by this unique_ptr.
-		     deleter_type  -  Deleter,the function object or lvalue reference to function or to function object,
-		     		      to be called from the destructor.
-
-	           member functions :
-		     (constructor)
-		     (destructor)
-		     operator=
-
-		     release  -  returns a pointer to the managed object and releases the ownership
-		     reset  -  replaces the managed object  
-		     swap  -  swaps the managed object
-		     
-		     get  -  returns a pointer to the managed object
-		     get_deleter  -  returns the deleter that is used for destruction of the managed object
-		     operator bool  -  checks if there is an associated managed object
-
-		     operator*  -  dereferences pointer to the managed object
-		     operator->  -  same feature
-
-		     operator[]  -  provides indexed access to the managed array
-
-		 std::shared_ptr :
-		   template<class T> class shared_ptr;
-
-		   shared_ptr is a smart pointer that shared object through a pointer between several shared_ptr objects.
-		   so shared_ptr is allow to copying.
-		   the resource pointed by the pointer would be recycle until the last shared_ptr object is destructed.
-		   shared ownership between shared_ptr objects.
-
-		   member types :
-		     element_type  -  T,std::remove_extent_t<T>
-		     weak_type(since c++17)  -  std::weak_ptr<T>
-
-		   member functions :
-		     shared_ptr almost has same member functions as unique_ptr,there is same different :
-		       shared_ptr dont has release method;
-		       shared_ptr dont has get_deleter method;
-		       shared_ptr has use_count method,returns the number of shared_ptr objects referring to the same
-		       managed object;
-		       shared_ptr has unique(until c++20) method,checks whether the managed object is managed only by the
-		       current shared_ptr instance;
-		       shared_ptr has owner_before method,provides owner-based ordering of shared pointers.
-
-		 std::weak_ptr :
-		   template<class T> class weak_ptr;
-
-		   std::weak_ptr is a smart pointer that holds a non-owning("weak") reference to an object that is managed
-		   by std::shared_ptr.
-		   it must be converted to std::shared_ptr in order to access the referenced object.
-
-		   the ordinary feature std::weak_ptr does :
-		     models temporary ownership :
-		       when an object needs to be accessed only if it exists,and it may be deleted at any time by someone else,
-		       std::weak_ptr is used to track the object,and it is converted to std::shared_ptr to assume temporary ownership.
-		     break reference cycle :
-		       there has reference cycles formed by objects managed by std::shared_ptr(no outside shared pointers into the cycle),
-		       the shared_ptr reference counts cant reach zero and the memory is leaked.to prevent this,one of the pointers in the
-		       cycle can be made weak.
-
-		   member types :
-		     element_type  -  T,std::remove_extent_t<T>
-		     
-		   member functions :
-		     (constructor)
-		     (destructor)
-		     operator=
-
-		     reset  -  releases the ownership of the managed object
-		     swap  -  swaps the managed objects
-
-		     use_count  -  returns the number of shared_ptr objects that manage the object
-		     expired  -  checks whether the referenced object was already deleted
-		     lock  -  creates a shared_ptr that manages the referenced object
-		     owner_before  -  provides owner-based ordering of weak pointers
+             #  &args...  //  pack expands to &e1, &e2, ..., &eN
+             #  args...   //  pack expands to e1, e2, ..., eN
+             #  ++args... //  pack expands to ++e1, ++e2, ..., ++eN
+
+             #  if the names of two parameter packs appear in the same pattern,they are expanded
+                simultaneously,and they must have the same length.    
+
+             #  if a pack expansion is nested with in another pack expansion, the parameter packs that
+                appear inside the innermost pack expansion are expanded by it,and there must be another
+                pack mentioned in the enclosing pack expansion,but not in the innermost one
+                  E.g.
+                template<class... Args>
+                void func1(Args... args)
+                {
+                    f(const_cast<const Args *>(&args)...);
+                    //  const_cast<const Args *>(&args) is a pattern
+                    //  it expands to const_cast<const TYPE1 *>(&E1), const_cast<const TYPE2 *>(&E2), ...
+
+                    f(h(args...) + args...);
+                    //  args is a pattern,it expands to E1, E2, E3, ...
+                    //  h(args...) + args is a pattern,
+                    //  it expands to h(args...) + E1, h(args...) + E2, ...
+                    //  == h(E1, E2, ...) + E1, h(E1, E2, ...) + E2, ...
+                }
+
+             #  expansion loci :
+                  depending on where the expansion takes place,the resulting comma-separated list is a
+                  different kind of list: function parameter list,member initializer list,attribute list, etc.
+
+             #  function parameter list :
+                  in a function parameter list,if an ellipsis appears in a parameter declaration(whether
+                  it names a function parameter pack(as in, Args... args) or not),the parameter declaration
+                  is the pattern.
+
+                  template<typename... Ts, int... N>
+                  void g(Ts (&...ts)[N]) {}
+
+                  int n[1];
+                  g<const char, int>("a", n);  //  Ts (&...ts)[N] => const char(&)[2], int(&)[1]
+                                                     //  NE1 is 2 because that "a" has two elements,
+                               //  NE2 is 1 because that n has one element.
+
+                  note : Ts (&...)[N] is not allowed because the C++11 grammar requires the parenthesized
+                           ellipsis to have a name.
+                  
+             #  base specifiers and member initializer lists :
+                  a pack expansion may designate the list of base classes in a class declaration.
+                  typically,this also means that the constructor needs to use a pack expansion in 
+                  the member initializer list to call the constructors of the these base classes.
+                    E.g.
+                  template<class... Bases>
+                  class A : public Bases... {
+                  public:
+                    A(const Bases&... bc) : Bases(bc)...
+                    {
+                        ...
+                    }
+                    //  Bases(bc) is a pattern expands to BaseClass1(E1), BaseClass2(E2), ...
+                  };
+
+             #  the sizeof... operator
+                  the sizeof... operator is classified as a pack expansion as well.
+                  E.g.
+                    template<class... Args>
+                size_t howManyArgs(Args...)
+                {
+                    return sizeof...(Args);  //  sizeof...(Args) will count number of types in pack
+                }
+
+             #  using-declarations
+                  in using declaration,ellipsis may appear in the list of declarators,this is useful when
+                  deriving from a parameter pack.
+                  E.g.
+                    template<typename... bases>
+                struct X : bases... {
+                       using bases::g...;
+                };
+                X<B, D> x;  //  using B::g, D::g;
+
+             #  pack expansions are allowed in the lists of attributes,if permitted by the attibute's
+                specification.
+                e.g.
+                  template<int... args>
+                  [[vendor::attr(args)...]] void *f();
+
+
+           union in c++
+                        declare syntax:
+                union <attr> <class-head-name> { ... };
+
+            a union can have member functions,but not virtual functions
+            a union cant have base classes and cant be used as a base class
+            a union cant have non-static data members of reference types
+            unions cant contain a non-static data member with a non-trivial special member function(
+            copy constructor,copy-assignment operator or destructor).
+            if a union contains a non-static data member with a non-trivial special member function(
+            copy/move constructor/assignment,destructor),that function is deleted by default in the
+            union and needs to be defined explicitly.
+            if a union contains a non-static data member with a non-trivial default constructor,the
+            default constructor of the union is deleted by default unless a variant member of the 
+            union has a default member initializer.
+            at most one variant member can have a default member initializer
+            just like in struct declaration,the default member access in a union is public
+
+           
+           union-like classes
+                   a union-like class is either a union,or a class(non-union) that has at least one anonymous
+            union as a member
+            a union-like class has a set of variant members:
+              the non-static data members of its member anonymous unions
+              in addition,if the union-like class is a union,its non-static data members that are not
+              anonymous unions
+
+            Usage:
+                struct union_like {
+                       union {
+                                int x;
+                         float y;
+                         char z;
+                       };
+                       //  int j;  //  ERROR,non-static data members should in anonymous union
+                };
+                union union_like_x {
+                      int x;
+                      float y;
+                      char z;
+                };      
+
+
+           PODs
+            PODType is plain old data type,this means the type is compatible with the types used in
+            C programming language,that is,can be exchanged with C libraries directly,in its binary form.
+            (PODType is deprecated in c++20)
+            POD types :
+                scalar types :
+                       arithmetic types
+                   enumeration types
+                   pointer types
+                   pointer-to-member types (&Class::member)
+                   std::nullptr_t
+                   
+                POD classes :        
+                       a POD class is a class that
+                     is an aggregate,
+                     has no user-declared copy assignment operator,
+                     has no user-declared destructor,and
+                     has no non-static data members of type non-POD class or reference,
+                     is a trivial class,
+                     is a standard-layout class,and
+                     has no non-static data members of type non-POD class
+
+                #  a POD struct is a non-union POD class,a POD union is a union that is a POD class
+
+                arrays of such types
+                
+                cv-qualified versions of these types
+
+            E.g.
+                struct c_struct {
+                       int x;
+                       char y;
+                       float z;
+                       struct c_struct *next;
+                };  //  c_struct just a POD type struct
+
+
+           unicode string literals
+                                syntax:
+                    "<s-char-sequence>(optional)";        //  ordinary string literal,type is const char[LENGTH]
+                    L"<s-char-sequence>(optional)";        //  wide string literal,type is const wchar_t[LENGTH]
+                    u8"<s-char-sequence>(optional)";    //  utf-8 string literal,type is const char[LENGTH]
+                    u"<s-char-sequence>(optional)";        //  utf-16 string literal,type is const char16_t[LENGTH]
+                    U"<s-char-sequence>(optional)";        //  utf-32 string literal,type is const char32_t[LENGTH]
+                    <prefix>(optional)R"<d-char-sequence>(optional)
+                    (<r-char-sequence>(optional))<d-char-sequence>(optional)"
+                                        //  raw string literal,used to avoid escaping of any
+                                        //  character.anything between the delimiters becomes
+                                        //  part of the string.
+                                        //  prefix,if present,has the same meaning as prefix
+                                        //  descriptions.the terminating d-char-sequence is the
+                                        //  same sequence of characters as the initial d-char-sequence.
+                                        
+
+                    #  prefix : L | u8 | u | U
+                    #  d-char-sequence : a sequence of one or more d-chars,at most 16 characters long
+                    #  d-char : a character from the "basic source character set"(c++23)
+                                "basic character set"(c++23),except parentheses,backslash and spaces
+                    #  r-char-sequence : a sequence of one or more r-chars,except that it must not 
+                                    contain the closing sequence   )d-char-sequence"
+                    #  r-char : a character from the "source character set"(c++23)
+                               "translation character set"(c++23)
+
+                #  if a character lacks representation in the associated character encoding:
+                      if the string literal is an ordinary string literal or wide string literal,it is
+                      conditionally-supported and an implementation-defined code unit sequence is encoded
+                      otherwise,the string literal is ill-formed
+
+           
+           user defined literals
+                           allows integer,floating-point,character,and string literals to produce objects of user-defined
+                type by defining a user-defined suffix.
+                (it is a feature to custom suffix in c++)
+
+                syntax:
+                <decimal-literal><ud-suffix>            //  integer
+                <octal-literal><ud-suffix>            //  integer
+                <hex-literal><ud-suffix>            //  integer
+                <binary-literal><ud-suffix>            //  integer
+                <fractional-constant exponent-part><ud-suffix>    //  floating-point
+                <digit-sequence exponent-part><ud-suffix>    //  floating-point
+                <character-literal><ud-suffix>            //  character
+                <string-literal><ud-suffix>            //  string
+
+                ud-suffix : an identifier,introduced by a literal operator or a literal operator template
+                        declaration.all ud-suffixes introduced by a program must begin with the underscore
+                        character _ ,the standard library ud-suffixes do not begin with underscores.
+
+                #  in the integer and floating-point digit sequences,optional separators ' are allowed
+                   between any two digits and are ignored.
+                #  if a token matches a user-defined literal syntax and a regular literal syntax,it is assumed to
+                   be a regular literal(cant overload LL in 123LL)
+                #  when the compiler encounters a user-defined literal with ud-suffix <X>,it performs unqualified 
+                   name lookup,looking for a function with the name operator""<X> ,if the lookup doesnt find a 
+                   declaration,the program is ill-formed
+
+                for user-defined integer literals :
+                    a>  parameter type is unsigned long long,the user-defined literal expression is treated as
+                        a function call operator""<ud-suffix>(nULL), n is the literal without ud-suffix
+                    b>  not a>
+                          1> a raw literal operator was included into overload set,the user-defined literal
+                         expression is treated as a function call operator""<X>("n")
+                      2> a numeric literal operator template was included into overload set,the expression
+                         is treated as a function call operator""<X><'c1', 'c2', ..., 'ck'>(),
+                         c1, ..., ck are the individual characters of n and all of them are from the
+                         basic source character set or basic character set.
+
+                for user-defined floating-point literals :
+                    it is treated alike in user-defined integer literals,but it is a floating-point value.
+                    (type of long double will be operator""<X>(fL).)
+
+                for user-defined string literals,let str be the literal without ud-suffix : 
+                    a>  if the overload set includes a string literal operator template with a non-type
+                        template parameter for which str is a well-formed template argument,then the 
+                    user-defined literal expression is treated as a function call operator""<X><str>()
+                    b>  not a>,the user-defined literal expression is treated as a function call
+                        operator""<X>(str,length_of_str),it is excluding '\0'
+
+                for user-defined character literals : 
+                    the user-defined literal expression is treated as a function call operator""<X>(the_char),
+                    where the_char is the literal without ud-suffix
+
+                literal operators : 
+                        the function called by a user-defined literal is known as literal operator,
+                    it is declared just like any other function or function template at namespace scope,
+                    except for the following restrictions.
+                    
+                    name of the function can have one of the two forms : 
+                         operator""<identifier>
+                     operator <user-defined-string-literal>
+
+                    only the following parameter lists are allowed on literal operators : 
+                         (const char *)
+                     (using long long int)
+                     (long double)
+                     (char)
+                     (wchar_t)
+                     (char8_t)
+                     (char16_t)
+                     (char32_t)
+                     (const char *, std::size_t)
+                     (const wchar_t *, std::size_t)
+                     (const char8_t *, std::size_t)
+                     (const char16_t *, std::size_t)
+                     (const char32_t *, std::size_t)
+
+                Usage :
+                std::string operator""_S(const char *,std::size_t);
+                unsigned long long int operator""_km(unsigned long long int);
+                char operator""_c(char i)
+                {
+                    //  can has more statements to do something
+                    return i - 1;
+                }
+                
+
+                256_km;                 //  operator""_km ull literal 256
+                "hello world"_S;   //  operator""_S  string literal std::string{"hello world"}
+                'k'_c;            //  operator""_c  char literal 'k' - 1 = 'j'
+
+
+           lambda expressions
+            constructs a closure: an unnamed function object capable of capturing variables in scope.
+
+            syntax:
+                [captures](parameters) <specifiers> -> <ret> { <body> };
+                //  full form
+
+                [captures]<specifiers> { <body> };
+                //  omitted parameter list,no return,no argument taken.
+
+                [captures]<tparameters> requires(optional) (parameters) -> <ret> <specifiers> { <body> };
+                [captures]<tparameters> requires(optional) -> <ret> <specifiers> { <body> };
+                //  generic lambda and explicitly provides a list of template parameters
+
+                captures :
+                     [= | & , <variables accessible>]
+                     = - access object by-copy (default)
+                     & - access object by-reference 
+
+                     !!  if captures list is null = [],that is cant access external object from body.
+                     !!  if captures list is capture by-reference equal to [&],that is all external object
+                         can be accessed from body.
+                     !!  if captures list is capture by-copy equal to [=],that is all changes on external object
+                         just change the copy version.
+                     !!  E.g.
+                         [&, a, b] { ... return k += 3; };
+                         //  default capture-mode is by-reference
+                         //  but a and b is captured by-copy,other objects in body would captured by-reference
+                         //  k is captured by-reference
+
+                     v is a non-local variable or has static or thread local storage duration
+                     or a reference that has been initialized with a constant expression,
+                     then v can be used even it is not in capture-list.
+
+                     v is a variable has const non-volatile integral or enumeration type and
+                     has been initialized with a constant expression or constexpr and has
+                     no mutable members,then v can be readed even it is not in capture-list.
+                
+                tparameters :
+                          a non-empty comma-separated list of template parameters,used to provide
+                          names to the template parameters of a generic lambda.
+                parameters :
+                       function argument list.
+                <ret> :
+                      type to returns.
+                <specifiers> :
+                         mutable | constexpr | consteval | static
+
+                         mutable :
+                                  allow to modify the objects captured by copy,and to call their
+                             non-const member functions.
+                         
+                         consteval :
+                                    specifies that the function call operator or any given operator
+                               themplate specialization is an immediate function,consteval and
+                               constexpr will conflicts to each other.
+
+            #  if auto is used as a type of a parameter or an explicit template parameter list is provided,
+               the lambda is a generic lambda.
+            #  a vairable __func__ is implicitly defined at the begining of body,with semantics as described
+               like this :
+                   static const char __func__[] = "function-name";
+                //  this variable has block scope and tatic storage duration.
+                //  can use std::cout to print this char array.
+
+             #  the lambda expression is a prvalue expression of unique unnamed non-union non-aggregate class type,
+               known as closure type,which is declared in the smallest block scope { ... },class scope,or namespace
+               scope that contains the lambda expression.
+               E.g.
+                void func(void)
+                {
+                    auto internal_func = [] -> void { return; };
+                    //  func::internal_func
+                }
+
+               the closure type cannt be explicitly instantiated,explicitly specialized,or named in a friend declaration.
+               ret ClosureType::operator()(parameters) { <body> }
+               template<template-parameters>
+               ret ClosureType::operator()(parameters) { <body> }
+
+               ClosureType::operator ret(*)(params)()
+               using F = ret(*)(params);
+               operator F() const nonexcept;
+               using F = ret(*)(params);
+               constexpr operator F() const noexcept;
+
+               using F = int(*)(const int &);
+               operator F() const noexcept;
+
+               template<tparams> using fptr_t = ret| tparams (*)(tparams fparams);
+               template<tparams> operator fptr_t<tparams>() const noexcept;
+               template<tparams> using fptr_t = ret | tparams (*)(tparams fparams);
+               template<tparams> constexpr operator fptr_t<tparams>() const noexcept;
+
+               template<class T> using fptr_t = T (*)(const T &);
+               template<class T> operator fptr_t<T>() const noexcept;
+
+               #  this user-defined conversion function is only defined if the capture list of the lambda-expression
+                  is empty,it is a public,constexpr,non-virtual,non-explicit,const noexcept member function of the 
+                  closure object.
+
+                  user-defined conversion function :
+                             enables implicit conversion or explicit conversion from a class type to another type.
+                       syntax : 
+                             conversion function is declared like a non-static member function or member 
+                          function template with no parameters,no explicit return type,and with the name
+                          of the form: 
+
+                             operator <conversion-type-id>
+                          explicit operator <conversion-type-id>
+                          explicit (<expression>) operator <conversion-type-id>
+
+            Usage:
+                auto func1 = []<class T> requires std::integral<T> (T a, T b) -> T {
+                            return a + b * 2;
+                       };
+
+                int main(void)
+                {
+                    int a(1), b(2);
+                    auto func2 = [a, b](void) -> decltype(a) {
+                         return func1(a, b);
+                         };
+                    return func2();     
+                }
+
+            #  for the purpose of name lookup,determining the type and value of the this pointer and for accessing
+               non-static class members,the body of the closure types's function call operator or operator template
+               is considered in the context of the lambda-expression.
+               E.g.
+                struct X {
+                       int x, y;
+                       int operator()(int);
+                       void f()
+                       {
+                        //  the context of the following lambda is the member function X::f
+                        [=]() -> int
+                        {
+                            return operator()(this->x + y);
+                            //  X::operator()(this->x + (*this).y)
+                            //  this has type X *
+                        };
+                       }
+
+
+           noexcept specifier
+            specifies whether a function could throw exceptions.
+
+            syntax :
+                   noexcept
+                   noexcept()
+                   throw()            //  removed in c++20,deprecated in c++17
+
+                   noexcept is same as noexcept(true)
+                   if the expression evaluates to true,the function is declared not to throw any
+                   exceptions.
+
+                   noexcept-specification is not a part of the function type and can only appear as
+                   a part of a lambda declarator or a top-level function declarator.
+                   it cant appear in a typedef or type alias declaration.
+                   noexcept-specification can nest.
+
+                   potentially-throwing :
+                                   'noexcept(flase)' follows a function declarator.
+                            or none of except-specifier follows a function declarator.
+
+                   non-throwing :
+                               'noexcept' or 'noexcept(true)' follows a function declarator.
+
+                   #  for constructor,destructor,copy/move constructor,copy/move assignment operator,
+                      comparison operator,any function in these is implicitly declared or is defaulted,it will
+                  be a non-throwing function unless a invocation in it or a base or member (if existing)
+                  is potentially-throwing.(base destructor is potentially throwing or base constructor is
+                  potentially-throwing,or a subexpression is potentially-throwing)
+
+                      #  for default constructor,if a default member initializer is potentially-throwing,then
+                     this default constructor is also potentially-throwing.
+
+                   #  deallocation functions are non-throwing
+                  
+
+            Usage:
+                void func(void) noexcept(false);
+                void func1(void);
+
+                void func2(void) noexcept;
+                void func3(void) noexcept(true);
+
+                void (&)(void) noexcept func4(int (*)(int) noexcept) noexcept;
+
+
+                #  if a function is noexcept but throws an exception,then std::terminate will be called.
+            #  the exception specification of a function template specialization is not instantiated along
+               with the function declaration;it is instantiated only when needed.
+            #  an overrider of a non-throwing virtual cant be potentially-throwing.
+
+
+           alignof operator AND alignas specifier
+            queries alignment requirements of a type.
+            syntax:
+                alignof(<type-id>)
+                //  returns a value of type std::size_t
+
+                operand of alignof() could be complete object type,an array type whose element type is complete,
+                or a reference type to one of those types.
+
+            #  type-id = reference,returns the alignment of referenced type
+            #  type-id = array type,returns the alignment of the element
+
+            specifies the alignment requirement of a type or an object.
+            syntax:
+                alignas(<expression>)
+                alignas(<type-id>)
+                alignas(<pack...>)
+
+                expression must be an integral constant expression that evaluates to zero,or to a valid value 
+                for an alignment or extended alignment.
+
+                alignas(<pack...>) <=> alignas(e1), alignas(e2), ...
+                //  pack could be type parameter pack or non-type parameter pack.
+                
+
+            #  alignas cant applies a function parameter or the exception parameter of a catch clause.
+               and also cant applies a bitfield class data member.
+               E.g.
+                void func(int alignas(int) a);  //  ERROR
+                try {
+                    ...
+                } catch (int alignas(int) x) {  //  ERROR
+
+                    ...
+                }
+                struct alignas(int) X {        //  OK
+                       int alignas(int) bits:2; //  ERROR
+                };
+
+            #  if the strictest(largest) alignas on a declaration is weaker than the alignment it would have
+               without any alignas specifiers,the program is ill-formed.
+               E.g.
+                struct alignas(8) X { };
+                struct alignas(1) Y { struct X x; };  //  ill-formed, 1 < 8
+            #  several alignas() in a declaration,would use the strictest(largest) alignas(),unless it would 
+               weaken the natural alignment of the type.
+               E.g.
+                struct alignas(1) X {
+                       int x;
+                       char c;
+                       double f;
+                };  //  alignment would be alignas(double)
+
+                int alignas(2) a(13);  //  ill-formed
+
+            #  alignas(0) is always ignored. (invalid non-zero expression such as 3, 5, 7, a + b = 9)
+
+
+           multithreaded memory model
+                        a thread of execution is a flow of control within a program that begins with the invocation of a 
+                 top-level function by std::thread::thread,std::async,or other means.
+
+                 method for avoid conflicting evaluations:
+                         conflicting evaluations execute on the same thread or in the same signal handler.
+                    conflicting evaluations are atomic operations,or one of the conflicting evaluations 
+                    happens-before another.(sync)
+
+                 memory order
+                         when a thread reads a value from a memory location,it may see the initial value,the value
+                    written in the same thread,or the value written in another thread.
+                    std::memory_order introduces how to access memory location.
+
+                     obstruction freedom
+                         when only one thread that is not blocked in a standard library function executes an 
+                    atomic function that is lock-free,that execution is guaranteed to complete.
+                    (local atomic operations)
+
+                 lock freedom
+                         when one or more lock-free atomic functions run concurrently,at least one of them is 
+                    guaranteed to complete.
+
+                 lock-free
+                        for a concurrent implementation,if running as enough time there at least has a process
+                    progressed or completed whatever state the implementation is.
+                    
+                 progress guarantee
+                         in a valid c++ program,every thread eventually does noe of the following:
+                       terminate,
+                       makes a call to an I/O library function,
+                       performs an access through a volatile glvalue,
+                       performs an atomic operation or a synchronization operation
+
+                    #  no thread of execution can execute forever without performing any of these 
+                       observable behaviors.
+                    #  a thread is said to make progress if it performs one of these executions.
+                       blocks in a std function,or calls an atomic lock-free function that does not
+                       complete because of a non-blocked concurrent thread.
+
+                 concurrent forward progress
+                        if a thread offers concurrent forward progress guarantee,it will make progress
+                    in finite amount of time,for as long as it has not terminated,regardless of 
+                    whether other threads are making progress.
+
+                    #  std encourages : 
+                              main thread and thread started by std::thread should offers
+                       concurrent forward progress.
+
+                 parallel forward progress
+                         if a thread offers parallel forward progress guarantee,the implementation is not
+                    required to ensure that the thread will eventually make progress if it has not
+                    yet executed any progress guarantee operation,but once this thread has executed
+                    such operation,it provides concurrent forward progress guarantees.
+
+                 weakly parallel forward progress
+                         if a thread offers weakly parallel forward progress guarantee,it does not guarantee
+                    to eventually make progress,regardless of whether other threads make progress or not.
+
+
+           thread-local storage
+                       thread storage duration.
+                The storage for the object is allocated when the thread begins and deallocated when the 
+                thread ends.each thread has its own instance of the object.
+                only objects declared thread_local have this storage duration.
+                thread_local can appear together with static or extern to adjust linkage.
+
+                Usage:
+                thread_local int x(3);
+                    ...
+
+           module linkage
+                     the name can be referred to only from the scopes in the same module unit or in the other translation
+              units of the same named module.
+              names declared at namespace scope have module linkage if  their declarations are attached to a named
+              module and are not exported,and dont have internal linkage.
+
+              Usage:
+            file - xxx.c :
+                 namespace _xxx {
+                            int x(10);
+                 }
+
+            file - yyy.c :
+                 namespace _xxx {
+                            int y(x);
+                 }
+                 namespace _yyy {
+                            int z(_xxx::y);
+                 }
+
+
+           GC interface(removed in C++23)
+                 Garbage collector support
+
+                     header <memory> ; namespace std
+            [type]             [name]            [description]
+            <function>         declare_reachable        declares that an object cant be recycled
+            <function template> undeclare_reachable        declares that an object can be recycled
+            <function>          declare_no_pointers        declares that a memory area does not contain traceable pointers
+            <function>         undeclare_no_pointers    cancels the effect of std::declare_no_pointers
+            <enum>             pointer_safety        lists pointer safety models
+            <function>         get_pointer_safety        returns the current pointer safety model
+
+
+           Range-based for loop (boost library)
+             executes a for loop over a range.used as a more readable equivalent to the traditional for loop operating
+         over a range of values,such as all elements in a containter.
+
+         syntax:
+           <attr(optional)> for (<init-statement(optional)> <range-declaration> : <range-expression>)
+                           <loop-statement>
+
+             attr - any number of attributes(C++ attr)
+             init-statement - (since c++20) either an expression statement or a simple declaration(variable with initializer,...)
+                           (or be null, just a ";" can omit the symbol)
+
+             range-declaration - a declaration of a named variable,whose type is the type of the element of the sequence
+                              represented by range-expression,or a reference to that type.
+                     often uses the auto specifier for automatic type deduction.
+             range-expression - any expression that represents a suitable sequence or a braced-init-list.
+                               (often use a container)
+             loop-statement - any statement.(loop body)
+
+             //  range-declaration may be a structed binding declaration:
+             //  for (auto &&[first, second] : mymap) { ... }
+
+         usage:
+            std::vector<int> y{1, 2, 3, 4, 5};
+            for (auto x : y) {
+                ...
+            }
+
+         attention:
+           range for loop is a simplify version of for loop when it works on a sequence.
+           the aboce syntax produces code equivalent to the following except for the lifetime expansion of
+           temporaries of range-expression.
+           {
+            <init-statement>
+            auto &&__range = <range-expression>;
+            auto __begin = <begin-expr>;
+            auto __end = <end-expr>;
+            for ( ; __begin != __end; ++__begin) {
+                <range-declaration> = *__begin;
+                <loop-statement>
+            }
+           }
+
+           so range-for use iterator of the sequence to traverses it.(c++17 no this request)
+           __begin evaluate from container.begin()
+           __end evaluate from container.end()
+           if range-expression returns a temporary,its lifetime is extended until the end of the loop,
+           as indicated by binding to the forwarding reference __range.lifetimes of all temporaries within
+           range-expression are not extended if they would otherwise be destroyed at the end of range-expression.
+
+
+           static_assert declaration (boost library)
+             performs compile-time assertion checking.(not in running time)
+         
+         syntax:
+           static_assert(<bool-constexpr>, <message>);
+           static_assert(<bool-constexpr>);
+
+           message - optional(since c++17) string literal that will appears as compiler error if bool-constexpr is fale,
+                    except that characters not in the basic source character set are not required to appear.
+
+         a static assert declaration may appear at namespace and block scope and inside a class body.if bool-constexpr 
+         is false,then a compiling error would be thrown out,if it is true,then no effect.
+
+         usage:
+            class A {
+              public:
+                int i;
+              private:
+                enum { EA, EB};
+                static_assert(EA >= 0, "bad enum EA");
+            };
+
+
+           c++11 memory
+             <memory>
+         std::unique_ptr
+         std::share_ptr
+         std::weak_ptr
+         std::auto_ptr  (deprecated in c++11,removed in c++17)
+
+         std::unique_ptr :
+           template<class T, class Deleter = std::default_deleter<T>>
+           class unique_ptr;  //  for single object
+
+           template<class T, class Deleter>
+           class unique_ptr<T[], Deleter>;  //  for object array
+
+           unique_ptr is a smart pointer that owns and manages another object through a pointer and disposes of that
+           object when the unique_ptr goes out of scope.(via destructor to delete)
+           
+           //  unique_ptr object has its ownership,so cant copy pointer through copy-methods (copy-constructor or copy-assignment)
+               e.g.
+                 std::unique_ptr<int> i = new int;
+             std::unique_ptr<int> b(i);
+             
+             //  ownership of the anoymous memory would deliver to b,i would be set to NULLPTR.
+                 b points to the anoymous memory.
+
+           member types :
+             pointer  -  std::remove_reference<Deleter>::type::pointer if that type exists,otherwise T*.
+                            must satisfy nullablepointer.
+             element_type  -  T,the type of the object managed by this unique_ptr.
+             deleter_type  -  Deleter,the function object or lvalue reference to function or to function object,
+                           to be called from the destructor.
+
+               member functions :
+             (constructor)
+             (destructor)
+             operator=
+
+             release  -  returns a pointer to the managed object and releases the ownership
+             reset  -  replaces the managed object  
+             swap  -  swaps the managed object
+             
+             get  -  returns a pointer to the managed object
+             get_deleter  -  returns the deleter that is used for destruction of the managed object
+             operator bool  -  checks if there is an associated managed object
+
+             operator*  -  dereferences pointer to the managed object
+             operator->  -  same feature
+
+             operator[]  -  provides indexed access to the managed array
+
+         std::shared_ptr :
+           template<class T> class shared_ptr;
+
+           shared_ptr is a smart pointer that shared object through a pointer between several shared_ptr objects.
+           so shared_ptr is allow to copying.
+           the resource pointed by the pointer would be recycle until the last shared_ptr object is destructed.
+           shared ownership between shared_ptr objects.
+
+           member types :
+             element_type  -  T,std::remove_extent_t<T>
+             weak_type(since c++17)  -  std::weak_ptr<T>
+
+           member functions :
+             shared_ptr almost has same member functions as unique_ptr,there is same different :
+               shared_ptr dont has release method;
+               shared_ptr dont has get_deleter method;
+               shared_ptr has use_count method,returns the number of shared_ptr objects referring to the same
+               managed object;
+               shared_ptr has unique(until c++20) method,checks whether the managed object is managed only by the
+               current shared_ptr instance;
+               shared_ptr has owner_before method,provides owner-based ordering of shared pointers.
+
+         std::weak_ptr :
+           template<class T> class weak_ptr;
+
+           std::weak_ptr is a smart pointer that holds a non-owning("weak") reference to an object that is managed
+           by std::shared_ptr.
+           it must be converted to std::shared_ptr in order to access the referenced object.
+
+           the ordinary feature std::weak_ptr does :
+             models temporary ownership :
+               when an object needs to be accessed only if it exists,and it may be deleted at any time by someone else,
+               std::weak_ptr is used to track the object,and it is converted to std::shared_ptr to assume temporary ownership.
+             break reference cycle :
+               there has reference cycles formed by objects managed by std::shared_ptr(no outside shared pointers into the cycle),
+               the shared_ptr reference counts cant reach zero and the memory is leaked.to prevent this,one of the pointers in the
+               cycle can be made weak.
+
+           member types :
+             element_type  -  T,std::remove_extent_t<T>
+             
+           member functions :
+             (constructor)
+             (destructor)
+             operator=
+
+             reset  -  releases the ownership of the managed object
+             swap  -  swaps the managed objects
+
+             use_count  -  returns the number of shared_ptr objects that manage the object
+             expired  -  checks whether the referenced object was already deleted
+             lock  -  creates a shared_ptr that manages the referenced object
+             owner_before  -  provides owner-based ordering of weak pointers
 
 
          forwarding reference :
@@ -1704,7 +1704,7 @@ cpp11>
 
 
          std::forward :
-	       <utility>
+           <utility>
              template<class T>
              T&& forward(typename std::remove_reference<T>::type& t) noexcept;
              template<class T>

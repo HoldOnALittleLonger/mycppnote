@@ -10,26 +10,26 @@ C++20>
       used anywhere else.
 
       attribute-token list :
-      	attribute-token	   attribute			standard	value
+          attribute-token       attribute            standard    value
       
-        assume	      	   [[assume]]			C++23		202207L
-	carries_dependency [[carries_dependency]]	C++11		200809L
-	deprecated	   [[deprecated]]		C++14		201309L
-	fallthrough	   [[fallthrough]]		C++17		201603L
-	likely		   [[likely]]			C++20		201803L
-	maybe_unused	   [[maybe_unused]]		C++17		201603L
-	no_unique_address  [[no_unique_address]]	C++20		201803L
-	nodiscard	   [[nodiscard]]		C++17		201603L || 201907L
-	noreturn	   [[noreturn]]			C++11		200809L
-	unlikely	   [[unlikely]]			C++20		201803L
+        assume                 [[assume]]            C++23        202207L
+    carries_dependency [[carries_dependency]]    C++11        200809L
+    deprecated       [[deprecated]]        C++14        201309L
+    fallthrough       [[fallthrough]]        C++17        201603L
+    likely           [[likely]]            C++20        201803L
+    maybe_unused       [[maybe_unused]]        C++17        201603L
+    no_unique_address  [[no_unique_address]]    C++20        201803L
+    nodiscard       [[nodiscard]]        C++17        201603L || 201907L
+    noreturn       [[noreturn]]            C++11        200809L
+    unlikely       [[unlikely]]            C++20        201803L
 
       //  more language features and library features were predefined in standard,
       //  and cant not use __has_attribute to as checking for support,should use 
       //  #ifdef,#if defined,#ifndef,#if .etc
-      	  e.g.
-	    #if __cpp_aligned_new >= 201606L
-	    ...
-	    #endif
+            e.g.
+        #if __cpp_aligned_new >= 201606L
+        ...
+        #endif
 
 
 > Three-way comparison
@@ -41,7 +41,7 @@ C++20>
       (a <=> b) == 0 if a and b are equal/equivalent
 
     //  if one of the operands is of type bool and the other is not,the program is ill-formed.
-    //	if a narrowing coversion is required,the program is ill-formed.
+    //    if a narrowing coversion is required,the program is ill-formed.
 
     if a and b have integral type,the operator yields a prvalue of type std::strong_ordering :
       std::strong_ordering::equal if both operands are arithmetically equal.
@@ -83,8 +83,8 @@ C++20>
       <return-type> <class-name>::operator<op>(this <class-name>, <class-name>) = default;
 
       return-type - return type  of the operator function,must be 
-      		    auto or one of three comparison category types if op is <=>
-		    otherwise,bool
+                  auto or one of three comparison category types if op is <=>
+            otherwise,bool
 
     defaulted three-way comparison :
       the default operator<=> performs lexicographical comparison by successively comparing the base
@@ -142,21 +142,21 @@ C++20>
 
     syntax :
       <attr>(optional) for (<init-statement>(optional) <range-declaration> : <range-expression>)
-      		         <loop-statement>
+                       <loop-statement>
 
 
       init-statement : since C++20
         an expression statement(which may be a null statement ";").
-	a simple declaration,typically a declaration of a variable with initializer,
-	but it may declare arbitrarily many variables or be a structured binding declaration.
-	an alias declaration.(since C++23)
-	(init-statement end with a semicolon ";")
+    a simple declaration,typically a declaration of a variable with initializer,
+    but it may declare arbitrarily many variables or be a structured binding declaration.
+    an alias declaration.(since C++23)
+    (init-statement end with a semicolon ";")
       range-declaration : 
         a declaration of a named variable,whose type is the type of the element of the sequence
-	represented by range-expression,or a reference to that type.
+    represented by range-expression,or a reference to that type.
       range-expression :
         any expression that represents a suitable sequence
-	(array,object which defined begin() and end() or free functions,braced-init-list)
+    (array,object which defined begin() and end() or free functions,braced-init-list)
 
     if range-expression returns a temporary,its lifetime is extended until the end of the loop.(C++23)
 
@@ -185,10 +185,10 @@ C++20>
 
       e.g.
         struct A {};
-	struct B : public A {
-	  int x;
-	  [[no_unique_address]] char c;
-	};
+    struct B : public A {
+      int x;
+      [[no_unique_address]] char c;
+    };
 
     [[likely]], [[unlikely]]  since C++20
       allow the compiler to optimize for the case where paths of execution including that statement are more or 
@@ -196,19 +196,19 @@ C++20>
 
       e.g.
         if (i > 0) [[likely]] {
-	  return i * 2;
-	} else {
-	  return i * 10;
-	}
+      return i * 2;
+    } else {
+      return i * 10;
+    }
 
-	switch (i) {
-	  [[likely]] case 7:
-	    return i + 3;
-	  case 2:
-	    return ++i;
-	  default:
-	    return i;
-	}
+    switch (i) {
+      [[likely]] case 7:
+        return i + 3;
+      case 2:
+        return ++i;
+      default:
+        return i;
+    }
 
 
 > Pack-expansions in lambda init-captures
@@ -219,12 +219,12 @@ C++20>
       void func(_Type &&arg, _TypePack... tp)
       {
         if (sizeof...(tp) != 0)
-	  std::cout<<std::forward<_Type>(arg)<<std::endl;
+      std::cout<<std::forward<_Type>(arg)<<std::endl;
 
         auto local_func = [&, tp...] (void)
-	{
-	  return func(tp...);
-	};
+    {
+      return func(tp...);
+    };
       }
 
       void func(void) {};
@@ -232,8 +232,8 @@ C++20>
     //  sizeof... operator is classified as a pack expansion as well.
     //  ellipsis appears on right side means do a pack expansion.
     //    e.g.  (tp + ...) => (tp0 + (tp1 + (tp2 + ...)))
-    //	  e.g.  g(std::forward<_TypePack>(tp)...); => 
-    //	  	g(std::forward<_TypePackE1>(A1), std::forward<_TypePackE2>(A2), ...);
+    //      e.g.  g(std::forward<_TypePack>(tp)...); => 
+    //          g(std::forward<_TypePackE1>(A1), std::forward<_TypePackE2>(A2), ...);
 
 
 > removed the requirement to use typename to disambiguate types in many contexts
@@ -243,7 +243,7 @@ C++20>
       };
 
       typename A::UserCustomType a;  //  a has type of int,
-      	       	       	   	     //  but in C++20,does not need typename keywrod any more.
+                                            //  but in C++20,does not need typename keywrod any more.
 
 
 > consteval specifier and constinit specifier
@@ -257,7 +257,7 @@ C++20>
       consteval int sqr(int n) { return n * n; }
       constexpr int x = sqr(3);  //  OK,evaluate sqr(3) produce constant 3 * 3.
       consteval int sqrsqr(int n) { return sqr(sqr(n)); }  //  OK,but not a constant expression,
-      		    	       	    	   		   //  because @n is variable.
+                                                       //  because @n is variable.
       //  function enclose a consteval function have to be a consteval function too.
 
     constinit - asserts that a variable has static initialization, i.e. zero initialization and 
@@ -281,8 +281,8 @@ C++20>
     initialization and constant destruction and makes the object const-qualified,but constinit
     does not mandate constant destruction and const-qualified.
     e.g.
-      static constinit int x(3);	//  variable x is static and initialized with 3
-      thread_local constinit int y(4);	//  variable y is thread_local and initialized with 4
+      static constinit int x(3);    //  variable x is static and initialized with 3
+      thread_local constinit int y(4);    //  variable y is thread_local and initialized with 4
       
       const char *g() { return "dynamic initialization."; }
       constexpr const char *f(bool p) { return p ? "constant initializer" : g(); }
@@ -346,43 +346,43 @@ C++20>
       used to resume execution of the coroutine or to destroy the coroutine frame.
       the coroutine state which is internal,dynamically-allocated storage,object that contains -
         the promise object,
-	the parameter,all copied by value,
-	suspension point,
-	local variables and temporaries whose lifetime spans the current suspension point.
+    the parameter,all copied by value,
+    suspension point,
+    local variables and temporaries whose lifetime spans the current suspension point.
 
     routine execution :
       it will performs the following :
         allocates the coroutine state object via operator new().
 
-	copies all function parameters to the coroutine state,by-value parameters are moved
-	or copied,by-reference parameters remain references.
+    copies all function parameters to the coroutine state,by-value parameters are moved
+    or copied,by-reference parameters remain references.
 
-	calls the constructor for the promise object,if the promise type has a constructor that
-	takes all coroutine parameters,that constructor is called,with post-copy coroutine arguments,
-	otherwise the default constructor is called.
+    calls the constructor for the promise object,if the promise type has a constructor that
+    takes all coroutine parameters,that constructor is called,with post-copy coroutine arguments,
+    otherwise the default constructor is called.
 
-	calls promise.get_return_object() and keeps the result in a local variable,it will be returned
-	to the caller when the coroutine first suspends,any exceptions thrown up to and including this 
-	step propagate back to the caller,not placed in the promise.
+    calls promise.get_return_object() and keeps the result in a local variable,it will be returned
+    to the caller when the coroutine first suspends,any exceptions thrown up to and including this 
+    step propagate back to the caller,not placed in the promise.
 
-	calls promise.initial_suspend() and co_awaits its result,typical promise types either return a
-	std::suspend_always,for lazily-started coroutines,or std::suspend_never,for eagerly-started 
-	coroutines.
-	  std::suspend_always :
-	    empty class used to indicates that await awaiter always suspend coroutine and dont 
-	    produce value.
-	  std::suspend_never :
-	    empty class used to indicates that await awaiter never suspend coroutine and dont
-	    produce value.
+    calls promise.initial_suspend() and co_awaits its result,typical promise types either return a
+    std::suspend_always,for lazily-started coroutines,or std::suspend_never,for eagerly-started 
+    coroutines.
+      std::suspend_always :
+        empty class used to indicates that await awaiter always suspend coroutine and dont 
+        produce value.
+      std::suspend_never :
+        empty class used to indicates that await awaiter never suspend coroutine and dont
+        produce value.
 
-	when co_await promise.initial_suspend() resumes,starts executing the body of the coroutine.
-	(co_await promise::initial_suspend() means program will invokes three functions in the
-	 awaiter returned by initial_suspend().
-	 awaiter::await_ready -> awaiter::await_suspend -> awaiter::await_resume.
-	 after awaiter::resume() has been finished,initial_suspend() resumed.)
+    when co_await promise.initial_suspend() resumes,starts executing the body of the coroutine.
+    (co_await promise::initial_suspend() means program will invokes three functions in the
+     awaiter returned by initial_suspend().
+     awaiter::await_ready -> awaiter::await_suspend -> awaiter::await_resume.
+     after awaiter::resume() has been finished,initial_suspend() resumed.)
 
-	//  caller calls coroutine_handle<PromiseType>.resume() or coroutine_handle<PromiseType>()
-	//  will resume coroutine from initial_suspend(),if it returned std::suspend_always.
+    //  caller calls coroutine_handle<PromiseType>.resume() or coroutine_handle<PromiseType>()
+    //  will resume coroutine from initial_suspend(),if it returned std::suspend_always.
 
     when a coroutine reaches a suspension point :
       the return object obtained earlier(from get_return_object()) is returned to the caller/resumer,
@@ -392,9 +392,9 @@ C++20>
       it performs the following :
         calls promise.return_void() for
           co_return;
-	  co_return <expr>; where expr has type void
-	  falling off the end of the coroutine,the behavior is undefined if the promise type has no
-	  promise::return_void() member function in this case.
+      co_return <expr>; where expr has type void
+      falling off the end of the coroutine,the behavior is undefined if the promise type has no
+      promise::return_void() member function in this case.
 
         or calls promise.return_value(<expr>) for "co_return <expr>;" where expr has non-void type.
       
@@ -411,8 +411,8 @@ C++20>
     operator new() for replacement,then calls this,otherwise calls ::new().
 
     //  the call to operator new() can be optimized out(even if custom allocator is used) if 
-     	  the lifetime of the coroutine state is strictly nested within the lifetime of the caller,and
-	  the size of coroutine frame is known at the call site.
+           the lifetime of the coroutine state is strictly nested within the lifetime of the caller,and
+      the size of coroutine frame is known at the call site.
 
     coroutine handle :
       a coroutine handle behaves a lot like a C pointer.it can be easily copied,but it does not have 
@@ -423,61 +423,61 @@ C++20>
       there has three ways to do this :
       >
         defintion a struct which is inherited from std::coroutine_handle<PromiseType>,coroutine will returns
-	an object is type of this struct,caller could call handle.resume() or handle() to access coroutine.
-	e.g.
-	  struct promise;
-	  struct coroutine : std::coroutine_handle<promise> {
-	    using promise_type = promise;
-	    ...
-	  };
+    an object is type of this struct,caller could call handle.resume() or handle() to access coroutine.
+    e.g.
+      struct promise;
+      struct coroutine : std::coroutine_handle<promise> {
+        using promise_type = promise;
+        ...
+      };
       >
         let the type CoroutineReturn contains promise_type,and represented a handle is type of 
-	std::coroutine_handle<PromiseType>.
-	define coversions covert CoroutineReturn to std::coroutine_handle<PromiseType> and std::coroutine_handle<>,
-	coroutine caller can easy to delcared a handle which is used to hold the coroutine_handle returned by 
-	coroutine.
-	e.g.
-	  struct coroutine {
-	    struct promise_type {
-	      ...
-	    };
-	    std::coroutine_handle<promise_type> handle;
-	    operator std::coroutine_handle<promise_type>() const { return handle; }
-	    operator std::coroutine_handle<>() const { return handle; }
-	  };
+    std::coroutine_handle<PromiseType>.
+    define coversions covert CoroutineReturn to std::coroutine_handle<PromiseType> and std::coroutine_handle<>,
+    coroutine caller can easy to delcared a handle which is used to hold the coroutine_handle returned by 
+    coroutine.
+    e.g.
+      struct coroutine {
+        struct promise_type {
+          ...
+        };
+        std::coroutine_handle<promise_type> handle;
+        operator std::coroutine_handle<promise_type>() const { return handle; }
+        operator std::coroutine_handle<>() const { return handle; }
+      };
       > define awaiter that hold a std::coroutine_handle pointer object,and assign it with the coroutine handle
         in await_suspend().this is require coroutine receive a std::coroutine_handle pointer as the argument
-	of awaiter's constrouctor.
-	e.g.
-	  struct coroutine;
-	  struct promise;
-	  struct awaiter {
-	    std::coroutine_handle<> *_pPromise;
-	    ...
-	    void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
-	    ...
-	  };
+    of awaiter's constrouctor.
+    e.g.
+      struct coroutine;
+      struct promise;
+      struct awaiter {
+        std::coroutine_handle<> *_pPromise;
+        ...
+        void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
+        ...
+      };
 
-	  //  template<typename _PromiseType> struct coroutine_handle : coroutine_handel<>;
+      //  template<typename _PromiseType> struct coroutine_handle : coroutine_handel<>;
 
-	  coroutine function(std::coroutine_handle<> *p)
-	  {
-	    /*  co_await promise::initial_suspend(); */
-	    /*  awaiter::resume() executed,the return value as expression value  */
+      coroutine function(std::coroutine_handle<> *p)
+      {
+        /*  co_await promise::initial_suspend(); */
+        /*  awaiter::resume() executed,the return value as expression value  */
 
-	    //  before encouter "co_await a;",coroutine should not return to caller,
-	    //  this ensure that caller has a way to access coroutine.(awaiter sets promise object for handle)
-	    //  so initial_suspend() have to returns std::suspend_never.
-	    awaiter a{p};
-	    co_await a;
-	  }
+        //  before encouter "co_await a;",coroutine should not return to caller,
+        //  this ensure that caller has a way to access coroutine.(awaiter sets promise object for handle)
+        //  so initial_suspend() have to returns std::suspend_never.
+        awaiter a{p};
+        co_await a;
+      }
 
-	  void caller(void)
-	  {
-	    std::coroutine_handle<> outer_handle;
-	    function(&outer_handle);
-	    outer_handle();
-	  }
+      void caller(void)
+      {
+        std::coroutine_handle<> outer_handle;
+        function(&outer_handle);
+        outer_handle();
+      }
 
 
     promise :
@@ -489,79 +489,79 @@ C++20>
       a promise object at least must has these members :
 
         CoroutineType get_return_object();
-	  get_return_object() have to returns coroutine object instance.its result will saved
-	  in a local variable,and will be returned to coroutine caller when first suspend.
-	  that is the time to co_await the result of inital_suspend().
-	  this is why a coroutine definition has a return value is of type CoroutineType object.
-	  generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
-	  get the coroutine object instance.
+      get_return_object() have to returns coroutine object instance.its result will saved
+      in a local variable,and will be returned to coroutine caller when first suspend.
+      that is the time to co_await the result of inital_suspend().
+      this is why a coroutine definition has a return value is of type CoroutineType object.
+      generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
+      get the coroutine object instance.
 
-	Awaiter initial_suspend();
-	  initial_suspend() will be called once when the coroutine is start to executing.
+    Awaiter initial_suspend();
+      initial_suspend() will be called once when the coroutine is start to executing.
 
-	Awaiter final_suspend();
-	  final_suspend() will be called when encouter "co_return" statement.
+    Awaiter final_suspend();
+      final_suspend() will be called when encouter "co_return" statement.
 
-	//  Awaiter == std::suspend_never || std::suspend_always || others
+    //  Awaiter == std::suspend_never || std::suspend_always || others
 
-	void return_void();
-	  for return void.
+    void return_void();
+      for return void.
 
-	void unhandled_exception();
-	  for exception deal with.
+    void unhandled_exception();
+      for exception deal with.
 
-	//  Awaiter will be used when "co_await" statement is process.
-	//  promise object could has more data members.
+    //  Awaiter will be used when "co_await" statement is process.
+    //  promise object could has more data members.
 
       if client wants to access promise_type,should use a handle "std::coroutine_handle<PromiseType>" 
       instance,member method promise() will return a reference to promise_type object.
 
       e.g.
         struct coroutine {
-	  struct promise_type {
-	    int i;
-	    ...
-	  };
-	  std::coroutine_handle<promise_type> _ptch;
-	  operator std::coroutine_handle<promise_type>() const { return _ptch; }
-	};
+      struct promise_type {
+        int i;
+        ...
+      };
+      std::coroutine_handle<promise_type> _ptch;
+      operator std::coroutine_handle<promise_type>() const { return _ptch; }
+    };
 
-	struct awaiter {
-	  ...
-	  coroutine::promise_type *_pp;
-	  ...
-	  void await_suspend(std::coroutine_handle<coroutine::promise_type> h)
-	  {
-	    _pp = &h.promise();
-	  }
-	  coroutine::promise_type *await_resume() { return _pp; }
-	};
+    struct awaiter {
+      ...
+      coroutine::promise_type *_pp;
+      ...
+      void await_suspend(std::coroutine_handle<coroutine::promise_type> h)
+      {
+        _pp = &h.promise();
+      }
+      coroutine::promise_type *await_resume() { return _pp; }
+    };
 
-	//  this awaiter let coroutine is able to access its own promise object in coroutine state
-	//  instance.
+    //  this awaiter let coroutine is able to access its own promise object in coroutine state
+    //  instance.
 
-	coroutine func()
-	{
-	  awaiter a;
-	  co_await a;  //  suspend coroutine,
+    coroutine func()
+    {
+      awaiter a;
+      co_await a;  //  suspend coroutine,
 
-	  	       //  when first suspend(co_await intial_suspend()),
-		       //  the coroutine object returned by get_return_object()
-		       //  will return to caller.
-	}
+                 //  when first suspend(co_await intial_suspend()),
+               //  the coroutine object returned by get_return_object()
+               //  will return to caller.
+    }
 
-	void main1(void)
-	{
-	  std::coroutine_handle<coroutine::promise_type> chcp = func();  //  calls covert function
-	  coroutine::promise_type &promise = chcp.promise();
-	  promise.i;
-	  promise.destroy();  //  destroy
-	}
+    void main1(void)
+    {
+      std::coroutine_handle<coroutine::promise_type> chcp = func();  //  calls covert function
+      coroutine::promise_type &promise = chcp.promise();
+      promise.i;
+      promise.destroy();  //  destroy
+    }
 
-	//  generally,outer of promise_type struct does not hold any data members that will be 
-	//  accessed in caller,except handle object.
-	//  a conventional method that is let promise_type holds such data members,and follow
-	//  the example code above to access them in caller.
+    //  generally,outer of promise_type struct does not hold any data members that will be 
+    //  accessed in caller,except handle object.
+    //  a conventional method that is let promise_type holds such data members,and follow
+    //  the example code above to access them in caller.
 
 
     co_await :
@@ -573,27 +573,27 @@ C++20>
       a co_await expression can only apper in a potentially-evaluated expression within a regular
       function body,and cannot appear -
         in an exception handler,
-	in a declaration statement,unless it appears in an initializer of that declaration statement,
-	in the simple declaration of an init-statement,unless it appears in an initialize of that
-	init-statement,
-	in a default argument,or in the initializer of a block-scope variable with static or thread
-	storage duration.
+    in a declaration statement,unless it appears in an initializer of that declaration statement,
+    in the simple declaration of an init-statement,unless it appears in an initialize of that
+    init-statement,
+    in a default argument,or in the initializer of a block-scope variable with static or thread
+    storage duration.
 
       <first>
       expr is converted to an awaitable as follows :
         if expr is produced by an initial suspend point,a final suspend point,or a yield expression,
-	the awaitable is expr,as-is.
-	otherwise,if the current coroutine's promise type has the member function await_transform,
-	then the awaitable is promise.await_transform(expr).
-	otherwise,the awaitable is expr,as-is.
+    the awaitable is expr,as-is.
+    otherwise,if the current coroutine's promise type has the member function await_transform,
+    then the awaitable is promise.await_transform(expr).
+    otherwise,the awaitable is expr,as-is.
  
       awaiter object is obtained,as follows :
         if overload resolution for operator co_await gives a single best overload,the awaiter is the
-	result of that call :
-	  awaitable.operator co_await() for member overload,
-	  operator co_await(static_cast<Awaitable&&>(awaitable())) for non-member overload.
-	otherwise,if overload resolution finds no operator co_await,the awaiter is awaitable,as-is.
-	otherwise,if overload resolution is ambiguous,the program is ill-formed.
+    result of that call :
+      awaitable.operator co_await() for member overload,
+      operator co_await(static_cast<Awaitable&&>(awaitable())) for non-member overload.
+    otherwise,if overload resolution finds no operator co_await,the awaiter is awaitable,as-is.
+    otherwise,if overload resolution is ambiguous,the program is ill-formed.
 
       <second>
       awaiter.await_ready() is called,if its result,contextually-converted to bool is false,then,
@@ -630,16 +630,16 @@ C++20>
       it is equivalent to 
         co_await promise.yield_value(expr);
 
-	a typical generator's yield_value would store its argument into the generator object and return
-	std::supend_always,transferring control to the caller/resumer.
+    a typical generator's yield_value would store its argument into the generator object and return
+    std::supend_always,transferring control to the caller/resumer.
 
     co_return :
       to signal the end of a coroutine,C++ adds a new co_return operator.there are three ways for a 
       coroutine to signal that it is complete :
         the coroutine can use "co_return e;" to return a final value e.
-	the coroutine can use "co_return;" with no value(or with a void expression) to end the coroutine
-	without a final value.
-	the coroutine can let execution fall off the end of the function which is similar to previous case.
+    the coroutine can use "co_return;" with no value(or with a void expression) to end the coroutine
+    without a final value.
+    the coroutine can let execution fall off the end of the function which is similar to previous case.
 
       if co_return returns void,then function "promise::return_void" will be called.
       if co_return returns a value,then function "promise::return_value" will be called.
@@ -660,26 +660,26 @@ C++20>
 
       struct promise {
         coroutine get_return_object() { return {coroutine::from_promise(*this)}; }
-	std::suspend_always initial_suspend() noexcept { return {}; }
-	std::suspend_always final_suspend() noexcept { return {}; }
-	void return_void() {}
-	void unhandled_exception() {}
+    std::suspend_always initial_suspend() noexcept { return {}; }
+    std::suspend_always final_suspend() noexcept { return {}; }
+    void return_void() {}
+    void unhandled_exception() {}
       };
 
       coroutine func()
       {
         coroutine h = [](int i) -> coroutine
-	{
-	  std::cout<<i;
-	  co_return;
-	} (0);
-	//  there,lambda function is a coroutine,argument is 0.
-	//  co_return; returns control to caller/resumer,this statement calls 
-	//  promise::return_void
-	
+    {
+      std::cout<<i;
+      co_return;
+    } (0);
+    //  there,lambda function is a coroutine,argument is 0.
+    //  co_return; returns control to caller/resumer,this statement calls 
+    //  promise::return_void
+    
 
-	h.resume();
-	h.destroy();
+    h.resume();
+    h.destroy();
       }
 
     coroutine process figure :
@@ -757,7 +757,7 @@ C++20>
 
       1>  module declaration,declares that the current translation unit is a module unit.
       2,3>  export declaration,export all namespace-scope declarations in declaration or
-      	    declaration-seq.
+              declaration-seq.
       4,5,6>  import declaration,import a module unit/module partition/header unit.
       7>  starts a global module fragment.
       8>  starts a private module fragment.
@@ -771,19 +771,19 @@ C++20>
       module units with the same module name.
 
       module interface unit : module unit whose declaration has the keyword 'export' are termed
-      	     	       	      module interface unit.
+                                    module interface unit.
       module implementation unit : other module units than module interface unit are termed
-      	     		    	   module implementation unit.
+                                  module implementation unit.
       primary module interface unit : every named module.there must be exactly one module interface
-      	      	     	       	      unit that specifies no module partition,this module unit is
-				      termed the primary module interface unit.
-				      its exported content will be available when importing the
-				      corresponding named module.
+                                              unit that specifies no module partition,this module unit is
+                      termed the primary module interface unit.
+                      its exported content will be available when importing the
+                      corresponding named module.
 
       export module hello_world;      //  primary module interface unit.
-      module hello_world;	      //  module implementation unit.
+      module hello_world;          //  module implementation unit.
       export module A, B, C, D.E;     //  several primary module interface units.
-      module A;	       	     	      //  module implementation unit.
+      module A;                              //  module implementation unit.
       module B;
       module C;
       module D.E;
@@ -811,19 +811,19 @@ C++20>
       all other declarations.
 
       e.g.
-        export module A;	//  primary module interface unit
-	export int a = 3;	//  export definition
+        export module A;    //  primary module interface unit
+    export int a = 3;    //  export definition
 
-	export module B;	//  primary module interface unit
-	export import A;	//  export-import A
+    export module B;    //  primary module interface unit
+    export import A;    //  export-import A
 
-	export module C;	//  primary module interface unit
-	import B;     		//  import B
+    export module C;    //  primary module interface unit
+    import B;             //  import B
 
-	int b = a;		//  because B export-imports A.
+    int b = a;        //  because B export-imports A.
 
-	#include<iostream>
-	  ...
+    #include<iostream>
+      ...
 
       #include should not be used in a module unit(outside the global module fragment),because all
       included declartions and definitions would be considered part of the module.
@@ -837,10 +837,10 @@ C++20>
 
       e.g.
         export module A;
-	import <vector>;
-	export import <iostream>;
+    import <vector>;
+    export import <iostream>;
 
-	#ifdef definitions or other processor macros in <vector> or <iostream> is not effect the header.
+    #ifdef definitions or other processor macros in <vector> or <iostream> is not effect the header.
 
     global module fragment :
       module units can be prefixed by a global module fragment,which can be used to include headers when
@@ -854,17 +854,17 @@ C++20>
       a standard module declaration makrs the end of the global module fragment.
 
       e.g.
-        module;		  //  global module fragment prefix
-	
-	#ifdef DEBUG
-	...
-	#endif
+        module;          //  global module fragment prefix
+    
+    #ifdef DEBUG
+    ...
+    #endif
 
-	#include<iostream>  //  #include can be used in global module fragment.
+    #include<iostream>  //  #include can be used in global module fragment.
 
-	export module A;  //  A marks global module fragment end
+    export module A;  //  A marks global module fragment end
 
-	...
+    ...
 
     private module fragment :
       primary module interface unit can be suffixed by a private module fragment,which allows
@@ -876,13 +876,13 @@ C++20>
 
       e.g.
         export module A;
-	import <iostream>;
-	
-	export int a = 3;
+    import <iostream>;
+    
+    export int a = 3;
 
-	module : private;
-	
-	void function(void) {}	//  function is not reachable from importers of A.
+    module : private;
+    
+    void function(void) {}    //  function is not reachable from importers of A.
       
       private module fragment ends the portion of the module interface unit that can affect the behavior
       of other translation units.if a module unit contains a private module fragment,it will be the only
@@ -901,13 +901,13 @@ C++20>
       export(optional) import <module-partition> <attr>(optional);
 
       e.g.
-        export module A:B;	//  file1	partition module interface unit :B
+        export module A:B;    //  file1    partition module interface unit :B
 
-	module A:C;   		//  file2	module parition unit :C
+    module A:C;           //  file2    module parition unit :C
 
-	export module A;	//  file3	primary module interface unit
-	import :C;
-	export import :B;	//  export-import module partition unit(also a interface)
+    export module A;    //  file3    primary module interface unit
+    import :C;
+    export import :B;    //  export-import module partition unit(also a interface)
 
       all definitions and declarations in a module partition are visible by the importing module unit,
       whether exported or not.
@@ -929,38 +929,38 @@ C++20>
         in the weak module ownership model,such declarations are considered to declare the same entity.
         in the strong module ownership model,they are considered to declare different entities.
 
-	e.g.
-	  file1 :
-	    export module A;
-	    export void func(void) {}
+    e.g.
+      file1 :
+        export module A;
+        export void func(void) {}
 
-	  file2 :
-	    export module B;
-	    export void func(void) {}
+      file2 :
+        export module B;
+        export void func(void) {}
 
-	  file3 :
-	    import A;
-	    import B;
+      file3 :
+        import A;
+        import B;
 
-	    //  void func(void){} now is visible in file3.
-	    //  weak :
-	    	  A::func and B::func are considered to declare the same entity,
-		  linker may pick either
-		strong :
-		  A::func and B::func are different entities.
+        //  void func(void){} now is visible in file3.
+        //  weak :
+              A::func and B::func are considered to declare the same entity,
+          linker may pick either
+        strong :
+          A::func and B::func are different entities.
 
       //  e.g.
             export module A;
 
-	    namespace dd {		    //  namespace definitions with external linkage.
-	      export extern "C++" int f();  //  declarations within a language linkage specification.
-	      export extern "C++" int g();
-	      export int h();
-	    }
+        namespace dd {            //  namespace definitions with external linkage.
+          export extern "C++" int f();  //  declarations within a language linkage specification.
+          export extern "C++" int g();
+          export int h();
+        }
 
-	    //  f and g are not attached to A.
-	    //  h is attached to A.
-	    //  dd::h must be defined in A,dd::f and dd::g can be defined in somewhere outside A.
+        //  f and g are not attached to A.
+        //  h is attached to A.
+        //  dd::h must be defined in A,dd::f and dd::g can be defined in somewhere outside A.
 
 
 > constraints and concepts
@@ -980,7 +980,7 @@ C++20>
 
       syntax :
         template<template-parameter-list>
-	    concept <concept-name> <attr>(optional) = <constraint-expression>;
+        concept <concept-name> <attr>(optional) = <constraint-expression>;
 
       concept can be a part in id-expression.
       concept can be named in a type-constraint,as part of type template parameter declaration,
@@ -988,17 +988,17 @@ C++20>
 
       attention :
         concept is not allowed to recursive.
-	    concept is not allowed to explicit instantiation,explicit specialization,partial specialization.
-	    (the meaning of the original definition of a constraint cant be changed)
+        concept is not allowed to explicit instantiation,explicit specialization,partial specialization.
+        (the meaning of the original definition of a constraint cant be changed)
 
-	in a type-constraint,a concept takes one less template argument than its parameter list demands,
-	because the contextually deduced type is implicitly used as the first argument of the concept.
-	e.g.
-	  template<class T, class U>
-	  concept C = std::is_base_of<U, T>::value;
+    in a type-constraint,a concept takes one less template argument than its parameter list demands,
+    because the contextually deduced type is implicitly used as the first argument of the concept.
+    e.g.
+      template<class T, class U>
+      concept C = std::is_base_of<U, T>::value;
 
-	  template<C<Base> T>  //  T as the first argument.
-	  void func(void) {}
+      template<C<Base> T>  //  T as the first argument.
+      void func(void) {}
 
     constraints :
       a constraint is a sequence of logical operations and operands that specifies requirements on 
@@ -1008,20 +1008,20 @@ C++20>
       the constraint associated with a declaration are determined by normalizing a logical AND
       expression whose operands are in the following order :
         >  the constraint expression introduced for each constrained type template parameter or
-	       non-type template parameter declared with a constrained placeholder type,in order of
-	       appearance.
+           non-type template parameter declared with a constrained placeholder type,in order of
+           appearance.
 
            template<constraint1<T>, constraint2<U>>
            ...
 
            the_constraint_expression := constrained_placeholder1<T> AND constrained_placeholder2<U> ...
 
-	    >  the constraint expression in the requires clause after the template parameter list.
+        >  the constraint expression in the requires clause after the template parameter list.
     
            the_constraint_expression := requires.requirement1 AND requires.requirement2 ...
 
-	    >  the constraint expression introduced for each parameter with constrained placeholer type
-	       in an abbreviated function template declaration.
+        >  the constraint expression introduced for each parameter with constrained placeholer type
+           in an abbreviated function template declaration.
 
            abbreviated function template :
              void func(auto x);  //  equal to "template<class T> void func(T)"
@@ -1030,129 +1030,129 @@ C++20>
 
            the_constraint_expression := constrained_placeholder<auto := T>
 
-	    >  the constraint expression in the trailing requires clause.
+        >  the constraint expression in the trailing requires clause.
 
-	e.g.
-	  template<class T>
-	  concept C = requires (T a) {
-	    typename a::value; 	  //  a must has type value.
-	    ++a;     		  //  a must supports ++a operation.
-	  };
+    e.g.
+      template<class T>
+      concept C = requires (T a) {
+        typename a::value;       //  a must has type value.
+        ++a;               //  a must supports ++a operation.
+      };
 
-	  template<class X>
-	  void function(void) requires C<X> {}
+      template<class X>
+      void function(void) requires C<X> {}
 
-	  template<class Y>
-	  requires C<Y>
-	  void g(void) {}
+      template<class Y>
+      requires C<Y>
+      void g(void) {}
 
-	  template<C Y>
-	  void h(void) {}
+      template<C Y>
+      void h(void) {}
 
       constraint is allows to redeclare but have to using the same syntactic form.
       e.g.
         template<C Y>
-	void g(void) {}
-	
-	template<class Y>
-	requires C<Y>		//  logically-equivalent-but-syntactically-different
-	void g(void) {}		//  ill-form
+    void g(void) {}
+    
+    template<class Y>
+    requires C<Y>        //  logically-equivalent-but-syntactically-different
+    void g(void) {}        //  ill-form
 
-	
+    
       
 
       three type of constraints :
         conjunctions >
-	  the conjunction of two constraints is formed by using the && operator in the 
-	  constraint expression.
+      the conjunction of two constraints is formed by using the && operator in the 
+      constraint expression.
 
-	disjunctions >
-	  the disjunction of two constraints is formed by using the || operator in the
-	  constraint expression.
+    disjunctions >
+      the disjunction of two constraints is formed by using the || operator in the
+      constraint expression.
 
-	atomic constraints >
-	  an atomic constraint consists of an expression E and a mapping from the template
-	  parameters that appear within E to template arguments involving the template
-	  parameters of the constrained entity,called its parameter mapping.
-	
-	  atomic constraints are formed during constraint normalization.E is never a logical
-	  AND or logical OR expression.
+    atomic constraints >
+      an atomic constraint consists of an expression E and a mapping from the template
+      parameters that appear within E to template arguments involving the template
+      parameters of the constrained entity,called its parameter mapping.
+    
+      atomic constraints are formed during constraint normalization.E is never a logical
+      AND or logical OR expression.
 
-	  atomic constraints checking have to do parameter mapping,use template arguments
-	  do substitution for template parameter which appears in E.if E is not an valid
-	  type or expression,checking will failure,otherwise,do lvalue-to-rvalue conversion,
-	  shall be a prvalue constant expression of type bool.if result is true,satisfied,
-	  if result is false,satisfy failed.
+      atomic constraints checking have to do parameter mapping,use template arguments
+      do substitution for template parameter which appears in E.if E is not an valid
+      type or expression,checking will failure,otherwise,do lvalue-to-rvalue conversion,
+      shall be a prvalue constant expression of type bool.if result is true,satisfied,
+      if result is false,satisfy failed.
 
       constraint normalization :
         constraint normalization is the process that transforms a constraint expression into
-	a sequence of a conjunctions and disjunctions of atomic constraints.
+    a sequence of a conjunctions and disjunctions of atomic constraints.
 
       partial ordering of constraints :
         before any further analysis,constraints are normalized by substituting the body of
-	every named concept and every requires expression until what is left is sequence of
-	conjunctions and disjunctions on atomic constraints.
+    every named concept and every requires expression until what is left is sequence of
+    conjunctions and disjunctions on atomic constraints.
 
-	a constraint P is said to subsume constraint Q if it can be proven that P implies
-	Q up to the identify of atomic constraints in P and Q.
+    a constraint P is said to subsume constraint Q if it can be proven that P implies
+    Q up to the identify of atomic constraints in P and Q.
 
-	(N > 0 does not subsume N >= 0)
+    (N > 0 does not subsume N >= 0)
 
       requires expression :
         yields a prvalue expression of type bool that describes the constraints.
 
-	syntax :
-	  requires { <requirement-seq> }
-	  requires (<parameter-list>(optional) { <requirement-seq> }
+    syntax :
+      requires { <requirement-seq> }
+      requires (<parameter-list>(optional) { <requirement-seq> }
 
-	  requirement-seq : sequence of requirements,each requirements is one of the following
-	  		      simple requirement
-			      type requirements
-			      compound requirements
-			      nested requirements
+      requirement-seq : sequence of requirements,each requirements is one of the following
+                    simple requirement
+                  type requirements
+                  compound requirements
+                  nested requirements
 
         simple requirements :
-	  a simple requirement is an arbitrary expression statement that does not start with the
-	  keyword requires.it asserts that the expression is valid.the expression is an unevaluated
-	  operand;only language correctness is checked.
+      a simple requirement is an arbitrary expression statement that does not start with the
+      keyword requires.it asserts that the expression is valid.the expression is an unevaluated
+      operand;only language correctness is checked.
 
-	  e.g.
-	    template<class T>
-	    concept C = requires(T a) {
-	      typename a::tag;
-	      ++a;
-	    };
+      e.g.
+        template<class T>
+        concept C = requires(T a) {
+          typename a::tag;
+          ++a;
+        };
 
-	type requirements :
-	  a type requirements is the keyword typename followed by a type name,optionally qualified.
-	  the requirement is that the named type is valid :
-	    this can be used to verify that a certain named nested type exists,or that a class
-	    template specialization names a type,or that an alias template specialization names
-	    a type.
+    type requirements :
+      a type requirements is the keyword typename followed by a type name,optionally qualified.
+      the requirement is that the named type is valid :
+        this can be used to verify that a certain named nested type exists,or that a class
+        template specialization names a type,or that an alias template specialization names
+        a type.
 
-	  a type requirement naming a class template specialization does not require the type to
-	  be complete.
+      a type requirement naming a class template specialization does not require the type to
+      be complete.
 
         compound requirements :
-	  a compound requirement has the form :
-	    { <expression> } noexcept(optional) <return-type-requirement>(optional);
+      a compound requirement has the form :
+        { <expression> } noexcept(optional) <return-type-requirement>(optional);
 
-	    return-type-requirement : -> <type-constraint>
+        return-type-requirement : -> <type-constraint>
 
-	    if return-type-requirement is present,then :
-	      template arguments are substituted into the return-type-requirement,
-	      decltype((expression)) must satisfy the constraint imposed by the 
-	      type-constraint.other wise,the enclosing requires-expression is false.
+        if return-type-requirement is present,then :
+          template arguments are substituted into the return-type-requirement,
+          decltype((expression)) must satisfy the constraint imposed by the 
+          type-constraint.other wise,the enclosing requires-expression is false.
 
         nested requirements :
-	  a nested requirement has the form :
-	    requires <constraint-expression>;
+      a nested requirement has the form :
+        requires <constraint-expression>;
 
-	  it can be used to specify additional constraints in terms of local parameters.
-	  the constraint-expression must be satisfied by the subsiituted template arguments,
-	  if any.
+      it can be used to specify additional constraints in terms of local parameters.
+      the constraint-expression must be satisfied by the subsiituted template arguments,
+      if any.
 
-	  
+      
 > abbreviated function template
     when placeholder types (either auto or Concept auto) appear in the parameter list of a function
     declaration or of a function template declaration,the declaration declares a function template,
@@ -1164,21 +1164,21 @@ C++20>
     void func(auto c) {};
 
     func(3);  =>
-    	        template<class T>
-		void func(T c) {}  =>  T = unsigned
+                template<class T>
+        void func(T c) {}  =>  T = unsigned
 
     void function(const C3 auto *, C4 auto &);  =>  template<C3 T, C4 U>
-    	 		   	      	   	    void function(const T *, U &);
+                                             void function(const T *, U &);
     //  at there, C3 and C4 is concepts.
 
     #  abbreviated function templates can be specialized like all function templates.
        e.g.
          void h(auto k) {}
 
-	 template<>
-	 void h<double>(double k) {}
+     template<>
+     void h<double>(double k) {}
 
 
 > array new can deduce array size
-    	  
+          
 

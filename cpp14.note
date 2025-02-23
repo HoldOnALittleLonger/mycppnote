@@ -11,7 +11,7 @@ C++14
 
       parameter-list :
         a non-empty comma-separated list of the template parameters,each of which is either non-type parameter,
-	a type parameter,a template parameter,or a parameter pack of any of those.
+    a type parameter,a template parameter,or a parameter pack of any of those.
 
     A variable instantiated from a variable template is called an instantiated variable.
     A static data member instantiated from a static data member template is called an instantiated static data member.
@@ -21,18 +21,18 @@ C++14
 
 
     E.g. :
-      template<class T>			//  constant template
+      template<class T>            //  constant template
       constexpr T pi = T(3.1415926L);
 
       return pi<float> * 2;
 
-      template<class _CType>		//  alias template
+      template<class _CType>        //  alias template
       using vec = std::vector<_CType>;
 
       vec<std::string> s_vec;
 
-      template<class _CType>		//  variable template ::(global namespace)
-      std::vector<_CType> vec;	
+      template<class _CType>        //  variable template ::(global namespace)
+      std::vector<_CType> vec;    
       std::vector<int> *pVec1 = &vec<int>;
       std::vector<int> *pVec2 = &vec<int>;
 
@@ -43,10 +43,10 @@ C++14
 
       struct A {
         template<typename T> static const T min;  //  declaration  A::(namespace scope)
-			     	    	    	  //  definition of a static data member must outside of class definition
+                                       //  definition of a static data member must outside of class definition
       };
       template<class T>
-      const T A::min = { };			  //  definition
+      const T A::min = { };              //  definition
 
     #  variable template is implicitly instantiated when a specialization of the variable template is referenced in
     #  a context that requires a variable definition to exist or if the existence of the definition affects the 
@@ -61,14 +61,14 @@ C++14
       [captures] <template-parameters> requires(optional) specs { body };
 
       specs : consists of specifiers,exception,attributes and trailing-return-type in that order;
-      	      each of these is optional.
+                each of these is optional.
 
     usage : 
       int i = 3, j = 4;
       auto tf = [=] <class _T> requires std::floating_point<_T> (_T x) -> _T
         {
-	  return (i + j) * x;
-	};  /*  for restrict template,could use concept  */
+      return (i + j) * x;
+    };  /*  for restrict template,could use concept  */
       
       return tf(3.5);
 
@@ -83,24 +83,24 @@ C++14
       ClosureType::operator ret(*)(params)();
       E.g.
         capture-less non-generic lambda :
-	  using F = ret(*)(params);	/*  until c++17  */
-	  operator F() const noexcept;
+      using F = ret(*)(params);    /*  until c++17  */
+      operator F() const noexcept;
 
-	  using F = ret(*)(params);	/*  since c++17  */
-	  constexpr operator F() const noexcept;
+      using F = ret(*)(params);    /*  since c++17  */
+      constexpr operator F() const noexcept;
 
-	capture-less generic lambda :
-	  template<template-params> using fptr_t = ret(*)(params);  /*  since c++14,until c++17  */
-	  template<template-params> operator fptr_t<template-params>() const noexcept;
+    capture-less generic lambda :
+      template<template-params> using fptr_t = ret(*)(params);  /*  since c++14,until c++17  */
+      template<template-params> operator fptr_t<template-params>() const noexcept;
 
-	  template<template-params> using fptr_t = ret(*)(params);  /*  since c++17  */
-	  template<template-params> constexpr operator fptr_t<template-params>() const noexcept;
+      template<template-params> using fptr_t = ret(*)(params);  /*  since c++17  */
+      template<template-params> constexpr operator fptr_t<template-params>() const noexcept;
 
       #  a generic captureless lambda has a user-defined conversion function template with the
          same invented template parameter list as the function-call operator template.
-	 if the return type is empty or auto,it is obtained by return type deduction on the 
-	 function template specialization,which,in turn,is obtained by template argument deduction
-	 for conversion function templates.
+     if the return type is empty or auto,it is obtained by return type deduction on the 
+     function template specialization,which,in turn,is obtained by template argument deduction
+     for conversion function templates.
 
 
       ClosureType::ClosureType() =default;  /*  since c++20,only if no captures are specified  */
@@ -126,7 +126,7 @@ C++14
        E.g.
          int x = 3, y = 4;
          void func1(int (*fp = ([x = 1, y = 2](int) -> int { ... }))(int)();
-	 //  even x and y had been declared,the noname lambda expression cant captures them.
+     //  even x and y had been declared,the noname lambda expression cant captures them.
 
 
 > lamabda init-capture (concept)
@@ -139,13 +139,13 @@ C++14
 
       E.g.
         auto pUnique = std::make_unique(5);
-	auto lambda = [ p = std::move(pUnique) ] () { return *p + 5; };
+    auto lambda = [ p = std::move(pUnique) ] () { return *p + 5; };
 
-	#  this will basically move the pointer object into the data member 'p' of the closure class created
-	   from the lambda.  // auto p = std::move(pUnique); ClosureType lambda.p
-	#  std::bind is posibility to emulate the move capture
-	     auto pUnique = std::make_unique(5);
-	     auto lambda = std::bind([] (const std::unique_ptr &p) { return *p + 5; }, std::move(pUnique));
+    #  this will basically move the pointer object into the data member 'p' of the closure class created
+       from the lambda.  // auto p = std::move(pUnique); ClosureType lambda.p
+    #  std::bind is posibility to emulate the move capture
+         auto pUnique = std::make_unique(5);
+         auto lambda = std::bind([] (const std::unique_ptr &p) { return *p + 5; }, std::move(pUnique));
 
 
 > new/delete elision
@@ -157,28 +157,28 @@ C++14
 
       type : type-id,which may be array type,and may include a placeholdertype specifier(c++11),or inlcude a class template name
              whose argument is to be deduced by class template argument deduction.
-	     placeholdertype : auto | decltype (auto)
+         placeholdertype : auto | decltype (auto)
 
       new-type : same as type,but is cannot include parentheses
-      	         additional : new-type is greedy,it will include every token that can be a part of a declarator.
-		 E.g.
-		   new int + 1;  //  parsed as (new int) + 1,but cant be "new int * 1;"
+                   additional : new-type is greedy,it will include every token that can be a part of a declarator.
+         E.g.
+           new int + 1;  //  parsed as (new int) + 1,but cant be "new int * 1;"
 
       placement-params : a buffer where new allocate memory for the object.
-      		         E.g.
-			   char buffer[256];
-			   auto i = new (buffer) int(16);  //  allocate memory from buffer and init *i as 16.
-			   	    		 	   //  type of i would be automatically deduced to int pointer.
+                       E.g.
+               char buffer[256];
+               auto i = new (buffer) int(16);  //  allocate memory from buffer and init *i as 16.
+                                       //  type of i would be automatically deduced to int pointer.
 
       initializer : it is not optional if 
-      		      type or new-type is an array of unknown bound;
-		      a placeholder is used in type or new-type,that is,auto or decltype(auto),possibly combined with
-		      a type constraint;
-		      a class template is used in type or new-type whose arguments need to be deduced;
+                    type or new-type is an array of unknown bound;
+              a placeholder is used in type or new-type,that is,auto or decltype(auto),possibly combined with
+              a type constraint;
+              a class template is used in type or new-type whose arguments need to be deduced;
 
       #  new would automatically adjust alignment via std::align_val_t()
          new int == new(sizeof(int), std::align_val_t(alignof(int)))  //  operator new()
-	 //  overhead would effective when allocate an array. new(sizeof(Type) + overhead, std::align_val_t(alignof(Type)))
+     //  overhead would effective when allocate an array. new(sizeof(Type) + overhead, std::align_val_t(alignof(Type)))
 
       #  delete should combined a part with new,
          delete[] should combined a part with new[]
@@ -197,9 +197,9 @@ C++14
     #  a function body that is =default or =delete contains none of the above
     #  for non-const constexpr methods :
          A constexpr specifier used in an object declaration or non-static member function implies const.
-	 A constexpr specifier used in a function or static data member(c++17) declaration implies inline.
-	 If andy declaration of a function or function template has a constexpr specifier,then every declaration
-	 must contain that specifier.
+     A constexpr specifier used in a function or static data member(c++17) declaration implies inline.
+     If andy declaration of a function or function template has a constexpr specifier,then every declaration
+     must contain that specifier.
 
 
 > binary literals AND digit separator
@@ -210,17 +210,17 @@ C++14
       binary-literal integer-suffix
 
       integer-suffix : unsigned-suffix u|U[std::size_t(c++23)]
-      		       long-suffix l|L
-		       long-long-suffix ll|LL(c++11)
-		       size-suffix z|Z[std::size_t](c++23)
+                     long-suffix l|L
+               long-long-suffix ll|LL(c++11)
+               size-suffix z|Z[std::size_t](c++23)
 
       #  binary-literal is the character sequence 0b or the character sequence 0B followed by one or more binary digits
-      	 0b01101111
-	 0B11111111
+           0b01101111
+     0B11111111
 
       #  literal is rvalue.
       #  letters in the integer literals are case-insensitive
-      	 0xabcd == 0xABCD == 0xaBcD
+           0xabcd == 0xABCD == 0xaBcD
 
     digit separator : (c++14)
       optional single quotes(') may be inserted between the digits as a separator,they are ignored during compilation.
@@ -239,8 +239,8 @@ C++14
     //  "const decltype(auto)&" is an error,decltype(auto) must be used on its own
     //  if there are multiple return statements,they must all deduce to the same type.
         e.g.
-	  auto func(void) { if 1 > 0 return 1; return 1.2; }
-	  //  error,return type cant is float and int.
+      auto func(void) { if 1 > 0 return 1; return 1.2; }
+      //  error,return type cant is float and int.
 
     //  no return statement or the argument of the return statement is a void expression,the declared return type
         must be either decltype(auto) {1> void or auto || 2> void}
@@ -259,12 +259,12 @@ C++14
         use the same return type placeholders.
     //  explicit instantiation declarations do not themselves instantiate function templates that use return
         type deduction.
-	e.g.
-	  template<typename T>
-	  auto func(T i) { return i; }
-	  extern template auto func(int);  //  does not instantiate f<int>
+    e.g.
+      template<typename T>
+      auto func(T i) { return i; }
+      extern template auto func(int);  //  does not instantiate f<int>
 
-	  int (*p)(int) = f;  //  instantiates f<int> to determine its return type.
+      int (*p)(int) = f;  //  instantiates f<int> to determine its return type.
 
 
 > aggregate initialization
@@ -283,28 +283,28 @@ C++14
       array type
       class type(typically,struct or union),that has
         no user-declared constructors  (until c++11)
-	no user-provided,inherited,or explicit constructors  (since c++11,until c++20)
-	no user-declared or inherited constructors  (since c++20)
-	no private or protected direct(c++17) non-static data members
-	no base classes  (until c++17)
-	no virtual base classes  (--
-	no private or protected direct base classes  (--  since c++17)
-	no virtual member functions
-	no default member initializers  (since c++11,until c++14)
+    no user-provided,inherited,or explicit constructors  (since c++11,until c++20)
+    no user-declared or inherited constructors  (since c++20)
+    no private or protected direct(c++17) non-static data members
+    no base classes  (until c++17)
+    no virtual base classes  (--
+    no private or protected direct base classes  (--  since c++17)
+    no virtual member functions
+    no default member initializers  (since c++11,until c++14)
 
     the elements of an aggregate are :
       for an array,the array elements in increasing subscript order.
       (until c++17) for a class,the non-static data members that are not anonymous bit-fields,in declaration order.
       (since c++17) for a class,the direct base classes in declaration order,followed by the direct non-static data members that
-      	     	    are neither anonymous bit-fields nor members of an anonymous union,in declaration order.
+                       are neither anonymous bit-fields nor members of an anonymous union,in declaration order.
 
     #  designated initializer :
          struct A { int a; int b; int c; };
-	 struct A a = {
-	   .b = 4,
-	   .a = 3,
-	   .c = 5
-	 };  //  such initializer was often occurred in linux kernel code.
+     struct A a = {
+       .b = 4,
+       .a = 3,
+       .c = 5
+     };  //  such initializer was often occurred in linux kernel code.
 
 
 > smart pointer producter
@@ -373,10 +373,10 @@ C++14
       std::make_unique()  --
 
         std::unique_ptr<int> uP = std::make_unique<int>(3);
-	//  uP would automatically destructed after exit current block
+    //  uP would automatically destructed after exit current block
 
       std::make_shared()  --
       
         std::shared_ptr<int> sP = std::make_shared<int>(3);
-	std::shared_ptr<int> sPa(sP);
-	//  sP,sPa would automatically destructed after exit current block
+    std::shared_ptr<int> sPa(sP);
+    //  sP,sPa would automatically destructed after exit current block
