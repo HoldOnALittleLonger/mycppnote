@@ -1120,7 +1120,7 @@ asio >
           t2.async_wait(boost::asio::bind_executor(the_strand, completion_handler));
           ...
 
-      A synchronous TCP dyatime client :
+      A synchronous TCP daytime client :
         boost have introduced a resolver type is ip::tcp::resolver,an object
         of such type is able to convert a network service name to a transport
         layout endpoint.                /** normally,a protocol is associated
@@ -1304,6 +1304,150 @@ asio >
              explicitly.
              e.g.
                @socket.read_some(boost::asio::buffer(std::array<char, N>());
+
+      A synchronous TCP daytime server :
+        it is similar to Linux network programming,if a server wants listen
+        on a specified port at TCP connection,it have to bind a socket to such
+        listen address,then wait for connection come in.API accept() is used to
+        wait for connection,bind() is used for bind listen address,and listen()
+        is used to open a listen queue on a specified socket.
+
+        <boost/asio/basic_socket_acceptor.hpp>
+          /**
+           * basic_socket_acceptor - class template basic_socket_acceptor used to
+           *                         represent an network acceptor for connection-based
+           *                         network protocol
+           * @Protocol:              template parameter for type of procotol
+           * @Executor:              template parameter for type of executor
+           */
+          template<typename Protocol, typename Executor>
+          class basic_socket_acceptor : public socket_base {
+          public:
+
+            typedef Executor executor_type;
+            typedef Protocol protocol_type;
+            typedef typename Protocol::endpoint endpoint_type;
+
+            // constructors # incomplete
+            explicit basic_socket_acceptor(const executor_type &ex)
+              : impl_(0, ex)
+            {
+            }
+
+            template<typename ExecutionContext>
+            explicit basic_socket_acceptor(ExecutionContext &context,
+                                           constraint_t<
+                                             is_convertible<
+                                               ExecutionContext &,
+                                               execution_context &
+                                             >::value
+                                           > = 0)
+              : impl_(0, 0, context)
+            {
+            }
+
+            basic_socket_acceptor(const executor_type &ex, const protocol_type &protocol)
+              : impl_(0. ex)
+            {
+              ...
+            }
+
+            basic_socket_acceptor(ExecutionContext &context, const protocol_type &protocol,
+                                  constraint_t<
+                                    is_convertible<
+                                      ExecutionContext &,
+                                      execution_context &
+                                    >::value,
+                                    defaulted_constraint
+                                  > = defaulted_constraint())
+              : impl_(0, 0, context)
+            {
+              ...
+            }
+
+            /**
+             * basic_socket_acceptor - construct a basic_socket_acceptor object with
+             *                         specified network endpoint
+             * @ex:                    asio executor
+             * @endpoint:              the specified  endpoint
+             * @reuse_addr:            address reuse
+             */
+            basic_socket_acceptor(const executor_type &ex,
+                                  const endpoint_type &endpoint,
+                                  bool reuse_addr = true)
+              : impl_(0, ex)
+            {
+              ...
+            }
+
+            ...
+
+            /**
+             * accept - member method accept is used to wait an network
+             *          connection come in
+             * @peer:   socket used for the established connection
+             */
+            template<typename Protocol1, typename Executor1>
+            void accept(basic_socket<Protocol1, Executor1> &peer,
+                        constraint_t<
+                          is_convertible<
+                            Protocol,
+                            Protocol1
+                          >::value
+                        > = 0)
+            {
+              ...
+            }
+
+          ...
+          };
+
+        <boost/asio/ip/tcp.hpp>
+          class tcp;  // protocol TCP
+          boost::asio::basic_socket_acceptor<tcp> = typedef => boost::asio::ip::tcp::acceptor
+
+          boost::asio::ip::basic_endpoint<tcp> = typedef => boost::asio::ip::tcp::endpoint
+
+          /**
+           * v4 - static method of class tcp used to construct a
+           *      network endpoint of IPv4 TCP protocol
+           */
+          static tcp tcp::v4();
+
+        <boost/asio/ip/basic_endpoint.hpp>
+          /**
+           * basic_endpoint - class template used to represent a network endpoint
+           * @InternetProtocol: template parameter for type of protocol over internet
+           */
+          template<typename InternetProtocol>
+          class basic_endpoint {
+          public:
+            /**
+             * basic_endpoint - constructor used to create basic_endpoint object
+             * @internet_protocol: the protocol this endpoint reside
+             * @port_num:          port number with host byte-order
+             */
+            basic_endpoint(const InternetProtocol &internet_protocol,
+                           port_type port_num) noexcept
+              : impl_(internet_protocol.family(), port_num)
+            {
+            }
+          };
+
+        e.g.
+          using bait = boost::asio::ip::tcp;
+          boost::asio::io_context io;
+          bait::socket socket(io);
+          bait::acceptor acceptor(io, bait::endpoint(bait::v4(), 13));
+
+          // wait for connection
+          acceptor.accept(socket);
+
+          // connection established,and @socket represents the connection
+          ...
+          
+
+
 
             
 
