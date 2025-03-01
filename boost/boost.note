@@ -1402,6 +1402,11 @@ asio >
           ...
           };
 
+        !! Note: member method accept() of class basic_socket_acceptor() will call to
+                 bind() to bind transport-level port with an IP address,but this require
+                 permission to process this.
+                 on my computer,"root" permission is required.
+
         <boost/asio/ip/tcp.hpp>
           class tcp;  // protocol TCP
           boost::asio::basic_socket_acceptor<tcp> = typedef => boost::asio::ip::tcp::acceptor
