@@ -1451,7 +1451,98 @@ asio >
           // connection established,and @socket represents the connection
           ...
           
+      An Asynchronous TCP daytime server :
+        we have introduced that,accept() method of acceptor is process synchronously,
+        there is another accept method named async_accept() can be used to process
+        asynchronously accepting.
 
+        <boost/asio/basic_socket_acceptor.hpp>
+          basic_socket_acceptor public zone {
+
+            /**
+             * async_accept - template function used to create an entity of function which
+             *                handles an asynchronous accepting
+             * @Protocol1:    template parameter represent type for protocol
+             * @Executor1:    template parameter represent type for I/O executing context
+             * @peer:         reference to a socket which acceptor listen on it
+             * @token:        reference to a rvalue object which is the completion function
+             *                and will be called when accepting event came in
+             * return:        an object is type of async_initiate which represent the
+             *                asynchronous accepting,but in normally,it is useless
+             */
+            template<typename Protocol1, typename Executor1,
+                     BOOST_ASIO_COMPLETION_TOKEN_FOR(void (boost::system::error_code))
+                     AcceptToken = default_completion_token_t<executor_type>
+                    >
+            auto async_accept(basic_socket<Protocol1, Executor1> &peer,
+                              AcceptToken &&token = default_completion_token<executor_type>(),
+                              constraint_t<
+                                is_convertible<Protocol, Protocol1>::value
+                              > = 0)
+            -> decltype(async_initiate<AcceptToken, void (boost::system::error_code)>(
+                          declval<initiate_async_accept>(),
+                          token, &peer, static_cast<endpoint_type *>(0)))
+            {
+              ...
+            }
+            /* if completion is a class method,then it implicitly receives "this" pointer */
+          }
+
+        boost::asio provides a template function async_write() to handle asynchronous writing operation.
+        if the Sink is writiable,then call to the token process writing.
+
+        <boost/asio/impl/write.hpp>
+          /* namespace boost::asio */
+          template<typename AsyncWriteStream, typename ConstBufferSequence,
+                   BOOST_ASIO_COMPLETION_TOKEN_FOR(void (boost::system::error_node,
+                   std::size_t)) WriteToken>
+          inline auto async_write(AsyncWriteStream &s, const ConstBufferSequence &buffers,
+                                  WriteToken &&token,
+                                  constraint_t<
+                                    is_const_buffer_sequence<ConstBufferSequence>::value
+                                  >)
+          -> decltype(async_initiate<WriteToken, void (boost::system::error_code,
+                                     std::size_t)>
+                        (declval<detail::initiate_async_write<AsyncWriteStream>>(),
+                         token, buffers, transfer_all()))
+          {
+            ...
+          }
+
+        e.g.
+          class tcp_async_server {
+          public:
+            start_accept :
+              create an identifier for the further come in connection
+              start async_accept on the socket which represent that connection
+              register completion at the same time to ensure the token would
+              be called when a new connection accepted
+              the completion should deal with the accept event and take some
+              actions on the established connection
+              after accomplished,go back to start_accept to wait next client
+          };
+
+          the identifier in the most simpliest fashion is a socket,but have to consider
+          to how daytime message will be sent to client,thus there could have a class
+          to represent the established connection.
+
+          class tcp_connection {
+          public:
+            ...
+          private:
+            boost::asio::ip::tcp::socket socket_;
+          };
+
+          ! std primitive enable_shared_from_this allows an object @t that is currently
+            managed by a std::shared_ptr named @pt to safely generate additional
+            std::shared_ptr instances @pt1,@pt2,etc,that all share ownership of @t with
+            @pt.
+            publicly inheriting from std::enable_shared_from_this<T> provides the type @T
+            with a member method shared_from_this().calling T::shared_from_this() on @t
+            will return a new std::shared_ptr<T> that share ownersip of @t with @pt.
+
+          ! boost::asio::io_context::run() used to start asynchronous operation on this
+            io_context.                            /* initiate */
 
 
             
