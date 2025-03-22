@@ -16,6 +16,8 @@
         std::array<type,num> declarator
         std::array<int,10> a;  == int a[10];
     # C++ array is inflexible while compile-time. (fixed-size)size
+    # std::array has member method data() which returns a const pointer
+      points to a buffer where the data is stored in it.      
     
     C++ vector  in header <vector>
         std::vector<type> declarator
@@ -538,6 +540,8 @@
     #     destructors
     #     move constructors and assignment operators
     #     ...   
+    # class std::exception has member method what(),which returns a const char pointer,
+    # the string which points to describes what kind of error have encountered.
 
 # constexpr
     function or variable cant be evaluated at compile time by default.

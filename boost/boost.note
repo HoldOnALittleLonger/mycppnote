@@ -1190,6 +1190,14 @@ asio >
               results_type resolve(const endpoint_type &e);
               results_type resolve(const endpoint_type &e,
                                    boost::system::error_code &ec);
+
+              /**
+               * results_type generally is class basic_resolver_results.
+               * if no error encountered,then it represents a list of 
+               * all endpoints.
+               * and member method begin() returns an iterator which points to
+               * the first result.
+               */
               
             private:
               /* initiate_async_resolve - initiate asynchronous resolution */
@@ -1544,9 +1552,72 @@ asio >
           ! boost::asio::io_context::run() used to start asynchronous operation on this
             io_context.                            /* initiate */
 
+      A synchronous UDP daytime client :
+        UDP - User Datagram Protocol => differ from TCP,it is no connection
+        UDP also is Transfer-Level protocol,thus,it requires an endpoint as the TCP.
 
-            
+        <boost/asio/ip/udp.hpp>
+          namespace boost::asio::ip {
 
+            /**
+             * udp - boost udp entity definition
+             * type-definitions:
+             *   // udp endpoint
+             *   typedef basic_endpoint<udp> endpoint;
+             *   // udp socket
+             *   typedef basic_datagram_socket<udp> socket;
+             *   // udp resolver
+             *   typedef basic_resolver<udp> resolver;
+             * public methods:
+             *   // construct UDP over IPv4
+             *   static udp v4() noexcept;
+             *   // construct UDP over IPv6
+             *   static udp v6() noexcept;
+             *   // typeof()
+             *   int type() const noexcept;
+             *   // familyof()
+             *   int family() const noexcept;
+             *   // protocolof()
+             *   int protocol() const noexcept;
+             * private methods:
+             *   // no using declaring,thus this constructor can not be accessed
+             *   explicit udp(int protocol_family) noexcept;
+             * private data members:
+             *   // faimly of this udp entity
+             *   int family_;
+             * operator overload:
+             *   udp == udp
+             *   udp != udp
+             */
+            class udp;
+
+          }
+
+        Client UDP datagram sending {
+          construct UDP over IP
+          call open() method on the UDP socket
+          /**
+           * because UDP no connection,thus can not invoke connect() on it,
+           * instead,invoke open() member method to open it but without connect.
+           */
+          construct UDP resolver to resolve remote server
+          construct remote server endpoint
+          send datagram through the UDP entity on endpoint of remote server
+        }
+
+        Client UDP datagram receiving {
+          construct an local UDP endpoint
+          use the endpoint to receive datagram from server through the UDP entity
+        }
+
+        !! endpoint => TSAP
+           In Linux POSIX.1 UDP programming,we just wait on the socket which
+           send datagram to remote sever previously as well.
+           /* which port to be selected is determined by kernel */
+           But for boost,an endpoint it required to identifier Sever Access Point
+           in ASIO.
+
+        
 
 
 SmartPtr >
