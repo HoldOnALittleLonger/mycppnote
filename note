@@ -2038,6 +2038,38 @@
 
   there is no restricts on these two overloading requires const or non-const on them.
 
+# std::ref
+  header: <functional>
+
+  the object std::ref is a refwapper used to pass lvalue object as a reference to a
+  thread function.
+  if do not wrap the lvalue object when construct a std::thread object,compiler will
+  throws an error message - "error: static assertion failed: std::thread arguments must
+  be invocable after conversion to rvalues"
+  the arguments for std::thread will be converted to rvalues,but the rvalue of an object
+  is not a function type,it can not be invoked.
+
+  template<class T>
+  std::reference_wrapper<T> ref(T &t) noexcept;
+
+  template<class T>
+  std::reference_wrapper<T> ref(std::reference_wrapper<T> t) noexcept;
+
+  template<class T>
+  void ref(const T&&) = delete;
+
+  // cref - const ref
+  template<class T>
+  std::reference_wrapper<const T> cref(const T &t) noexcept;
+
+  template<class T>
+  std::reference_wrapper<const T> cref(std::reference_wrapper<T> t) noexcept;
+
+  template<class T>
+  void cref(const T &&) = delete;
+
+  
+
 
 
   
