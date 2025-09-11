@@ -19,29 +19,46 @@
     # std::array has member method data() which returns a const pointer
       points to a buffer where the data is stored in it.      
     
-    C++ vector  in header <vector>
+    C++ vector in header <vector>
         std::vector<type> declarator
         std::vector<int> a;
 
     vector::function :
-        push_back(type c)    # insert c to end of vector
-        pop_back()        # erase element in the end
-        emplace_back(arg-list)    # create object with T and place to end
-        emplace(i,arg-list)    # create object with T and palce it at i pos.
-        begin()            # return iterator of the BEGIN
-        end()            # return iterator of the END
-        front()            # return the first element in container.
-        back()            # return element in the end
-        erase(i)        # erase a element at i pos
-        size(void)        # return size of vector
-        clear()            # clear content of vector
-        empty()            # if empty
-        resize()        # resize vector,all unit will be zero
-        reserve(size_t)        # reserve element memory space.
-        capacity()        # return memory space size.
-        data()            # use vector underlying C-style array.
+        push_back(type c)        # insert c to end of vector
+        pop_back()               # erase element in the end
+        emplace_back(arg-list)   # create object with T and place to end
+        emplace(i,arg-list)      # create object with T and palce it at i pos.
+        begin()                  # return iterator of the BEGIN
+        end()                    # return iterator of the END
+        front()                  # return the first element in container.
+        back()                   # return element in the end
+        erase(i)                 # erase a element at i pos,do not deallocate memory,
+                                   and shift another element to fill the gap caused
+                                   by erase()
+                                   ! an overload version can erase a range
+        size(void)               # return size of vector,that is the number of
+                                   elements currently holding by this vector
+        clear()                  # clear content of vector,just modify @size to
+                                   _zero_,do not deallocate memory
+        empty()                  # is empty?
+        resize(new_size)         # resize vector,if @new_size is less than
+                                   current @size,then reduce the size and
+                                   erase the elements.
+                                   an overload version need second parameter
+                                   as the initializer when expand @size,
+                                   for expand @size,it push_back() new
+                                   elements with @initializer
+                                   do nothing if @new_size == @size
+        reserve(size_t)          # reserve element memory space.
+        capacity()               # return memory space size,@capacity do not need
+                                   to equal to @size,and it often greater than it.
+        data()                   # use vector underlying C-style array.
+        shrink_to_fit()          # deallocate memory to unused capacity
 
-        # vector would automatically resize if no enough space to save object.
+        # vector would automatically resize if no enough space to save object,
+          however,if you use vector with random access operator[] to set new
+          element,then it would not auto resize.you have to checks @size and
+          @idx of the random access operator[],resize it manually.
         # current size = n, maximum size = m, new size = 2m ;
         # while deleting, if n >= m/2 , then destroy m/2 unit spaces.
 
@@ -56,6 +73,9 @@
 
     for (unsigned short &a : std::vector<type> x)
         a == x[0], a == x[1], ...    # every time for cycle
+
+    ! range-for require the container has methods begin() and end() are defined,thus can not
+      use it with C-style array,and list,etc.
 
 # NULL pointer 'NULL' or 'nullptr'
 
@@ -370,34 +390,34 @@
 # std::unique_ptr
     header <memory>
 
-    a std::unique_ptr may own no object,in which case it is empty.
-    can be used (almost) exactlly like a raw pointer.
-    std::unique_ptr can be moved but cant be copied.
-    # RAII object was managed through compiler.
-    
-    std::unique_ptr<type> <name>;
-    std::make_unique<type>(arg0,arg1,...,argn);
-    std::unique_ptr<type> <name> = std::make_unique<type>(arg-list);
-
-    // make_unique pass arguments to constructor of type.
-
-    unique_ptr.get();    //    get raw pointer
-    unique_ptr.release();    //    get raw pointer and release ownership
-
-    # unique_ptr can also be used for heap-based arrays. (type could be int[] char[] ...)
+      a std::unique_ptr may own no object,in which case it is empty.
+      can be used (almost) exactlly like a raw pointer.
+      std::unique_ptr can be moved but cant be copied.
+      # RAII object was managed through compiler.
+      
+      std::unique_ptr<type> <name>;
+      std::make_unique<type>(arg0,arg1,...,argn);
+      std::unique_ptr<type> <name> = std::make_unique<type>(arg-list);
+  
+      // make_unique pass arguments to constructor of type.
+  
+      unique_ptr.get();    //    get raw pointer
+      unique_ptr.release();    //    get raw pointer and release ownership
+  
+      # unique_ptr can also be used for heap-based arrays. (type could be int[] char[] ...)
 
 # std::shared_ptr
     header <memory>
 
-    std::shared_ptr<type> <name>;
-    std::make_shared<type>(arg0,arg1,...,argn);
-    std::shared_ptr<type> <name> = std::make_shared<type>(arg0,arg1,arg2,...,argn);
-
-    # a resource may be simultaneously have several owners
-    # the resource should only be released once the last owner releases it
-    # multiple shared_ptr objects may own the same raw pointer
-    # shared_ptr may be copied and moved
-    # make_shared<type>() alike to make_unique<type>()
+      std::shared_ptr<type> <name>;
+      std::make_shared<type>(arg0,arg1,...,argn);
+      std::shared_ptr<type> <name> = std::make_shared<type>(arg0,arg1,arg2,...,argn);
+  
+      # a resource may be simultaneously have several owners
+      # the resource should only be released once the last owner releases it
+      # multiple shared_ptr objects may own the same raw pointer
+      # shared_ptr may be copied and moved
+      # make_shared<type>() alike to make_unique<type>()
 
 # inheritance
     In C++,struct can also be inheried.because struct is a class which only has public members.
@@ -500,48 +520,48 @@
 # Exception
     header <exception>
     
-    try-throw-catch block.
-    
-    type <func>(arg-list) throw(type) { 
-        throw type-object;
-
-        throw std::exception();
-        
-        // abort();
-    }
-
-    type <func>(arg-list) noexcept { ... }
-    type <func>(arg-list) noexcept(false) { ... }
-    //  newer method to declare exception for a function.
-    //  older would unsupported as soon.
-
-    try {
-        <func>(...);
-    } catch (type variable) {
-        /* do something */
-    }
-
-    # if <func>() throw an error,then catch block will catch that exception.
-    # if type of exception was thrown dont consistant with catch(type),that exception,
-    # it will be marked as unexpect-exception (std::bad_exception),
-    # for the default behavior is terminate program.set_terminate() interface can change this
-    # behavior.
-    # If a exception was thrown,but there is no catch(type) block for catch it,this exception
-    # would throw back to lower level caller.Finally,it was caught by someone.
-    # Exception will interrupt process.
-    
-    typedef void (*terminate_handler)();
-    terminate_hander set_terminate(terminate_handler f)throw();
-
-    # !! function should not throw exceptions when preconditions are not met -
-    #    use assertions instead.
-    # !! exception should not be used for control flow.
-    # !! Cant throw exceptions in these case:
-    #     destructors
-    #     move constructors and assignment operators
-    #     ...   
-    # class std::exception has member method what(),which returns a const char pointer,
-    # the string which points to describes what kind of error have encountered.
+      try-throw-catch block.
+      
+      type <func>(arg-list) throw(type) { 
+          throw type-object;
+  
+          throw std::exception();
+          
+          // abort();
+      }
+  
+      type <func>(arg-list) noexcept { ... }
+      type <func>(arg-list) noexcept(false) { ... }
+      //  newer method to declare exception for a function.
+      //  older would unsupported as soon.
+  
+      try {
+          <func>(...);
+      } catch (type variable) {
+          /* do something */
+      }
+  
+      # if <func>() throw an error,then catch block will catch that exception.
+      # if type of exception was thrown dont consistant with catch(type),that exception,
+      # it will be marked as unexpect-exception (std::bad_exception),
+      # for the default behavior is terminate program.set_terminate() interface can change this
+      # behavior.
+      # If a exception was thrown,but there is no catch(type) block for catch it,this exception
+      # would throw back to lower level caller.Finally,it was caught by someone.
+      # Exception will interrupt process.
+      
+      typedef void (*terminate_handler)();
+      terminate_hander set_terminate(terminate_handler f)throw();
+  
+      # !! function should not throw exceptions when preconditions are not met -
+      #    use assertions instead.
+      # !! exception should not be used for control flow.
+      # !! Cant throw exceptions in these case:
+      #     destructors
+      #     move constructors and assignment operators
+      #     ...   
+      # class std::exception has member method what(),which returns a const char pointer,
+      # the string which points to describes what kind of error have encountered.
 
 # constexpr
     function or variable cant be evaluated at compile time by default.
@@ -575,118 +595,119 @@
           if using concepts with template,explicit-specialization would
           ineffecial.
           because,if do exspec to template,must write statement like this
-                   template<>
-                 void func<type>(type x) { ... }
-              but the time is using concepts with template,so need 'requires' key-word
+            template<>
+            void func<type>(type x) { ... }
+
+          but the time is using concepts with template,so need 'requires' key-word
           and concepts assert.
           assert needs type qualifier to work,like int, char *, float, T, etc...
           compiler will prompts
-           "template-id func<type> for void func(type x) doest not match any template
-            declaration."
+          "template-id func<type> for void func(type x) doest not match any template
+          declaration."
 
           for prevent this error,can use a different declaration within another concepts.
-                    template<class T>
-                  requires std::integral<T>
-                  void func(T x) { ... }
-                  template<class T>
-                  requires std::same_as<T, char *>
-                  void func(T str) { ... }
+            template<class T>
+            requires std::integral<T>
+            void func(T x) { ... }
 
-                  char *s;
-                  func(1);  //  with T = int, void func<int>(int x)
-                  func(s);  //  with T = char *, void func<char *>(char *str)
+            template<class T>
+            requires std::same_as<T, char *>
+            void func(T str) { ... }
 
-                  //  but cant send const char *
-                  const char *s = "nullptr";
-                  func(s);  //  with T = const char *, same_as<T, char *> = false
-                          //  and complier will interpret @s is type to const char *
+            char *s;
+            func(1);  //  with T = int, void func<int>(int x)
+            func(s);  //  with T = char *, void func<char *>(char *str)
+
+            //  but cant send const char *
+            const char *s = "nullptr";
+            func(s);  //  with T = const char *, same_as<T, char *> = false
+                      //  and complier will interpret @s is type to const char *
 
     
     template specifically implement>
     
-    // template prototype
-    template<typename T>
-    type-return <func>(arg-list);
-    
-    // specifically implement in explicitly
-    template<>
-    type-return <func><std::type>(arg-list);
-
-    // partial specialization
-
-    template<class T1, class T2, class T3>
-    struct C {};
-
-    template<class T, class T3>
-    struct C<T, T *, T3> {};
-
-    template<class T1>
-    struct C<T1, int, float> {};
-
-    template<class T>
-    struct C<int, T *, float> {};
-
-    template<typename T>
-    type-return <func><T *>(arg-list);  //  ERROR,function is not allowed to
-                                        //  partial specialization.
-
-    template<class _Tp>
-    struct iterator_traits<_Tp *> {};  //  apply to all pointer types
-
-    template<class _Tp>
-    struct iterator_traits<const _Tp *> {};  //  apply to all constant pointer types
-
-    !  the specialization selected by compiler follow minmum matching,that is
-       the template parameters constructed a minmum acceptible argument subset of
-       the definition.(precise matching first)
+      // template prototype
+      template<typename T>
+      type-return <func>(arg-list);
+      
+      // specifically implement in explicitly
+      template<>
+      type-return <func><std::type>(arg-list);
+  
+      // partial specialization
+  
+      template<class T1, class T2, class T3>
+      struct C {};
+  
+      template<class T, class T3>
+      struct C<T, T *, T3> {};
+  
+      template<class T1>
+      struct C<T1, int, float> {};
+  
+      template<class T>
+      struct C<int, T *, float> {};
+  
+      template<typename T>
+      type-return <func><T *>(arg-list);  //  ERROR,function is not allowed to
+                                          //  partial specialization.
+  
+      template<class _Tp>
+      struct iterator_traits<_Tp *> {};  //  apply to all pointer types
+  
+      template<class _Tp>
+      struct iterator_traits<const _Tp *> {};  //  apply to all constant pointer types
+  
+      !  the specialization selected by compiler follow minmum matching,that is
+         the template parameters constructed a minmum acceptible argument subset of
+         the definition.(precise matching first)
 
     template instance implement>
     
-    template<typename T>
-    type-return <func>(arg-list);
-
-    // product a template instantiation with type in explicitly.
-    template type-return <func><type>(arg-list);
-
-    # the typename T could also be a template.
-    # class can also make a class template.
-    #     template<typename T>
-    #     class A {
-    #        T i;
-    #     };
-
-    !! If a template member function within a template class,the keyword of type explained character 
-    !! can be same.
-    E.g.
-        template<class T>
-        class A {
-              public:
-            template<class T>    // ERROR! conflict.
-        //    template<class X>    // RIGHT! 
-            void func(T a);
-        };
-
-        # define this member function :
-        template<class T>
-        template<class X>
-        void A<T>::func(X a) { ... }
-    
-    # friend function could also be a template.
-    # class A {
-    #    friend template<typename T> type-return <func>(arg-list);
-    # };
-    
+      template<typename T>
+      type-return <func>(arg-list);
+  
+      // product a template instantiation with type in explicitly.
+      template type-return <func><type>(arg-list);
+  
+      # the typename T could also be a template.
+      # class can also make a class template.
+      #     template<typename T>
+      #     class A {
+      #        T i;
+      #     };
+  
+      !! If a template member function within a template class,the keyword of type explained character 
+      !! can be same.
+      E.g.
+          template<class T>
+          class A {
+                public:
+              template<class T>    // ERROR! conflict.
+          //    template<class X>    // RIGHT! 
+              void func(T a);
+          };
+  
+          # define this member function :
+          template<class T>
+          template<class X>
+          void A<T>::func(X a) { ... }
+      
+      # friend function could also be a template.
+      # class A {
+      #    friend template<typename T> type-return <func>(arg-list);
+      # };
+      
     template alias:
-        template<typename T,typename R>
-        class A {
-            ...
-        };
+      template<typename T,typename R>
+      class A {
+          ...
+      };
 
-        template<typename X>
-        using the_alias = namespace::A<X,std::type>;
-        using the_alias = ret-type (*) (arg-list);    # define function pointer
-        # using let 'the_alias' becomes an alias for A<typename,std::type>.
-
+      template<typename X>
+      using the_alias = namespace::A<X,std::type>;
+      using the_alias = ret-type (*) (arg-list);    # define function pointer
+      # using let 'the_alias' becomes an alias for A<typename,std::type>.
         the_alias<int> classA;
 
     variable template:
@@ -958,7 +979,7 @@
         inline thread::id get_id() noexcept;
         # return current thread id.
 
-        header: <mutex> and <shared_mutex>
+      header: <mutex> and <shared_mutex>
         std::mutex
         std::recursive_mutex
         std::shared_mutex    // another threads can to see this locker.
@@ -983,7 +1004,7 @@
         #    the locker will be locked up after std::unique_lock was producted.
         #    the locker will be released after std::unique_lock was destroyed.
 
-        header: <condition_variable>
+      header: <condition_variable>
         class std::condition_variable
         
         member functions:
@@ -1001,7 +1022,7 @@
             # notify all waiting threads,mutex does not
             # need to be held by caller.
 
-        header: <atomic>
+      header: <atomic>
         # provides atomical operations in program.
         template<typename _Tp>
         struct atomic;
@@ -1083,463 +1104,463 @@
 
     <string> # headr
 
-    class std::string;    // template class C++ string.
-            // it is a type alias to std::basic_string<char>
-            // std::basic_string also has specializations for 
-            // 16bits and 32bits character strings.
-            // specialization of std::basic_string with custom
-            // character types possible.
-        constructor :
-            std::string::string(const char *);
-            std::string::string(const std::string &);
-            std::string::string();
-            ...
-        member functions :
-            std::string::size();
-            std::string::length();
-            # return the number of characters in string.
-            
-            std::string::empty();
-            # return true if string is empty,otherwise,
-            # false would be returned.
-
-            std::string::append(const string &);
-            std::string::append(const char *);
-            std::string::operator += (const string &);
-            std::string::operator += (const char *);
-            # append string to *this.
-            # they are may be realloc memory for contain
-            # these characters.
-    
-            std::string::operator + (const string &);
-            std::string::operator + (const char *);
-            # concatenates two strings and returns a new 
-            # heap-allocated string.
-
-            std::string::find(const string &);
-            std::string::find(const char *);
-            # return the offset of substring in *this.string
-            # return std::string::npos in not found case.
-
-            std::string::substr(offset,length);
-            # return a new string object which contains a 
-            # substring begin offset of *this with the length.
-
-            std::string::clear()
-            # erase all characters in the string object.
-
-            # many member functions were defined in header.!
+      class std::string;    // template class C++ string.
+                            // it is a type alias to std::basic_string<char>
+                            // std::basic_string also has specializations for 
+                            // 16bits and 32bits character strings.
+                            // specialization of std::basic_string with custom
+                            // character types possible.
+          constructor :
+              std::string::string(const char *);
+              std::string::string(const std::string &);
+              std::string::string();
+              ...
+          member functions :
+              std::string::size();
+              std::string::length();
+              # return the number of characters in string.
+              
+              std::string::empty();
+              # return true if string is empty,otherwise,
+              # false would be returned.
+  
+              std::string::append(const string &);
+              std::string::append(const char *);
+              std::string::operator += (const string &);
+              std::string::operator += (const char *);
+              # append string to *this.
+              # they are may be realloc memory for contain
+              # these characters.
+      
+              std::string::operator + (const string &);
+              std::string::operator + (const char *);
+              # concatenates two strings and returns a new 
+              # heap-allocated string.
+  
+              std::string::find(const string &);
+              std::string::find(const char *);
+              # return the offset of substring in *this.string
+              # return std::string::npos in not found case.
+  
+              std::string::substr(offset,length);
+              # return a new string object which contains a 
+              # substring begin offset of *this with the length.
+  
+              std::string::clear()
+              # erase all characters in the string object.
+  
+              # many member functions were defined in header.!
 
     <string_view> # header
 
-    class std::string_view;    // this class can helps avoiding expensive copying.            
-            // read-only views on already existing strings.
-            // internally: just a pointer and a length.
-            // creation,substring and copying in constant time. (O(1))
-
-        constructor :
-            std::string_view(const char *,size_t);
-            std::string_view(const string &);
-
-        member functions:
-            # std::string_view almost has similar member functions of 
-            # std::string.
-
-            std::string_view::remove_prefix(length);
-            std::string_view::remove_suffix(length);
-            # features alike to their name.
-
-            bool std::string_view::operator = (
-                const std::string_view &,
-                const std::string_view &);
-            # if sv1 == sv2 ("abc" == "abc"),then return true.
-            # else return false.
-    
-    # regular string literals dont handle null-byte content    correctly.
-    #     the standard library provides special literals("suffixes")
-    #     to construct std::string_view and std::string objects that
-    #     deal with null-bytes correctly.
-    #
-    #     usage:
-    #         using namespace std::literals::string_view_literals;
-    #         using namespace std::literals::string_literals;
-    #
-    #     string_view_literals and string_literals can deal with 
-    #     null-bytes like this format :
-    #         "hello \0world\0 yeah"
-    #         print it will see "hello world yeah"
-    #
-    #     ! string and string_view dont deal with null-bytes.
+      class std::string_view;    // this class can helps avoiding expensive copying.            
+                                 // read-only views on already existing strings.
+                                 // internally: just a pointer and a length.
+                                 // creation,substring and copying in constant time. (O(1))
+                                 // this class supports C-style string,array and C++
+                                 // std::string,it let std::string methods can
+                                 // works on its data implementation.
+  
+  
+          constructor :
+              std::string_view(); // _M_str := nullptr
+              std::string_view(const char *,size_t); // _M_str := C-style array address
+              std::string_view(const _CharT *__str); // _M_str := C-style string address
+              std::string_view(const string &); // _M_str := std::string object address
+  
+          member functions:
+              # std::string_view almost has similar member functions of 
+              # std::string.
+  
+              std::string_view::remove_prefix(length);
+              std::string_view::remove_suffix(length);
+              # features alike to their name.
+  
+              bool std::string_view::operator = (
+                  const std::string_view &,
+                  const std::string_view &);
+              # if sv1 == sv2 ("abc" == "abc"),then return true.
+              # else return false.
+      
+      # regular string literals dont handle null-byte content correctly.
+      #     the standard library provides special literals("suffixes")
+      #     to construct std::string_view and std::string objects that
+      #     deal with null-bytes correctly.
+      #
+      #     usage:
+      #         using namespace std::literals::string_view_literals;
+      #         using namespace std::literals::string_literals;
+      #
+      #     string_view_literals and string_literals can deal with 
+      #     null-bytes like this format :
+      #         "hello \0world\0 yeah"
+      #         print it will see "hello world yeah"
+      #
+      #     ! string and string_view dont deal with null-bytes.
     
     <charconv> # header
+      // to_chars_result - used to store the result of to_chars()
+      struct std::to_chars_result;
+      
+      // to_chars - convert numberic @value to string and place
+      //            the characters into the memory area [@first, @last],
+      //            index starting from _zero_
+      std::to_chars(char *first, char *last, T value);
+                    // can be used for any number type except bool.
+                    // . as float separator.
+                    // write string into memory in range @first to @last.
+                    // std::to_chars_result::ec     # std::errc type,indicate error.
+                    // std::to_chars_result::ptr    # pointer past the end of the 
+                                                    # string that was written.
 
-    std::to_chars_result std::to_chars(char *first,char *last,T value);
-    # convert numbers to strings.
-
-        // can be used for any number type except bool.
-        // . as float separator.
-        // write string into memory in range @first to @last.
-        // std::to_chars_result::ec    # std::errc type,indicate error.
-        // std::to_chars_result::ptr    # pointer past the end of the 
-                        # string that was written.
-
-    std::from_chars_result std::from_chars(const char *first,
-                        const char *last,
-                        T &value);
-    # convert string to number.
-        
-        // read string from buffer in range @first to @last,
-        // write number into value.
+      struct std::from_chars_result;
+      std::from_chars(const char *first, const char *last, T &value);
+      # convert string to number.
+          // read string from buffer in range @first to @last,
+          // write number into value.
 
     <optional> # header
 
-    template type
-    class std::optional;
-    
-    # its a class encapsulating a value that might or might not exist.
-    
-        // can either be empty,holding no value,or non-empty,holding an arbitrary
-        // value of its value type.
-        // <typename T>,T cant be referrence or array.
-
-        constructor :
-            std::optional::optional(T value);
-            # can use std::make_optional<T>(T value) to create.
-
-        member functions :
-            
-            has_value(); // checks whether std::optional has a value.
-            operator * (); operator -> (); // a way to access value.
-
-            value_or(); // Return the contained value if the optional
-                    // is non-empty,or a default value otherwise.
-            reset();    // clear the optional.
+      template type
+      class std::optional;
+      
+      # its a class encapsulating a value that might or might not exist.
+      
+          // can either be empty,holding no value,or non-empty,holding an arbitrary
+          // value of its value type.
+          // <typename T>,T cant be referrence or array.
+  
+          constructor :
+              std::optional::optional(T value);
+              # can use std::make_optional<T>(T value) to create.
+  
+          member functions :
+              
+              has_value(); // checks whether std::optional has a value.
+              operator * (); operator -> (); // a way to access value.
+  
+              value_or(); // Return the contained value if the optional
+                      // is non-empty,or a default value otherwise.
+              reset();    // clear the optional.
 
     <utility> # header
 
-    template<class T,class U>
-    class std::pair;
-
-    # a pair class hold two object,one of it with type T,another is U.
-        // could process == or != , <=>    
-
-    # create it with constructor pair(T first,U second);
-    # or use std::make_pair<T,U>(T first,U second);
+      template<class T,class U>
+      class std::pair;
+  
+      # a pair class hold two object,one of it with type T,another is U.
+          // could process == or != , <=>    
+  
+      # create it with constructor pair(T first,U second);
+      # or use std::make_pair<T,U>(T first,U second);
     
     <tuple> # header
 
-    template<typename ...n>
-    class std::tuple;
-
-    # store exactly one object of each of the n types.
-    # tuple is the generic std::pair;
-    
-        constructor :
-            tuple(n&... types);
-
-            # tuple can be constructed with std::make_tuple();
-            # std::tuple t(1,2,3.3,...);
-            # std::tuple<int,int,float,...> t;
-            # std::tupe<int,int,float> t = std::make_tuple(1,2,3.33);
-
-            # std::tuple<int,int,float> tu;
-              > alike to :
-                      struct tu {
-                       int a;
-                     int b;
-                     float c;
-                  };
-        
-        member functions :
-
-            std::get<i>(tuple_object); // access i_th object.
-            std::tuple_size<decltype(object)>::value;   // get count of types in the object.
-            sizeof...(object);                // get count of types in the object.
-            std::tuple_element<N,decltype(object)>::type variable = std::get<i>(object);
-                                    // N is the index of types set,
-                                    // decltype(object) get type of object,
-                                    // object should be a tuple object.
-            auto t = std::tuple_cat(obj1,obj2,...);        // combine objects in a new tupe object.
-            
-            
-        # tuple like to pair,define all relational comparion operators.
-        # tuple can also contain values of referrence type.they can 
-        # be constructed with std::tie();
-        
-        # auto t = std::make_tuple(123,4.56); // [0] 123,[1] 4.56
-        # int a; double b;
-        # std::tie(a,b) = t; // decompose t into a and b.
-        #              // a = 123, b = 4.56
-        
-        # int a = 1, b = 2;
-        # float c = 3.3;
-        # auto tu = std::tie(a,b,c);    // another usage.
-                                   // tu would be std::tuple.
-                        // arg-list of tie() cant be const.
-
-        # int x = 456; double y = 1.23;
-        # std::tie(a,b) < std::tie(x,y); // return true
-    
-        tuple can be used with structured bindings.
-        auto [a,b] = t; // a = 123, b = 4.56.
-                // auto & or const auto & will create refferences.
-        
-                # pair class can also be used like tuple.
-        
-        # for print elements in tuple object>
-        template<class Head,typename ...Tail>
-        void printElements(const Head &head, const Tail &...tail) {
-             std::cout<<head<<endl;
-             printElements(tail...);
-        }
-
-        # Detail:
-            printElements(1,2,3,4.5);
-            < printElements<int,int,int,float>
-              < Head bind to int
-              < Tail bind to a pack {int,int,float}
-            
-              printElements<int,int,float>
-              ....
+      template<typename ...n>
+      class std::tuple;
+  
+      # store exactly one object of each of the n types.
+      # tuple is the generic std::pair;
+      
+          constructor :
+              tuple(n&... types);
+  
+              # tuple can be constructed with std::make_tuple();
+              # std::tuple t(1,2,3.3,...);
+              # std::tuple<int,int,float,...> t;
+              # std::tupe<int,int,float> t = std::make_tuple(1,2,3.33);
+  
+              # std::tuple<int,int,float> tu;
+                > alike to :
+                        struct tu {
+                         int a;
+                       int b;
+                       float c;
+                    };
+          
+          member functions :
+  
+              std::get<i>(tuple_object); // access i_th object.
+              std::tuple_size<decltype(object)>::value;   // get count of types in the object.
+              sizeof...(object);                // get count of types in the object.
+              std::tuple_element<N,decltype(object)>::type variable = std::get<i>(object);
+                                      // N is the index of types set,
+                                      // decltype(object) get type of object,
+                                      // object should be a tuple object.
+              auto t = std::tuple_cat(obj1,obj2,...);        // combine objects in a new tupe object.
+              
+              
+          # tuple like to pair,define all relational comparion operators.
+          # tuple can also contain values of referrence type.they can 
+          # be constructed with std::tie();
+          
+          # auto t = std::make_tuple(123,4.56); // [0] 123,[1] 4.56
+          # int a; double b;
+          # std::tie(a,b) = t; // decompose t into a and b.
+          #              // a = 123, b = 4.56
+          
+          # int a = 1, b = 2;
+          # float c = 3.3;
+          # auto tu = std::tie(a,b,c);    // another usage.
+                                     // tu would be std::tuple.
+                          // arg-list of tie() cant be const.
+  
+          # int x = 456; double y = 1.23;
+          # std::tie(a,b) < std::tie(x,y); // return true
+      
+          tuple can be used with structured bindings.
+          auto [a,b] = t; // a = 123, b = 4.56.
+                  // auto & or const auto & will create refferences.
+          
+                  # pair class can also be used like tuple.
+          
+          # for print elements in tuple object>
+          template<class Head,typename ...Tail>
+          void printElements(const Head &head, const Tail &...tail) {
+               std::cout<<head<<endl;
+               printElements(tail...);
+          }
+  
+          # Detail:
+              printElements(1,2,3,4.5);
+              < printElements<int,int,int,float>
+                < Head bind to int
+                < Tail bind to a pack {int,int,float}
+              
+                printElements<int,int,float>
+                ....
 
 
     <span> # header
 
-    template<typename T>
-    class std::span;
-    
-    # abstraction for pass user-define object.
-    # prefer using it over referrence to std::array,std::vector ...
-    # use const T if possible
-    # pass std::span by copy in function arguments.
-    #
-    # this class supports iterator,brackets operator,data(),size()
-    
-        // std::vector<int> x = {1, 2, 3, 4};
-        // std::span<int> ref = x; // now ref is a refference of x.
-        // ref[0] == 1;
-
-    # span can be constructed from all contiguous container or
-    # pointer and size (ptr,size).
+      template<typename T>
+      class std::span;
+      
+      # abstraction for pass user-define object.
+      # prefer using it over referrence to std::array,std::vector ...
+      # use const T if possible
+      # pass std::span by copy in function arguments.
+      #
+      # this class supports iterator,brackets operator,data(),size()
+      
+          // std::vector<int> x = {1, 2, 3, 4};
+          // std::span<int> ref = x; // now ref is a refference of x.
+          // ref[0] == 1;
+  
+      # span can be constructed from all contiguous container or
+      # pointer and size (ptr,size).
     
     <unordered_map> # header
 
-    # a hash table
-    
-    template<class Key,class V,typename... other>
-    class std::unordered_map;
-
-    # accept custom    hash- and comparison functions
-    # through parameter pack @other.
-    
-        constructor :
-            unordered_map(std::pair,other... p);
-                # x {{"a",1},...}
-        member functions :
-        
-            find(Key key);            // return a iterator of a pair which
-                        // contains the key
-            end();            // return iterator point to end
-            contains(Key key);    // if contain this @key.
-            insert(pair);        // insert
-            emplace(pair);
-            erase(iterator);    // erase a pair which contains @key
-            clear();        // remove all.
-
-        # can use unordered_map like this:
-        #     std::unorder_map a {{"a",1}};
-        #     a["a"] == 1; // true
+      # a hash table
+      
+      template<class Key,class V,typename... other>
+      class std::unordered_map;
+  
+      # accept custom    hash- and comparison functions
+      # through parameter pack @other.
+      
+          constructor :
+              unordered_map(std::pair,other... p);
+                  # x {{"a",1},...}
+          member functions :
+          
+              find(Key key);            // return a iterator of a pair which
+                          // contains the key
+              end();            // return iterator point to end
+              contains(Key key);    // if contain this @key.
+              insert(pair);        // insert
+              emplace(pair);
+              erase(iterator);    // erase a pair which contains @key
+              clear();        // remove all.
+  
+          # can use unordered_map like this:
+          #     std::unorder_map a {{"a",1}};
+          #     a["a"] == 1; // true
             
     <map> # header
     
-    template<class Key,class V,typename... other>
-    class std::map;        
-
-    # mapping.
-
-        constructor :
-            map(pair,other... p);
-            
-        member functions :
-
-            upper_bound(Key key);    // return an iterator pointing to
-                        // the first greater element
-
-            lower_bound(Key key);    // return an iterator pointing to
-                        // the first element not lower.
+      template<class Key,class V,typename... other>
+      class std::map;        
+  
+      # mapping.
+  
+          constructor :
+              map(pair,other... p);
+              
+          member functions :
+  
+              upper_bound(Key key);    // return an iterator pointing to
+                          // the first greater element
+  
+              lower_bound(Key key);    // return an iterator pointing to
+                          // the first element not lower.
 
     <unordered_set> # header
     
-        sets are associative containers consisting of keys.
-        # keys are required to be unique
-        # template parameter key for the type of the elements
-        # a hash table
-        # no way to access keys in order
-        # elements must not be modified.if an element's hash changes,
-        # the container might get corrupted.
-        # can send custom hash and comparison functions
+      sets are associative containers consisting of keys.
+      # keys are required to be unique
+      # template parameter key for the type of the elements
+      # a hash table
+      # no way to access keys in order
+      # elements must not be modified.if an element's hash changes,
+      # the container might get corrupted.
+      # can send custom hash and comparison functions
     
-    template<class Key,typename... other>
-    class std::unordered_set;
-            
+      template<class Key,typename... other>
+      class std::unordered_set;
         constructor :
-            unordered_set(Key key,other... p);
+          unordered_set(Key key,other... p);
 
         member functions :
 
-            find(key);    // return an iterator point to @key
-            end();        // return an iterator point to end    
-            contains(key);    // if contain @key
-            size();        // elements number
-            empty();    // if empty
-            insert(key);    // insert    
-            emplace(key);
-                    // insert() return a std::pair<iterator,bool>
-                    // if succeed,iterator point to @key,bool = true
-            erase(iterator);// erase an element.
-            clear();    // remove all
+          find(key);      // return an iterator point to @key
+          end();          // return an iterator point to end    
+          contains(key);  // if contain @key
+          size();         // elements number
+          empty();        // if empty
+          insert(key);    // insert    
+                          // insert() return a std::pair<iterator,bool>
+                          // if succeed,iterator point to @key,bool = true
+          emplace(key);
+          erase(iterator);// erase an element.
+          clear();        // remove all
 
     <set> # header
 
-    template<class T,typename... other>
-    class std::set;
-
-    # store elements.
-    # can send custom comparison function
-    # it also supports upper_bound() and lower_bound();
-    # e.g
-    #     std::set<int> x = {1,2,3};
-
-        # set would order element as default behavior.(less -> greater)
-
-        member methods:
-               empty()        # if set is NULL?
-               size()        # return size of set
-               clear()        # clean set
-               begin()        # return an iterator point to head
-               end()        # return an iterator point to end
-               insert()        # insert an element into set
-               erase()        # erase an element from set
-               find()        # find a position where the target be
-               lower_bound()    # return an element which is greater than or equal to key
-               upper_bound()    # return an element which is greater than key
-               equal_range()    # return a pair <lower_bound(), upper_bound()>
-                           # if no such element in it,then set it for end()
-
-        # lower_bound() and upper_bound() will return iterator
-
-    template<class T, typename... other>
-    class std::multiset;
-
-    # it alike to set,but allows element repeates.
-    # different between them: erase(k); count(k);
-    #         std::multiset::erase();
-            // delete all element each equal to k.
-
-            // For delete one
-            //   if ((it = std::multiset::find(k)) != std::multiset::end())
-            //              std::multiset::erase(it);
-
-       // count(k) returns the count of k in container.
+      template<class T,typename... other>
+      class std::set;
+  
+      # store elements.
+      # can send custom comparison function
+      # it also supports upper_bound() and lower_bound();
+      # e.g
+      #     std::set<int> x = {1,2,3};
+  
+          # set would order element as default behavior.(less -> greater)
+  
+          member methods:
+                 empty()        # if set is NULL?
+                 size()        # return size of set
+                 clear()        # clean set
+                 begin()        # return an iterator point to head
+                 end()        # return an iterator point to end
+                 insert()        # insert an element into set
+                 erase()        # erase an element from set
+                 find()        # find a position where the target be
+                 lower_bound()    # return an element which is greater than or equal to key
+                 upper_bound()    # return an element which is greater than key
+                 equal_range()    # return a pair <lower_bound(), upper_bound()>
+                             # if no such element in it,then set it for end()
+  
+          # lower_bound() and upper_bound() will return iterator
+  
+      template<class T, typename... other>
+      class std::multiset;
+  
+      # it alike to set,but allows element repeates.
+      # different between them: erase(k); count(k);
+      #         std::multiset::erase();
+              // delete all element each equal to k.
+  
+              // For delete one
+              //   if ((it = std::multiset::find(k)) != std::multiset::end())
+              //              std::multiset::erase(it);
+  
+         // count(k) returns the count of k in container.
 
     <bitset>  #header
-    template<class T, typename... other>
-    class std::bitset;
-
-    # this container alike to a bool array. <0|1 binary string>
-    # 8bits combine to 1byte
-
-    declare:
-        bitset<_Nw> s;            //  create a binary string length is _Nw . 
-
-        member methods:
-               count()        # return the total of 1 in this container
-               none()        # if all elements in container each is 0
-               any()        # if unless an element is 1 be there
-               set()        # set all elements each be 1
-               set(u)        # set the element at position u to 1
-               reset()        # set all elements each be 0
-               reset(k)        # set the element at position k to 0
-               flip()        # ~ all elements <has one argument overload version>
-               test(pos)        # test s[pos] if equal to 1,then return true,otherwise return false
-               operator ~ ()
-               operator & ()
-               operator | ()
-               operator ^ ()
-               operator << ()
-               operator >> ()
-               operator == ()
-               operator != ()
-               operator = ()
-               operator [] ()
-               ...
-
-    
-            
-
-
-    
-    
-    # !! iterators are objects that can be thought of as pointer abstractions.
-    # problem: different element access methods for each container
-    # therefore: container type not easily exchangable in code
-    # solution: iterators abstract over element access and provide pointer-like
-    #         interface.
+      template<class T, typename... other>
+      class std::bitset;
+  
+      # this container alike to a bool array. <0|1 binary string>
+      # 8bits combine to 1byte
+  
+      declare:
+          bitset<_Nw> s;            //  create a binary string length is _Nw . 
+  
+          member methods:
+                 count()        # return the total of 1 in this container
+                 none()        # if all elements in container each is 0
+                 any()        # if unless an element is 1 be there
+                 set()        # set all elements each be 1
+                 set(u)        # set the element at position u to 1
+                 reset()        # set all elements each be 0
+                 reset(k)        # set the element at position k to 0
+                 flip()        # ~ all elements <has one argument overload version>
+                 test(pos)        # test s[pos] if equal to 1,then return true,otherwise return false
+                 operator ~ ()
+                 operator & ()
+                 operator | ()
+                 operator ^ ()
+                 operator << ()
+                 operator >> ()
+                 operator == ()
+                 operator != ()
+                 operator = ()
+                 operator [] ()
+                 ...
+  
+        !! iterators are objects that can be thought of as pointer abstractions.
+           problem: different element access methods for each container
+           therefore: container type not easily exchangable in code
+           solution: iterators abstract over element access and provide pointer-like
+           interface.
     
     <iterator> # header
 
-    c++ stdlib defines several concepts for different kinds of iterators.
-    std::input_iterator and std::output_iterator are the most basic iterators.
-    they have the following features :
-        equality comparison
-        dereferrencable
-        incrementable
-        a dereferrenced std::input_iterator can only by read
-        a dereferrenced std::output_iterator can only be written to
+      c++ stdlib defines several concepts for different kinds of iterators.
+      std::input_iterator and std::output_iterator are the most basic iterators.
+      they have the following features :
+          equality comparison
+          dereferrencable
+          incrementable
+          a dereferrenced std::input_iterator can only by read
+          a dereferrenced std::output_iterator can only be written to
+  
+      limitations :
+          single-pass only : cant decremented
+          only allow equality comparison
+          can only be incremented by one
+              // it + 2 doesnt work
+  
+      std::forward_iterator was combined from input_iterator and output_iterator
+  
+      std::bidirectional_iterator generalizes std::forward_iterator
+          // allows decrementing.
+          // supports multi-pass algorithms traversing the container 
+          // multiple times.
+  
+      std::random_access_iterator generalizes std::bidirectional_iterator
+          // allows [] access
+          // supports relational operators such as < or >=
+          // can be incremented or decremented by any amount
+              // it + 2 does work
+  
+      std::contiguous_iterator generalizes std::random_access_iterator
+          // guarantees that elements are stored in memory contiguously
+          // this means that iterators of this category can be used
+          // interchangeably with pointers: &*(it + n) == (&*it) + n
 
-    limitations :
-        single-pass only : cant decremented
-        only allow equality comparison
-        can only be incremented by one
-            // it + 2 doesnt work
-
-    std::forward_iterator was combined from input_iterator and output_iterator
-
-    std::bidirectional_iterator generalizes std::forward_iterator
-        // allows decrementing.
-        // supports multi-pass algorithms traversing the container 
-        // multiple times.
-
-    std::random_access_iterator generalizes std::bidirectional_iterator
-        // allows [] access
-        // supports relational operators such as < or >=
-        // can be incremented or decremented by any amount
-            // it + 2 does work
-
-    std::contiguous_iterator generalizes std::random_access_iterator
-        // guarantees that elements are stored in memory contiguously
-        // this means that iterators of this category can be used
-        // interchangeably with pointers: &*(it + n) == (&*it) + n
-
-    # function object
-    
-    regular functions are not objects in C++
-        cant be passed as parameters
-        cant have state
-
-    C++ additionally defines the FunctionObject named requirement.
-    For a type T to be a FunctionObject.
-        T has to be an object.
-        operator ()(args) has to be defined for T for a suitable
-        argument list args which can be empty.
-        often referred to as functions.
-    
-    C++ function object in valid:
-        function pointer
-        lambda expression
-        stateful function objects in form of classes
-
-        #! function or function referrence are not FunctionObject.
+  # function object
+      
+      regular functions are not objects in C++
+          cant be passed as parameters
+          cant have state
+  
+      C++ additionally defines the FunctionObject named requirement.
+      For a type T to be a FunctionObject.
+          T has to be an object.
+          operator ()(args) has to be defined for T for a suitable
+          argument list args which can be empty.
+          often referred to as functions.
+      
+      C++ function object in valid:
+          function pointer
+          lambda expression
+          stateful function objects in form of classes
+  
+          #! function or function referrence are not FunctionObject.
     
       lambda expression :
 
@@ -1576,7 +1597,7 @@
 
             # dont duplicate special accessing with capture-list.
     
-    stateful FunctionObject :
+      stateful FunctionObject :
         Function Objects can be implemented in a regular class.
             allows the function object to keep arbitrary state.
             difference to lambda expression:
@@ -1596,136 +1617,132 @@
 
     <functional> # header
     
-    template<class T>
-    class std::function;
+      template<class T>
+      class std::function;
+      
+      # a general purpose wrapper for all callable targets
+      # able to store,copy and invoke the wrapped target.
+      # potentially incurs dynamic memory allocations.
+      # often adds unnecessary overhead.
+      # should be avoided where possible.
+      
+          e.g.
+              int func(int i) {return i;}
+              std::function<int(int)> f1 = func;
+              
+              # int(int) means ret int and receive int.
+      # ! should use std::function rely template.
     
-    # a general purpose wrapper for all callable targets
-    # able to store,copy and invoke the wrapped target.
-    # potentially incurs dynamic memory allocations.
-    # often adds unnecessary overhead.
-    # should be avoided where possible.
-    
-        e.g.
-            int func(int i) {return i;}
-            std::function<int(int)> f1 = func;
-            
-            # int(int) means ret int and receive int.
-    # ! should use std::function rely template.
-    
-    algorithm :
-
-            # header
+  algorithm :
     <algorithm>
     <numberic>
     <memory>
     <cstdlib>
-            # header
     
-    template<class First,class End,typename... other>
-    class std::sort;
+      template<class First,class End,typename... other>
+      class std::sort;
+  
+      # sort elements in the range [First,End).
+      # can send custom comparison through parameter pack.
+      # First and End usually be iterator.
+      
+      std::stable_sort    # keep the order of equal-ranked elements
+      std::partial_sort    # partially sort a range
+      
+      std::is_sorted        # check if a range is sorted
+      std::is_sorted_until    #
+  
+      searching:    # search element in the range [first,last)
+          search operations return iterator pointing to the result.
+          unsuccessful operations are usually indicated by returning the
+          last iterator. 
+  
+          # find the first element satisfying some criteria
+              std::find(First first,End end,element);
+              std::find_if(First first,End end,Comparison c);
+              std::find_if_not(First fisrt,End end,Comparison c);
+  
+          # search for a range of elements in another range of elements
+              std::search
+  
+          # count matching elements
+              std::count
+              std::count_if
+      
+          ...
+  
+      searching work on sorted:    [first,last)
+          
+          # search for one occurrence of a certain element
+              bool std::binary_search(First first,End end,element);
+  
+          # search for range boundaries
+              iterator std::lower_bound(First first,End end,element);
+              iterator std::upper_bound(First first,End end,element);
+  
+          # search for all occurrences of a certain     
+              std::pair std::equal_range(First first,End end,element);
+              // identical to using std::lower_bound() and std::upper_bound();
+  
+      permutations:    [first,last)
+          permute a given range in lexicographical order.
+  
+          demand:
+              requires at least BidirectionalIterators;
+              values have to be swappable;
+              order is determined using operator < by default.
+              supports custom comparison.
+  
+          # initialize a dense range of elements
+              std::iota(ForwardIt first,ForwardIt last,T value);
+              // fills the range [first,end) with increasing values starting
+              // at value.
+              // values are incremented using operator ++ ();
+  
+          # iterate over permutations in lexicographical order
+              bool std::next_permutation(BidirIt first,BidirIt last);
+              // reorder elements in range to the lexicographically next permutation.
+              // return false if the current permutation was the lexicographically 
+              // last permutation.
+  
+              bool std::prev_permutation(BidirIt first,BidirIt last);
+              // reorder elements in range to the lexicographically prev permutation.
+              // return false if the current permutation was the lexicographically
+              // first permutation
+  
+      Additional Functionality:
+  
+          std::min and std::max over a range instead of two elements.
+          std::merge and std::in_place_merge for merging of sorted ranges.
+          multiple set operations(intersection,union,difference,...)
+          head functionality.
+          sampling of elements using std::sample.
+          swapping elements using std::swap.
+          range modifications:
+              std::copy to copy elemetns to new location.
+              std::rotate to rotate range.
+              std::shuffle to randomly reorder elements.
 
-    # sort elements in the range [First,End).
-    # can send custom comparison through parameter pack.
-    # First and End usually be iterator.
-    
-    std::stable_sort    # keep the order of equal-ranked elements
-    std::partial_sort    # partially sort a range
-    
-    std::is_sorted        # check if a range is sorted
-    std::is_sorted_until    #
-
-    searching:    # search element in the range [first,last)
-        search operations return iterator pointing to the result.
-        unsuccessful operations are usually indicated by returning the
-        last iterator. 
-
-        # find the first element satisfying some criteria
-            std::find(First first,End end,element);
-            std::find_if(First first,End end,Comparison c);
-            std::find_if_not(First fisrt,End end,Comparison c);
-
-        # search for a range of elements in another range of elements
-            std::search
-
-        # count matching elements
-            std::count
-            std::count_if
-    
-        ...
-
-    searching work on sorted:    [first,last)
+  ranges library:
         
-        # search for one occurrence of a certain element
-            bool std::binary_search(First first,End end,element);
+    <ranges> # header
 
-        # search for range boundaries
-            iterator std::lower_bound(First first,End end,element);
-            iterator std::upper_bound(First first,End end,element);
+      provides components for dealing with ranges of elements.
+      # abstraction of the [first,last) iterator pair.
+      views of ranges can be manipulated through range adaptors
+      apply various transformations to a view or its contained elements.
+      range adaptors can be composed in a functional way to yield more
+      complex transformations.
 
-        # search for all occurrences of a certain     
-            std::pair std::equal_range(First first,End end,element);
-            // identical to using std::lower_bound() and std::upper_bound();
+      e.g.
+        std::map<int,int> map{{1,2},{3,4}};
 
-    permutations:    [first,last)
-        permute a given range in lexicographical order.
+        for (auto key : (map | std::views::keys))
+          std::cerr<<key<<std::endl;
 
-        demand:
-            requires at least BidirectionalIterators;
-            values have to be swappable;
-            order is determined using operator < by default.
-            supports custom comparison.
-
-        # initialize a dense range of elements
-            std::iota(ForwardIt first,ForwardIt last,T value);
-            // fills the range [first,end) with increasing values starting
-            // at value.
-            // values are incremented using operator ++ ();
-
-        # iterate over permutations in lexicographical order
-            bool std::next_permutation(BidirIt first,BidirIt last);
-            // reorder elements in range to the lexicographically next permutation.
-            // return false if the current permutation was the lexicographically 
-            // last permutation.
-
-            bool std::prev_permutation(BidirIt first,BidirIt last);
-            // reorder elements in range to the lexicographically prev permutation.
-            // return false if the current permutation was the lexicographically
-            // first permutation
-
-    Additional Functionality:
-
-        std::min and std::max over a range instead of two elements.
-        std::merge and std::in_place_merge for merging of sorted ranges.
-        multiple set operations(intersection,union,difference,...)
-        head functionality.
-        sampling of elements using std::sample.
-        swapping elements using std::swap.
-        range modifications:
-            std::copy to copy elemetns to new location.
-            std::rotate to rotate range.
-            std::shuffle to randomly reorder elements.
-
-    ranges library:
-        
-        <ranges> # header
-
-        provides components for dealing with ranges of elements.
-            # abstraction of the [first,last) iterator pair.
-
-        views of ranges can be manipulated through range adaptors
-            apply various transformations to a view or its contained elements.
-            range adaptors can be composed in a functional way to yield more
-            complex transformations.
-
-        e.g.
-            std::map<int,int> map{{1,2},{3,4}};
-
-            for (auto key : (map | std::views::keys))
-                std::cerr<<key<<std::endl;
-        
-            print:
-                1
-                3
+        print:
+              1
+              3
 
     range factories:
         in particular the viewable_range concept which allows a range to be
@@ -1756,34 +1773,34 @@
         views::keys - view the first elements of a range of pairs
         views::values - view the second elements of a range of pairs
     
-    random library:
+  random library:
     
-        <random> # header
+    <random> # header
         
-        # abstraction for random devices
-        # random number generators
-        # wrappers to generate numberical distributions from RNGs
+      # abstraction for random devices
+      # random number generators
+      # wrappers to generate numberical distributions from RNGs
 
-        random number generator:
+      random number generator:
 
-            # uniform pseudo-random bit generators with distinct properties
-            # RNGs can be seeded and reseeded
-            # RNGs can be equality-compared
-            # RNGs are not thread-safe
-            # within the STL,one should usually prefer the Mersene Twister Generators
+          # uniform pseudo-random bit generators with distinct properties
+          # RNGs can be seeded and reseeded
+          # RNGs can be equality-compared
+          # RNGs are not thread-safe
+          # within the STL,one should usually prefer the Mersene Twister Generators
 
-            #! RNGs are template specializations of an underlying random number engine.
+          #! RNGs are template specializations of an underlying random number engine.
             
-            # default_random_engine type alias was defined by RL <cant port>.    
+          # default_random_engine type alias was defined by RL <cant port>.    
 
             Mersenne Twister engine:
-                std::mt19937     <32bit>
-                std::mt19937_64    <64bit>
+              std::mt19937     <32bit>
+              std::mt19937_64    <64bit>
 
-                            // w is seed
-                std::mt19937 engine(w);    // w is the number of bits.
-                            // engine will generate a random from
-                            // [0,2^w - 1].
+                                         // w is seed
+              std::mt19937 engine(w);    // w is the number of bits.
+                                         // engine will generate a random from
+                                         // [0,2^w - 1].
 
             std::random_device
                 seed from operation-system event.
@@ -1833,240 +1850,224 @@
             # seeding,used to make a random number.
 
     <queue>  #header
-    template<class T, typename... other>
-    class std::queue;   
-    
-        # queue is a container and comply LIFO rule.
-        # can do randomly accessing to queue.
-        # there no clear() method for clean it.(must use pop() cycle)
-
-          constructor:
-             queue()        # constructe queue.
-
+      template<class T, typename... other>
+      class std::queue;   
+      
+          # queue is a container and comply LIFO rule.
+          # can do randomly accessing to queue.
+          # there no clear() method for clean it.(must use pop() cycle)
+  
+            constructor:
+               queue()        # constructe queue.
+  
+            member methods:
+                     front()        # return the first element in container.
+               back()        # return the end element inf container.
+               push()        # push an object into the end of container.
+               pop()        # pop an object from the head of container.
+               size()        # return size of queue.
+               empty()        # if queue is NULL?
+  
+      template<class T, typename... other>
+      class std::priority_queue;
+  
+          # priority_queue alike to queue,but it would set priority for elements.
+          # STL use binary-heap to implements it.
+          # can set mode with big-root heap or less-root heap.
+          # there no clear() method.
+  
+          For declare big-root heap:
+              just declare it.
+              priority_queue<int> pq;
+  
+          For declare less-root heap:
+              1>
+              priority_queue<int> pq;
+              int a(1), b(2), c(3);
+              pq.push(~a);
+              pq.push(~b);
+              pq.push(~c);
+  
+              ...
+              
+              ~pq.pop(); // a
+              ~pq.pop(); // b
+              ~pq.pop(); // c
+  
+              2>
+              priority_queue<int, vector<int>, greater<int> > pq;
+              // greater<int> would let the small element on the top of pq.
+  
           member methods:
-                   front()        # return the first element in container.
-             back()        # return the end element inf container.
-             push()        # push an object into the end of container.
-             pop()        # pop an object from the head of container.
-             size()        # return size of queue.
-             empty()        # if queue is NULL?
-
-    template<class T, typename... other>
-    class std::priority_queue;
-
-        # priority_queue alike to queue,but it would set priority for elements.
-        # STL use binary-heap to implements it.
-        # can set mode with big-root heap or less-root heap.
-        # there no clear() method.
-
-        For declare big-root heap:
-            just declare it.
-            priority_queue<int> pq;
-
-        For declare less-root heap:
-            1>
-            priority_queue<int> pq;
-            int a(1), b(2), c(3);
-            pq.push(~a);
-            pq.push(~b);
-            pq.push(~c);
-
-            ...
-            
-            ~pq.pop(); // a
-            ~pq.pop(); // b
-            ~pq.pop(); // c
-
-            2>
-            priority_queue<int, vector<int>, greater<int> > pq;
-            // greater<int> would let the small element on the top of pq.
-
-        member methods:
-             top()        # return the top element
-             push()        # push an element into priority_queue
-             pop()        # pop an element from priority_queue    
-             size()        # return size of priority_queue
-             empty()        # if priority_queue is NULL?
+               top()        # return the top element
+               push()        # push an element into priority_queue
+               pop()        # pop an element from priority_queue    
+               size()        # return size of priority_queue
+               empty()        # if priority_queue is NULL?
 
     <deque>  #header
-    template<class T, typename... other>
-    class std::deque;
-    
-        # deque is not same as queue or priority_queue.
-        # the element can join from head or end,and can out from head or end.
-        # a linear container with high effective.
-
-        member methods:
-             begin()        # return a iterator point to head
-             end()        # return a iterator point to end
-             front()        # return the first element
-             back()        # return the end element
-             push_back()    # push an element from end of container
-             push_front()    # push an element from head of container
-             pop_back()        # pop an element from end of container
-             pop_front()    # pop an element from head of container
-             clear()        # clean this deque
-
-          
-
+      template<class T, typename... other>
+      class std::deque;
+      
+          # deque is not same as queue or priority_queue.
+          # the element can join from head or end,and can out from head or end.
+          # a linear container with high effective.
+  
+          member methods:
+               begin()        # return a iterator point to head
+               end()        # return a iterator point to end
+               front()        # return the first element
+               back()        # return the end element
+               push_back()    # push an element from end of container
+               push_front()    # push an element from head of container
+               pop_back()        # pop an element from end of container
+               pop_front()    # pop an element from head of container
+               clear()        # clean this deque
+  
     <stack>  #header
-    template<class T, typename... other>
-    class std::stack;
-
-        # stack isnt a generical data structure,it's a container-adpater actually.
-        # this means allow to save another container in it.
-        # but normally,used to save element like CPU stack.
-
-        member methods:
-             top()        # return the top element
-             push()        # push an element into it as the top element
-             pop()        # pop an element which is the top element
-             size()        # return size of stack
-             empty()        # if stack is NULL?
+      template<class T, typename... other>
+      class std::stack;
+  
+          # stack isnt a generical data structure,it's a container-adpater actually.
+          # this means allow to save another container in it.
+          # but normally,used to save element like CPU stack.
+  
+          member methods:
+               top()        # return the top element
+               push()        # push an element into it as the top element
+               pop()        # pop an element which is the top element
+               size()        # return size of stack
+               empty()        # if stack is NULL?
 
     
 
         
 
-#conditions for overriding functions
-        A function overrides a virtual base class function if>
+# conditions for overriding functions
+    A function overrides a virtual base class function if>
+      The function name is the same;
+      The parameter type list(but not the return type) is the same;
+      The return type must be the same or covariant;
+      The cv-qualifiers of the function are the same;
+      The ref-qualifiers of the function are the same;
 
-          The function name is the same;
-
-          The parameter type list(but not the return type) is the same;
-
-          The return type must be the same or covariant;
-
-          The cv-qualifiers of the function are the same;
-
-          The ref-qualifiers of the function are the same;
-
-        If these confitions are met,the function overrides the virtual base class function>
-
-          The derived function is also virtual and can be overriden by further-derived
-          classes;
-
-          The base class function does not need to be visible;
-
-        If these conditions are not met,the function hides the virtual base class function.
+    If these confitions are met,the function overrides the virtual base class function>
+      The derived function is also virtual and can be overriden by further-derived
+      classes;
+      The base class function does not need to be visible;
+    If these conditions are not met,the function hides the virtual base class function.
 
 
-        The override specifier:
-            the override specifier should be used to prevent bugs
+    The override specifier:
+      the override specifier should be used to prevent bugs
+      The override specifier can appear directly after the declarator in a 
+      member function declaration or inline member function definition;
+      Ensures that the member function is virtual and overrides a base class
+      method;
+      Useful to avoid bugs where a function in a derived class actually hides
+      a base class function instead of overriding it.
 
-            The override specifier can appear directly after the declarator in a 
-            member function declaration or inline member function definition;
-
-            Ensures that the member function is virtual and overrides a base class
-            method;
-
-            Useful to avoid bugs where a function in a derived class actually hides
-            a base class function instead of overriding it.
-
-        The final specifier:
-            the final specifier can be used to prevent overriding a function.
-        
-            The final specifier can appear directly after the declarator in a member
-            function declaration or inline member function definition;
-
-        the final speficier can be used to prevent inheritance from a class
-
-            The final specifier can appear in a class definition,immediately after the
-            class name;
+    The final specifier:
+      the final specifier can be used to prevent overriding a function.
+      The final specifier can appear directly after the declarator in a member
+      function declaration or inline member function definition;
+      the final speficier can be used to prevent inheritance from a class
+      The final specifier can appear in a class definition,immediately after the
+      class name;
 
 # about overload the operator -> and the operator ->*
-  these two operators can only be overloadded inside a class,that is,they must be overloaded
-  as class member function.
+    these two operators can only be overloadded inside a class,that is,they must be overloaded
+    as class member function.
 
-  e.g.
-    struct INT {
-      int a;
-    };
+    e.g.
+      struct INT {
+        int a;
+      };
 
-    class A {
-    public:
-      struct INT *operator->();
-      ANY_TYPE operator->*(ANY_TYPE);
-    ...
-    };  
+      class A {
+      public:
+        struct INT *operator->();
+        ANY_TYPE operator->*(ANY_TYPE);
+      ...
+      };  
   
-  C++ allows overloaded '->' returns either a regular pointer or an instance of another class if
-  this class also provides a '->' operator.
-  when in the second case the search for the dereferenced object continues from this new instance.
-  e.g.
-    INT sINT = {2};
-    A pINT(&sINT);
-    pINT->a;        //  OK,C++ compiler resolve name searching.
-
-    class B {
-    public:
-      A &operator->();
-    ...
-    };
-
-    B pB(pINT);
-    pB->a;          //  OK.pB->->a is an ERROR
-
-  !  I find out a user of stackoverflow answered that,in the second case,the object must have a
-     pointer dereference operator(the '*' symbol).
-     (referred to "Bruce Eckel: Thinking CPP Vol-one: operator->")
-     Im consider he wants to describe '->' symbol,the member access operator for a pointer type
-     left value.
-     If the object only have '*' operator but no '->' operator existed,compiler search will fail,
-     even let opertor*() return a pointer.
-
-     !! Im ensure this is the naming problem,in some books,'->' is called 'structure pointer
-        dereference operator',and in another books,'->' is called 'member access' operator
-        (cppreference also refers it to this name),
-        or "arrow operator"(What?Ok,it is very simple,the best name.)
-
-  !  C++ allows programmer overload '*',similar to C++ Smart Pointer.
-
-  '->*',there is nothing special about it.the non-overloadding version requires an object of pointer
-  to class type on the left-hand side,and an object of pointer to member type on the right side hand.
-  when overloading it,programmer can let it takes anything that want it to take and returns anything
-  that want it to return.
-  e.g.
-    class A {
-    public:
-      int operator->*(int x);
-    ...
-    };
-
-    A a;
-    std::cout<<a->*(3)<<std::endl;
-
-  there is no restricts on these two overloading requires const or non-const on them.
+    C++ allows overloaded '->' returns either a regular pointer or an instance of another class if
+    this class also provides a '->' operator.
+    when in the second case the search for the dereferenced object continues from this new instance.
+    e.g.
+      INT sINT = {2};
+      A pINT(&sINT);
+      pINT->a;        //  OK,C++ compiler resolve name searching.
+  
+      class B {
+      public:
+        A &operator->();
+      ...
+      };
+  
+      B pB(pINT);
+      pB->a;          //  OK.pB->->a is an ERROR
+  
+    !  I find out a user of stackoverflow answered that,in the second case,the object must have a
+       pointer dereference operator(the '*' symbol).
+       (referred to "Bruce Eckel: Thinking CPP Vol-one: operator->")
+       Im consider he wants to describe '->' symbol,the member access operator for a pointer type
+       left value.
+       If the object only have '*' operator but no '->' operator existed,compiler search will fail,
+       even let opertor*() return a pointer.
+  
+       !! Im ensure this is the naming problem,in some books,'->' is called 'structure pointer
+          dereference operator',and in another books,'->' is called 'member access' operator
+          (cppreference also refers it to this name),
+          or "arrow operator"(What?Ok,it is very simple,the best name.)
+  
+    !  C++ allows programmer overload '*',similar to C++ Smart Pointer.
+  
+    '->*',there is nothing special about it.the non-overloadding version requires an object of pointer
+    to class type on the left-hand side,and an object of pointer to member type on the right side hand.
+    when overloading it,programmer can let it takes anything that want it to take and returns anything
+    that want it to return.
+    e.g.
+      class A {
+      public:
+        int operator->*(int x);
+      ...
+      };
+  
+      A a;
+      std::cout<<a->*(3)<<std::endl;
+  
+    there is no restricts on these two overloading requires const or non-const on them.
 
 # std::ref
   header: <functional>
 
-  the object std::ref is a refwapper used to pass lvalue object as a reference to a
-  thread function.
-  if do not wrap the lvalue object when construct a std::thread object,compiler will
-  throws an error message - "error: static assertion failed: std::thread arguments must
-  be invocable after conversion to rvalues"
-  the arguments for std::thread will be converted to rvalues,but the rvalue of an object
-  is not a function type,it can not be invoked.
-
-  template<class T>
-  std::reference_wrapper<T> ref(T &t) noexcept;
-
-  template<class T>
-  std::reference_wrapper<T> ref(std::reference_wrapper<T> t) noexcept;
-
-  template<class T>
-  void ref(const T&&) = delete;
-
-  // cref - const ref
-  template<class T>
-  std::reference_wrapper<const T> cref(const T &t) noexcept;
-
-  template<class T>
-  std::reference_wrapper<const T> cref(std::reference_wrapper<T> t) noexcept;
-
-  template<class T>
-  void cref(const T &&) = delete;
+    the object std::ref is a refwapper used to pass lvalue object as a reference to a
+    thread function.
+    if do not wrap the lvalue object when construct a std::thread object,compiler will
+    throws an error message - "error: static assertion failed: std::thread arguments must
+    be invocable after conversion to rvalues"
+    the arguments for std::thread will be converted to rvalues,but the rvalue of an object
+    is not a function type,it can not be invoked.
+  
+    template<class T>
+    std::reference_wrapper<T> ref(T &t) noexcept;
+  
+    template<class T>
+    std::reference_wrapper<T> ref(std::reference_wrapper<T> t) noexcept;
+  
+    template<class T>
+    void ref(const T&&) = delete;
+  
+    // cref - const ref
+    template<class T>
+    std::reference_wrapper<const T> cref(const T &t) noexcept;
+  
+    template<class T>
+    std::reference_wrapper<const T> cref(std::reference_wrapper<T> t) noexcept;
+  
+    template<class T>
+    void cref(const T &&) = delete;
 
   
 
