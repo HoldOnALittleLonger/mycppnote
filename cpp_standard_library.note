@@ -1,0 +1,103 @@
+                                                        The C++ Standard Library 2
+
+Callable Objects :
+    objects that can be used to call some functionality >
+      1> a function,where additional args are passed to as arguments
+      2> a pointer to a member function,which is called for the object passed
+         as the first additional argument(reference or pointer) and gets the
+         remaining argument as member function parameters
+      3> a function object(operator() for a passed object),where additional args
+         are passed as arguments
+      4> a lambda,which strictly speaking is a kind of function object
+
+    function :
+      void func(int a, float b, char c);
+      func(1, 1.1, 'c');
+
+    member function :
+      void Class::func(Class &obj, int a, float b, char c);
+      Class obj;    /* +-> can omit in prototype */
+      obj.func(1, 1.1, 'c');
+
+    function object :
+      std::function<void (int a, float b, char c)> func(function);
+      func(1, 1.1, 'c');
+
+    lambda :
+      auto function = [](int a, float b, char c) -> void { ... };
+      function(1, 1.1, 'c');
+
+    std::bind :
+      the stuff bind of namespace std can be used to bind arguments with callable a object.
+      the expression of std::bind returns a callable object,the detail is defined in header
+      <tr1/functional>.
+
+      <tr1/functional>
+        template<typename _Functor, typename... _ArgTypes>
+        inline _Bind<typename _Maybe_wrap_member_pointer<_Functor>::type(_ArgTypes...)>
+        bind(_Functor __f, _ArgTypes... _args);
+
+        /* another version returns _Bind_result object */
+
+    std::async :
+      the stuff async of namespace std can be used to start a new background task in two ways,
+      one is async,another one is deferred.std::async is based on C++ promise,it is part of
+      C++ future introduced in C++ 11.the header is <future>.
+
+      <future>
+        template<typename _Fn, typename... _Args>
+        future<__async_result_of<_Fn, _Args...>>
+        async(launch __policy, _Fn&& __fn, _Args&&... __args);
+
+        /* launch could be @async,@deferred */
+
+        template<typename _Fn, typename... _Args>
+        future<__async_result_of<_Fn, _Args...>>
+        async(_Fn&& __fn, _Args&&... __args);
+
+Concurrency and Multithreading :
+    Since C++ 11,language core supporting concurrency.
+      Introduced memory model
+        - it guarantees that updates on two different objects used by two different
+          threads are independent of each other
+      Introduced new keyword thread_local
+        - define thread-specific variables and objects
+      /**
+       * In Linux,multithreading is implemented by POSIX thread model,the new thread is
+       * a lightweight process cloned from the original process,they share the same
+       * process address space,but the ip register for them has different instruction
+       * position,sp register as the same,and so on.
+       */
+
+    The General Concurrency Guarantees of the C++ Standard Library :
+      > modifying an object of a standard library type that is sharted between threads
+        risks undefined behavior unless objects of that type are explicitly specified
+        as being sharable without data races or user supplies a locking mechanism.
+      > during the construction of an object in one thread,using it in another thread
+        results in undefined behavior,without loss of generality,destruction as the same.
+        /* this applies to objects are provided for thread synchronization */
+      
+      For STL containers :
+        > concurrent read-only access is possible
+        > concurrent access to different elements of the same container is possible
+          (except for vector<bool>)
+          /* read/write different elements has different positions in the container,
+           * follow this view point,each element in the container is similar to a
+           * variable in different memory position
+           */    
+
+      For formatted I/O to a _standard stream_ :
+        > synchronized with C I/O,concurrent access is possible,although it might
+          result in interleaved characters
+          /* default behavior for std::cout, std::cin, std::cerr */
+          /* std::ios::sync_with_stdio(bool value) is a trigger for such sync */
+
+      > concurrent calls of atexit() and at_quick_exit() are synchronized,and more
+        include set_new_handler(),set_unexpected(),set_terminate() and the corresponding
+        geters
+      > for all member functions of the default allocator except destructor,concurrent
+        access is synchronized
+
+      ! the library guarantees that C++ standard library has no "hidden" side effects
+        that break concurrent access to different objects.      
+    
