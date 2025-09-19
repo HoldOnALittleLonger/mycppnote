@@ -1,0 +1,28 @@
+    High
+
+        1-------|    ::   
+        2-------|    (Expression)  func()  @type(expression)  []        (L -> R)
+                |    ->  .  @a++  @a--
+                |    const_cast  dynamic_cast
+                |    reinterpret_cast  static_cast
+                |    typeid
+        3-------|    !  ~  +  -  ++@a  --@a                             (R -> L)
+                |    &  *  ()@expression  sizeof  new  new[]
+                |    delete  delete[]
+        4-------|    .*  ->*                                            (L -> R)
+        5-------|    *  /  %                                            (L -> R)
+        6-------|    +  -                                               (L -> R)
+        7-------|    <<  >>                                             (L -> R)
+        8-------|    <  <=  >=  >                                       (L -> R)
+        9-------|    ==  !=                                             (L -> R)
+        10------|    &                                                  (L -> R)
+        11------|    ^                                                  (L -> R)
+        12------|    |                                                  (L -> R)
+        13------|    &&                                                 (L -> R)
+        14------|    ||                                                 (L -> R)
+        15------|    (@cond) ? @v1 : @v2                                (R -> L)
+        16------|    =  *=  /=  %=  +=  -=  &=  ^=  |=  <<=  >>=        (R -> L)
+        17------|    throw @error                                       (L -> R)
+        18------|    ,                                                  (L -> R)
+
+    Low

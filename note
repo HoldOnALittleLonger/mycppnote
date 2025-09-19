@@ -34,7 +34,10 @@
         back()                   # return element in the end
         erase(i)                 # erase a element at i pos,do not deallocate memory,
                                    and shift another element to fill the gap caused
-                                   by erase()
+                                   by erase(),but the same iterator pointed to
+                                   erased element become invalid,the position
+                                   of next element in the container is returned
+                                   by erase().
                                    ! an overload version can erase a range
         size(void)               # return size of vector,that is the number of
                                    elements currently holding by this vector
@@ -2068,6 +2071,15 @@
   
     template<class T>
     void cref(const T &&) = delete;
+
+# about ++ -- overload
+  prefix :
+    operator++()
+    operator--()
+
+  postfix :
+    operator++(int)
+    operator--(int)
 
   
 
