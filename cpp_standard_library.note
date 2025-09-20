@@ -30,7 +30,7 @@ Callable Objects :
     std::bind :
       the stuff bind of namespace std can be used to bind arguments with callable a object.
       the expression of std::bind returns a callable object,the detail is defined in header
-      <tr1/functional>.
+      <tr1/functional>. // just include header <functional> as well
 
       <tr1/functional>
         template<typename _Functor, typename... _ArgTypes>
@@ -100,4 +100,105 @@ Concurrency and Multithreading :
 
       ! the library guarantees that C++ standard library has no "hidden" side effects
         that break concurrent access to different objects.      
-    
+
+Allocators :
+    C++ standard library use special objects to handle the allocation and deallocation of
+    memory in several places,such object is called "Allocator".they represent a special
+    memory model and are used as an abstraction to translate the "need" to use memory
+    into a raw "call" for memory.
+    /* allocator is part of STL used to solve pointer type problem on PCs,but now as
+     * the base for technical solution that use certain memory models withou changing
+     * the interfaces.
+     */
+
+    the C++ allocator base is defined in <ext/new_allocator.h> inside to namespace std :
+      template<typename _Tp>
+      class new_allocator;  // allocator for global new
+
+      typedef _TP value_type;
+      typedef std::size_t size_type;
+      typedef std::ptrdiff_t difference_type;
+      // more type definitions if __cplusplus <= 201703L
+      
+      member method allocate() is used to allocate a memory space with aligned specified size.
+      member method deallocate() is used to deallocate the memory allocated previously.
+
+    and an alias for std::allocator is introduced in <"architecture depend directory"/bits/c++allocator.h> :
+      template<typename _Tp>
+        using __allocator_base = __gnu_cxx::new_allocator<_Tp>;  // need __cplusplus >= 201103L
+
+Pairs :
+    a type used to treat two values as single unit,the most normal case is key/value pairs.
+    the structure pair is defined in <utility> inside to namespace std.
+
+    // the detail is defined in <bits/stl_pair.h>
+    template<typename T1, typename T2>
+    struct pair {
+      ...
+    };
+
+    the structure allows :
+      copy  move  assign  swap  compare
+                                |
+                                +--> A.first == B.first && A.second == B.second // operator<
+                                 |
+                                 +-> A.first < B.first || (!(A.first < B.first) &&
+                                 |   A.second < B.second) // operator<
+                                 +-> !(A < B) // operator<=
+    type definitions :
+      typedef _T1 first_type;
+      typedef _T2 second_type;
+
+    shortcut :
+      /**
+       * make_pair - shortcut for make up a pair
+       * @_T1:       first type
+       * @_T2:       second type
+       * @__x:       forward reference to first object
+       * @__y:       forward reference to second object
+       * return:     value of an object is type of pair<_T1, _T2>{__x, __y}
+       * # make_pair() "decay"s and "strip"s _T1 and _T2 for produce types
+       *   of @first and @second.for example "a" and "ab" as parameters will
+       *   get type const char *,not the const char[2] and const char[3]
+       * # because of forward reference,make_pair() can combine with std::move()
+       *   when move semantics is applied,and can combine with std::ref() when
+       *   reference semantics is applied
+       */
+      template<typename _T1, typename _T2>
+      constexpr pair<_T1, _T2>
+      make_pair(_T1 &&__x, __T2 &&__y);
+
+      /**
+       * __pair_get - shortcut for get element in a pair object,only specializations
+       *              _Int := 0 and _Int := 1 been defined
+       */
+      template<std::size_t _Int>
+      struct __pair_get;
+
+      // get value in pair object,more overloaded versions
+      template<std::size_t _Int, class _Tp1, class _Tp2>
+      constexpr typename tuple_element<_Int, std::pair<_Tp1, _Tp2>>::type &
+      get(std::pair<_Tp1, _Tp2>& __in) noexcept;
+
+    ! because std::tuple is the extend for std::pair,thus template methods std::tuple_size
+      and std::tuple_element can be used on an object is type of std::pair.
+    ! C++ language rule request an explicit call of a default constructor also initializes
+      fundamental data types,for the pair,the constructors first() and second() will be
+      called by pair().
+    ! since C++ 11,a std::pair using a type that has only a nonconstant copy constructor
+      will no longer compile.
+
+    a special constructor of std::pair :
+      /**
+       * pair - a constructor for std::pair introduced for the situation that @first_type and/or
+       *        @second_type is std::tuple
+       * @_Args1:    template parameter pack for tuple1
+       * @_Args2:    template parameter pack for tuple2
+       * @piecewise_construct_t:    void structure used as an identifier
+       * @tuple objects:    std::tuple for @first and/or @second
+       * # if the type of data member is not tuple,then implicit type conversion will
+       *   take place during construct the object
+       */
+      template<typename... _Args1, typename... _Args2>
+      _GLIBCXX20_CONSTEXPR
+      pair(piecewise_construct_t, tuple<_Args1...>, tuple<_Args2...>);
