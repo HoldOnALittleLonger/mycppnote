@@ -202,3 +202,127 @@ Pairs :
       template<typename... _Args1, typename... _Args2>
       _GLIBCXX20_CONSTEXPR
       pair(piecewise_construct_t, tuple<_Args1...>, tuple<_Args2...>);
+
+Tuples :
+    extend pairs to represent a heterogeneous list  of elements for which the types are specified
+    or deduced at compile time.
+    for tuple apply C++ 98 features,the implementation defined at least ten template parameters,that
+    is the maximum number of elements.the newer C++ 11 supported template parameter pack,thus there
+    can have more than ten elements in a tuple.
+
+    <tuple>
+      /* tuple - tuple is a container extended std::pair */
+      /* tuple is in namespace std */
+      template<typename... _Elements>
+      class tuple : public _Tuple_impl<0, _Elements...>
+      {
+        ...
+      };
+
+    shortcut :
+      /* make_tuple - template function used to makeup a tuple object and return it */
+       * # because make_tuple() is a template function,thus automatically type deduce
+       *   will process
+       * # std::ref() and std::cref() combined with make_tuple() is possible to
+       *   let tuple include an element whose type is a lvalue reference or a const lvalue
+       *   reference.by using reference with make_tuple(),allow extract values of a tuple
+       *   back to some other variable
+       */
+      template<typename... _Elements>
+      constexpr tuple<typename __decay_and_strip<_Elements>::__type...>
+      make_tuple(_Elements&&... __args);
+
+      /* tie - makeup a tupe with lvalue references and return it
+       * # for const lvalue reference,the types pass to template should with const quantifier
+       * # std::ignore can be used as a placeholder to tell tie() do not process reference
+       *   binding on "this" element
+       */
+      template<typename... _Elements>
+      constexpr tuple<_Elements&...>
+      tie(_Elements&... __args) noexcept;
+
+
+      /* __get_helper - this implementation applied a special programming technique to extract
+       *                the specified __i-th element in a tuple object
+       * # used template metaprogramming technique
+       */
+      template<std::size_t __i, typename _Head, typename... _Tail>
+      constexpr _Head&
+      __get_helper(_Tuple_impl<__i, _Head, _Tail...>& __t) noexcept
+      { return _Tuple_impl<__i, _Head, _Tail...>::_M_head(__t); }
+
+      /* get - get @__i-th element in a tuple,this routine returns std::__get_helper<__i>(__t) */
+      template<std::size_t __i, typename... _Elements>
+      constexpr __tuple_element_t<__i, tuple<_Elements...>>&
+      get(tuple<_Elements...>& __t) noexcept;
+
+      ! because get() returns a value is constexpr,that means it is compile-time constant,thus
+        index __i can not be a variable is not constexpr.
+        e.g.
+          int i(0); // @i is not a constexpr value,that it is runtime variable
+          auto t(make_tuple(1, 1.1, 'c');
+          auto x = get<i>(t);
+      ! pass an invalid index also throw a compile-time error.
+
+    Allowed operations :
+      assign  copy  move  swap  compare
+                                |
+                                +--> A.@all == B.@all
+                                 |
+                                 +-> A1 < B1 || (!(A1 < B1) && (A2 < B2 || .. // lexicographical comparison
+                                 |
+                                 +-> !(A < B)
+    
+    Tuple and Initializer lists :
+      std::tuple<@types> t(@arguments);      //  OK,call to copy constructor
+      std::tuple<@types> t1{@arguments};     //  OK,call to copy constructor
+      std::tuple<@types> t2 = {@arguments};  //  ERROR,call to assignment operator
+                                             //  for process assignment,the rvalue must been constructred
+                                             //  t2 = std::tuple<@types>{@arguments}; => OK
+
+      std::vector<std::tuple<int, float>> v{{1, 1.1}, {2, 1.2}};  // ERROR
+      // but it is OK when @value_type is std::pair<int, float> or std::vector
+      // it is OK when combine std::make_tuple() with initializer list
+      //   std::vector<std::tuple<int, float>> v{std::make_tuple(1, 1.1), std::make_tuple(2, 2.2)};
+
+      return {1, 2, 3}; in a function which returns a value is type of std::tuple<int, int, int>.
+      // ERROR for std::tuple,but it is OK for std::vector
+
+    Additional Tuple Features :
+      /**
+       * tuple_size - structure template in namespace std used to calculate the number of elements
+       *              in std::tuple object
+       * # operator sizeof...() is a compiler feature used to get number of types in template
+       *   parameter pack
+       * # integral_constant::value is the number of elements of "this" tuple object
+       */
+      template<typename... _Elements>
+      struct tuple_size<tuple<_Elements...>>
+      : public integral_constant<std::size_t, sizeof...(_Elements)> { };
+
+      /**
+       * tuple_element - structure template in namespace std used to get the type of a specified
+       *                 element in std::tuple object
+       * # recursive derive itself,used template metaprogramming technique
+       * # type definition "typedef _Head type;" is introduced in the specialization that __i := 0,
+       *   @type is the type of that @__i-th element 
+       */
+      template<std::size_t __i, typename _Head, typename... _Tail>
+      struct tuple_element<__i, tuple<_Head, _Tail...>>
+      : tuple_element<__i - 1, tuple<_Tail...>> { };
+
+      /**
+       * tuple_cat - function template in namespace std used to concatenates multiple tuples into
+       *             one tuple
+       * # this function template receive forward reference
+       * # this function applied trailing return type function definition
+       */
+      template<typename... _Tpls,
+               typename = typename enable_if<__and_<__is_tuple_like<_Tpls>...>::value>::type>
+      constexpr auto
+      tuple_cat(_Tpls&&... __tpls)
+      -> typename __tuple_cat_result<_Tpls...>::__type
+      {
+        ...
+      }
+        
