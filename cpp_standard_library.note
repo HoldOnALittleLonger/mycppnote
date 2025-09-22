@@ -326,3 +326,63 @@ Tuples :
         ...
       }
         
+    I/O for Tuples :
+      std::tuple does not provide operator<< overload for output values to standard output through
+      std::cout(nor standard error std::cerr).
+
+      if you want it,then you have to implement it.
+
+      e.g.
+        // use compile-time recursion to traverse every element
+        // in the tuple object,and print them to standard output
+        // *template metaprogramming*
+        
+        template<std::size_t IDX, std::size_t MAX, typename... _TupleTypes>
+        struct PrintTuple {
+          static void print(std::tuple<_TupleTypes...> &t)
+          {
+            std::cout << std::get<IDX>(t) << " ";
+            PrintTuple<IDX + 1, MAX, _TupleTypes...>::print(t); // print next one
+          }
+        };
+
+        // partial specialization to end the recursion
+        template<std::size_t MAX, typename... _TupleTypes>
+        struct PrintTuple<MAX, MAX, _TupleTypes...> {
+          static void print(std::tuple<_TupleTypes...> &t)
+          { }
+        }
+
+        // caller
+        template<typename... _TupleTypes>
+        void printTuple(std::tuple<_TupleTypes> &t)
+        {
+          PrintTuple<0, std::tuple_size(t), _TupleTypes...>::print(t);
+        }
+
+        std::tuple<@types> x(std::make_tuple<@type>{@arguments});
+        printTuple(x);
+
+    Conversions between tuples and pairs :
+      for convert std::tuple to std::pair,should construct the std::pair by special
+      constructor piecewise_construct_t as its first parameter.
+
+      for convert std::pair to std::tuple,should instantiate a partial specialization
+      2-element tuple template.that partial specialization includes construction and
+      assignment from a std::pair.
+      <tuple>
+        template<typename _T1, typename _T2>
+        class tuple<_T1, _T2> : public _Tuple_impl<0, _T1, _T2>
+        {
+          ...
+        };
+
+        // construction for a 2-elements tuple from a pair
+        // function definition outside to class definition
+        template<typename _T1, typename _T2>
+        template<typename _U1, typename _U2, _ImpliciCtor<true, const _U1&, const _U2&> = true>
+        constexpr
+        tuple<_T1, _T2>::tuple(const pair<_U1, _U2> &__in)
+        noexcept(__nothrow_constructible<const _U1 &, const _U2 &>())
+        : _Inherited(__in.first, __in.second)
+        { }
