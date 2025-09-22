@@ -576,6 +576,15 @@
     # constexpr function must have literal return and parameter types.
 
 # Template
+    !! function template allow full specialization only,but class template allow
+       both full specialization and partial specialization.
+       class template only be instantiated when an object need to be constructed,but
+       function template can be instantiated before realy call to the function.
+       /* the default behavior is instantiate the template when realy call to
+        * the function.
+        * e.g. func(x, y);
+        */
+
     function template:
 
     // general function template
@@ -672,13 +681,18 @@
   
       // product a template instantiation with type in explicitly.
       template type-return <func><type>(arg-list);
-  
-      # the typename T could also be a template.
-      # class can also make a class template.
-      #     template<typename T>
-      #     class A {
-      #        T i;
-      #     };
+
+    class template :  
+      class can also make a class template.
+        template<typename T>
+        class A {
+          T i;
+        };
+
+      a class is a class template can derive another class also a class template.
+        template<typename _Type>
+        class A : public B<_Type>
+        { ... };
   
       !! If a template member function within a template class,the keyword of type explained character 
       !! can be same.
