@@ -386,3 +386,90 @@ Tuples :
         noexcept(__nothrow_constructible<const _U1 &, const _U2 &>())
         : _Inherited(__in.first, __in.second)
         { }
+
+Smart Pointers :
+    shared_ptr :
+      pointer that can be shared by several owners,and memory is recycled when the reference
+      count become _zero_.
+
+      the destructor of shared_ptr call to "delete" as a default behavior,thus,if used it
+      with array together,must define an array-specified destruction policy.
+      for do this,should pass it a callable object that the callback function,it will be
+      called in destructor.
+      define a deleter :
+        std::shared_ptr<int> pInt(new int[10], [](int *p) -> void { delete[] p; });
+
+      a helper officially provided for std::unique_ptr for array-deleting also can be
+      used with std::shared_ptr.
+        std::default_delete<@type[]>()
+
+      destruction policy :
+        of couse,the deleter of std::shared_ptr can be an object of a user-defined class.
+        in this case,operator() must be overloaded.
+        the object will be called in destructor of std::shared_ptr through @obj(@type pointer)
+        function calling.
+
+        ! notice that,the destruction policy is not deallocate memory only.it could do everything
+          that we want.but at the last,it must deallocate the memory.the overload operator()
+          can pass the pointer to another function,hand over the deallocating to them.this is
+          useful when handle system share resources such shared memory.
+
+      ! can not create several std::shared_ptr objects refer to the same one object,this will bring
+        a problem that the object is deallocated more than once.
+        # copy an existed std::shared_ptr object is OK
+        # keep only one group of shared pointers owns an object
+      ! std smart pointer stuff class template std::enable_shared_from_this can pass the "this"
+        pointer in a class method to the outside place.
+        e.g.
+          class A : public std::enable_shared_from_this<A>
+          {
+          public:
+            void func(std::vector<A> &vec)
+            {
+              ...
+              vec.push_back(shared_from_this()); // OK
+              ...
+            }
+            ...
+          };
+          /* if no std::enable_shared_from_this,then send @this to another std::shared_ptr group is
+           * an error
+           * another way,is pass the pointer of class object as additional parameter for that method,
+           * but that is not elegant.
+           * !! CAN NOT shared_from_this() WHEN AN OBJECT IS CONSTRUCTING,OF COURSE DESTRUCTING.
+           */
+
+    weak_ptr :
+      std::weak_ptr is introduced for solve the following two problems they might happens when using
+      std::shared_ptr :
+        1> cyclic references
+             A -> B
+             B -> A
+        2> explicitly share but not own an object
+           semantics : the lifetime of a reference to an object outlives the object it refers to
+           /* dangling pointer */
+
+      std::weak_ptr,allows sharing but now owning an object.for use this class,require a shared
+      pointer,whenever the last shared pointer owning the object lose its ownership,any std::weak_ptr
+      automatically becomes empty.so,except default and copy constructors,std::weak_ptr provides
+      only a constructor taking a std::shared_ptr object.
+
+      ! dereference operator and member access operator are not supported by std::weak_ptr,for
+        do these operations,must use the std::weak_ptr to create a std::shared_ptr at first.
+        in this way we can :
+          1> checks whether the pointer is NULL,if it is,then throw an exception or create
+             empty std::shared_ptr object
+          2> we are using the referred object,that the object referred by the std::shared_ptr
+             will not be deallocated unexpectedly
+
+      usage :
+        std::shared_ptr<int> pInt(new int(10));
+
+        std::weak_ptr<int> weakPInt(pInt);
+        std::shared_ptr<int> weakPIntOP(weakPInt);
+
+        *weakPIntOP = 20;
+      
+
+       
+      
