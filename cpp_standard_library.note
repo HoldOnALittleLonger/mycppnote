@@ -439,6 +439,58 @@ Smart Pointers :
            * !! CAN NOT shared_from_this() WHEN AN OBJECT IS CONSTRUCTING,OF COURSE DESTRUCTING.
            */
 
+      ! deleter of std::shared_ptr would be called after methods reset(),operator=(&),operator=(&&)
+        if this shared_ptr is the last owner of the original pointer.
+
+      ! deleter that passed to constructor shall not throw.
+    
+      some member methods :
+        shared_ptr(sp2, ptr)     /* alias constructor,creates a shared pointer "sharing" ownership
+                                  * of @sp2 but referring to @ptr
+                                  * useful when we want get a pointer points to a member of a
+                                  * structure,this can prevent unexpected destorying to the
+                                  * structure object when we using its member
+                                  */
+        swap(sp2)                /* exchange raw pointer */
+        reset()                  /* reset raw pointer to nullptr */
+        reset(new)               /* reset raw pointer to @new */
+                                 !! after called reset() method, the std::weak_ptr
+                                    created from the std::shared_ptr will be invalidated,
+                                    operation on the std::weak_ptr will throw exception
+                                    bad_weak_ptr,std::weak_ptr::expired() returns true
+        operator*()              /* derefer */
+        operator->()             /* member access on pointer */
+        use_count()              /* how many instances are existing */
+        unique()                 /* if use_count() == 1 ? */
+        get()                    /* get the raw pointer */
+        operator==(sp2)          /* comparison operates raw pointers */
+        operator!=(sp2)
+        operator<(sp2)
+        operator<=(sp2)
+        operator>(sp2)
+        operator>=(sp2)
+        operator bool()          /* raw pointer == nullptr ? false : true */
+        owner_before(sp2)        /* provide a strict weak ordering with another shared pointer */
+        owner_before(wp)         /* provide a strict weak ordering with a weak pointer */
+
+      some std stuffs :
+        make_shared(...)
+        allocate_shared(@allocator, ...)
+        swap(sp1, sp2)
+        static_pointer_cast      /* for convert a shared_ptr of @type1 to @type2,should use this
+                                  * static casting,not the static_cast<@type2*>(sp)
+                                  */
+        dynamic_pointer_cast     
+        const_pointer_cast
+        get_deleter(sp)
+        operator<<(sp)           /* output raw pointer got by @sp.get() */       
+
+      some atomic interfaces :
+        atomic_is_lock_free(&sp) /* whether atomic operations on @sp is lock-free */
+        atomic_load(&sp)         /* return *@sp */
+        atomic_store(&sp, sp2)   /* *@sp = sp2 */
+        atomic_exchange(&sp, sp2) /* exchange *@sp and @sp2 */
+
     weak_ptr :
       std::weak_ptr is introduced for solve the following two problems they might happens when using
       std::shared_ptr :
@@ -462,6 +514,19 @@ Smart Pointers :
           2> we are using the referred object,that the object referred by the std::shared_ptr
              will not be deallocated unexpectedly
 
+      some member methods :
+        weak_ptr(sp)                /* create std::weak_ptr from @sp */
+        weak_ptr(wp2)               /* create std::weak_ptr from @wp2,sharing ownership of @wp2 */
+        operator=(sp)               /* give up original ownership,and get new */
+        operator=(wp2)              /* give up original ownership,and get new */
+        swap(wp2)                   /* exchange */
+        reset()                     /* give up current ownership,then this become empty */
+        use_count()                 /* number of shared owners or 0 if this is empty */
+        expired()                   /* whether this weak ptr is empty,that use_count() == 0 */
+        lock()                      /* create a std::shared_ptr from this */
+        owner_before(wp2)           /* provide a strict weak ordering with another weak pointer */
+        owner_before(sp)            /* provide a strict weak ordering with a shared pointer */
+
       usage :
         std::shared_ptr<int> pInt(new int(10));
 
@@ -469,7 +534,6 @@ Smart Pointers :
         std::shared_ptr<int> weakPIntOP(weakPInt);
 
         *weakPIntOP = 20;
-      
 
        
       
