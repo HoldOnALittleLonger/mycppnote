@@ -388,6 +388,8 @@ Tuples :
         { }
 
 Smart Pointers :
+    header - <memory>
+
     shared_ptr :
       pointer that can be shared by several owners,and memory is recycled when the reference
       count become _zero_.
@@ -463,15 +465,13 @@ Smart Pointers :
         use_count()              /* how many instances are existing */
         unique()                 /* if use_count() == 1 ? */
         get()                    /* get the raw pointer */
-        operator==(sp2)          /* comparison operates raw pointers */
-        operator!=(sp2)
-        operator<(sp2)
-        operator<=(sp2)
-        operator>(sp2)
-        operator>=(sp2)
         operator bool()          /* raw pointer == nullptr ? false : true */
         owner_before(sp2)        /* provide a strict weak ordering with another shared pointer */
         owner_before(wp)         /* provide a strict weak ordering with a weak pointer */
+
+      logical operations :
+        ==  !=  <  <=  >=  >
+        /* logical operations are use the raw pointer as the real operand */
 
       some std stuffs :
         make_shared(...)
@@ -535,5 +535,91 @@ Smart Pointers :
 
         *weakPIntOP = 20;
 
-       
-      
+    unique_ptr :
+      smart pointer that exclusive ownership,used for RAII to prevent resource leak.
+
+      template<typename _Tp, typename _Dp = default_delete<_Tp>>
+      class unique_ptr {
+        template<typename _Up>
+        using _DeleterConstraint = 
+          typename __uniq_ptr_impl<_Tp, _Up>::_DeleterConstraint::type;
+
+        __uniq_ptr_data<_Tp, _Dp> _M_t;
+      public:
+        using pointer = typename __uniq_ptr_impl<_Tp, _Dp>::pointer;
+        using element_type = _Tp;
+        using deleter_type = _Dp;
+        ...
+      }; /**
+          * struct __uniq_ptr_impl<>
+          * struct __uniq_ptr_data<> : public __uniq_ptr_impl<>
+          *
+          * struct default_delete<>
+          * struct default_delete<>::operator()(@type *__ptr) const -> void
+          * # just do static assert,and "delete" @__ptr
+          * # a specification of default_delete is @type = _Tp[]
+          */
+
+      std::unique_ptr<> disallow to be initialized through assignment syntax.
+        std::unique_ptr<int> pInt = new int(10);  /* ERROR */
+
+      default constructor for std::unique_ptr<> will create an object with nullptr.
+        std::unique_ptr<@type> up;  /* @up is nullptr */
+
+      a runtime error should to be prevented :
+        int *x = new int(10);
+        std::unique_ptr<int> up1(x);  /* OK */
+        std::unique_ptr<int> up2(x);  /* ERROR,@up1 and @up2 own same data */
+
+      unique pointer can be used with array :
+        std::unique_ptr<int[]> up(new int[4](0));
+    
+        /* do not need to define deleter suit to array destroying.
+         * but std::unique_ptr<> also support to custom deleter.
+         * pass it a customized deleter as the second template parameter
+         * can let std::unique_ptr<> make use of new deleter.
+         * the deleter must be callable!
+         * # _Dp could be std::function<>,that means lambda function is legal
+         */
+
+      disallow :
+        copy  assignment
+
+      allow :
+        move  swap  "assign nulltpr"
+        
+        /* allow "swap" means std::swap(up1, up2) is OK */
+      special constructor :
+        unique_ptr<...>(@ptr, @del) /* owns @ptr,use @del as deleter */
+                                    /* @del is rvalue,then it must be MoveConstructible
+                                     * @del is lvalue,then it must be CopyConstructible
+                                     */
+        special format make use of this constructor :
+          std::unqiue_ptr<@type, @deleter&> up(@ptr @del);  /* @del is a lvalue type of @deleter */
+
+          ! disallow pass deleter as the second parameter is rvalue but @_Dp is a lvalue reference.
+              std::unique_ptr<@type, const @deleter&> up(@ptr, @del-expression-produce-rvalue);
+
+      some member methods :
+        reset()                /* reset to nullptr */
+        reset(newp)            /* give up to original,get new ownership of @newp */
+        release()              /* give up to original,and return the raw pointer */
+        get()                  /* get raw pointer */
+        get_deleter()          /* get return the lvalue reference to the deleter */
+                               /* this method actually call to _M_t._M_deleter(),
+                                * and that method is come from __uniq_ptr_impl.
+                                */
+        operator bool()        /* get() == pointer() ? false : true
+                                * pointer() will create a nullptr
+                                */
+        operator*()
+        operator->()
+        operator[](@idx)
+
+      logical operations :
+        ==  !=  <  <=  >=  >
+
+      resource destroyed if :
+        lifetime of the std::unique_ptr object is end
+        reset() method is called
+        either operator=(nullptr) or operator=(&&) is called
