@@ -623,3 +623,99 @@ Smart Pointers :
         lifetime of the std::unique_ptr object is end
         reset() method is called
         either operator=(nullptr) or operator=(&&) is called
+
+Numeric Limits :
+    template class numeric_limits<> is provided by C++,C++ make use of it to replace and
+    supplement the ordinary preprocessor C constants which are available in headers
+    <climits> and <limits.h>,floating-point types are available in headers <cfloat> and
+    <float.h>.
+
+    Advantages of numeric limits :
+      1> offers more type safety
+      2> enables a programmer to write templates that evaluate these limits
+         /* so any error can be detected during compile-time */
+
+    Minimum Size of Built-In Types :
+      the minimum guaranteed precision of types.
+
+      char 1B
+      short int 2B
+      int 2B
+      long int 4B
+      long long int 8B
+      float 4B
+      double 8B
+      long double 8B
+
+      /* these limits are platform-independent */
+
+    Class numeric_limits<> :
+      it is a common interface that is implemented for each type.
+
+      <limits>
+        struct __numeric_limits_base;
+        
+        template<typename _Tp>
+        struct numeric_limits : public __numeric_limits_base
+        {
+          /* this bool variable is a static member in __numeric_limits_base,used to
+           * indicates whether the specified type has a specialization exists
+           */
+          static _GLIBCXX_USE_CONSTEXPR bool __numeric_limits_base::is_specialized;
+
+          /* methods used to return minimum value and maximum value of @_Tp */
+          static _GLIBCXX_CONSTEXPR _Tp
+          min() _GLIBCXX_USE_NOEXCEPT { return _Tp(); }
+
+          static _GLIBCXX_CONSTEXPR _Tp
+          max() _GLIBCXX_USE_NOEXCEPT { return _Tp(); }
+
+          /* each specialization re-defined these two methods by return
+           * __glibcxx_min(@type),and __glibcxx_max(@type)
+           */
+          ...
+        };
+
+        /* partial specializations const @_Tp and volatile @_TP,const volatile @_Tp are void */
+        /* for each built-in type,header <limits> specialized one template for it. */
+
+        /* rounding style for floating-point types */
+        enum float_round_style {
+          round_indeterminate = -1,
+          round_toward_zero = 0,
+          round_to_nearest = 1,
+          round_toward_infinity = 2,
+          round_toward_neg_infinity = 3
+        };
+
+        /* de-normalization for floating-point types */
+        enum float_denorm_style {
+          denorm_indeterminate = -1,
+          denorm_absent = 0,
+          denorm_present = 1
+        };
+
+      some useful data members :
+        is_specialized    /* if specialization exist */
+        is_signed         /* signed */
+        is_integer        /* integer */
+        is_exact          /* calculations produce no rounding erros */
+        digits            /* character/integer - number of bits,excluding sign */
+        radix             /* integer - base of the representation(almost always 2)
+                           * floating point - base of the exponent representation
+                           */
+        has_denorm        /* whether type allows denormalized values */
+        has_denorm_loss   /* loss of accuracy is detected as a denormalization loss rather
+                           * than as an inexact result
+                           */
+
+      some useful methods :
+        lowest()          /* maximum negative finite value(meaningful if @is_bounded */
+        epsilon()         /* difference of 1 and least value greater than 1,C constant FLT_EPSLION, ... */
+        round_style()     /* rounding style */
+        round_error()     /* measure of the maximum rounding error(ISO/IEC 10967-1)
+        infinity()        /* positive infinity,if available */
+        quiet_NaN()       /* quiet "Not a Number",if available */
+        signaling_NaN()   /* signaling "Not a Number",if available */
+        denorm_min()      /* minimum positive denormalized value */
+      
