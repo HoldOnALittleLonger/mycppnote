@@ -718,4 +718,150 @@ Numeric Limits :
         quiet_NaN()       /* quiet "Not a Number",if available */
         signaling_NaN()   /* signaling "Not a Number",if available */
         denorm_min()      /* minimum positive denormalized value */
+
+Type Traits and Type Utilities :
+    Purpose of Type Traits :
+      a type trait provides a way to deal with the _peroperties_ of a type.
+      it is a template,which at compile time yields a specific type or value based
+      on one or more passed template arguments,which are usually types.
+      type traits are building blocks for generic code.
+
+    std::is_pointer<> :
+      <type_traits>
+        /**
+         * integral_constant<> has a static member,its type will be the
+         * first template parameter,and its value will be the second
+         * template parameter,and its name is @value
+         * of course,it has a type-definition "typedef integral_constant<_Tp, __v> type",
+         * thus ::type can be used for class deriving
+         * operator () been overloaded in the structure,it returns @value.
+         */
+
+        typedef integral_constant<bool, false> false_type;
+        typedef integral_constant<bool, true> true_type;
+
+        // no(match everything) template parameter specialization
+        // this means,except pointer type,any others are
+        // get false
+        template<typename>
+        struct __is_pointer_helper : public false_type
+        { };
+
+        ! of course,similar to function,we can accept function parameter,
+          but do not name it,that means we do not want to make use of it,
+          just as an indicator
+
+        // pointer type template parameter specialization
+        template<typename _Tp>
+        struct __is_pointer_helper<_Tp *> : public true_type
+        { };
+
+        template<typename _Tp>
+        struct is_pointer : public __is_pointer_helper<__remove_cv_t<_Tp>>::type
+        { };
+
+      e.g.
+        // it's OK,because @value is static linkage and declared with
+        // constexpr
+        // compiler will optimizes this if-else statement depends on the @type
+        if (std::is_pointer<@type>::value) {
+          ...
+        } else {
+          ...
+        }
+
+      !! can not use std::is_pointer<> in expression "@cond ? @v1 : @v2" .
+      !! std::is_pointer<> can be used as an argument of a function's parameter,
+         which type either is std::true_type or std::false_type,can be used as an
+         calling indicator.
+         e.g.
+           template<typename T>
+           void func(@params, std::false_type) { ... }
+
+           template<typename T>
+           void func(@params, std::true_type) { ... }
+
+           template<typename T>
+           void call_to_func_is_int(@params)
+           {
+             func(@params, std::is_integral<T>());
+           }
+
+    Processing the Common Type :
+      type traits can be used to solve the problem process the "common type" of two or more types.
+      because,the function can only returns the value with one type,if we want it to return the
+      value with a common type from its parameters,then we can make use of type traits to determine
+      which type should be returned.
+      by make use of template metaprogramming technique,we can determine the real return type of
+      such function through find common type of the types of its parameters during compile-time.
+
+      ! if these types have no common type,then attempt to find a common type is an error.
+
+      std::common_type<> : (header <type_traits>)
+        // no detail,because we use this
+        // as the Prototype for specializations
+        template<typename... _Tp>
+        struct common_type;
+
+        // Partial-Specialization
+        // sizeof...(T) == 0
+        template<>
+        struct common_type<>
+        { };
+
+        // Partial-Specialization
+        // sizeof...(T) == 1 => common type is T
+        template<typename _Tp0>
+        struct common_type<_Tp0> : public common_type<_Tp0, _Tp0>
+        { };
+
+        // Partial-Specialization
+        // sizeof...(T) == 2
+        template<typename _Tp1, typename _Tp2>
+        struct common_type<_Tp1, _Tp2> : public __common_type_impl<_Tp1, _Tp2>::type
+        { };
+
+        // Partial-Specialization
+        // sizeof...(T) > 2
+        // recursive checks
+        // common_type<common_type<_Tp1, _Tp2>::type, _Rp...> ... 
+        template<typename _Tp1, typename _Tp2, typename... _Rp>
+        struct common_type<_Tp1, _Tp2, _Rp...>
+        : public __common_type_fold<common_type<_Tp1, _Tp2>, __common_type_pack<_Rp...>>
+        { };
+
+        // Prototype
+        // impl of common type when sizeof...(T) == 2
+        template<typename _Tp1, typename _Tp2,
+                 typename _Dp1 = __decay_t<_Tp1>, typename _Dp2 = __decay_t<_Tp2>>
+        struct __common_type_impl
+        {
+          using type = common_type<_Dp1, _Dp2>;
+        };
+
+        // Partial-Specialization
+        // impl of common type when sizeof...(T) == 2
+        // and _Dp1 == _Tp1, and _Dp2 == _Tp2
+        // evaluate common type of _Tp1 and _Tp2
+        template<typename _Tp1, typename _Tp2>
+        struct __common_type_impl<_Tp1, _Tp2, _Tp1, _Tp2>
+        : private __do_common_type_impl
+        {
+          using type = decltype(_S_test<Tp1, _Tp2>(0));
+        }
+
+        /**
+         * structure __do_common_type_impl defined an alias
+         *   template<typename _Tp, typename _Up>
+         *   using __cond_t = decltype(true? std::declval<_Tp>() : std::declval<_Up>());
+         *   # "@cond ? @v1 : @v2" expression produce a value @v1 or @v2,and the value
+         *     can be used by decltype keyword to produce the exact type
+         *   # keyword declval
+         *       introduced since C++ 11
+         *       produce a rvalue reference to the type T,but do not evaluate it
+         *                                                           (no real object makeup)
+         * and defined template methods _S_test<>(),_S_test_2<>() and their overloaded 
+         * versions for find common type of the given types
+         */
+        
       
