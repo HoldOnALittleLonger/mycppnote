@@ -863,5 +863,107 @@ Type Traits and Type Utilities :
          * and defined template methods _S_test<>(),_S_test_2<>() and their overloaded 
          * versions for find common type of the given types
          */
+
+    Unary Type Predicates : (result in std::true_type or std::false_type)
+      is_void<T>
+      is_integral<T>
+      is_floating_point<T>
+      is_arithmetic<T>
+      is_signed<T>
+      is_unsigned<T>
+      is_const<T>
+      is_volatile<T>
+      is_array<T>
+      is_enum<T>
+      is_union<T>
+      is_class<T>
+      is_function<T>
+      is_reference<T>
+      is_lvalue_reference<T>
+      is_rvalue_reference<T>
+      is_pointer<T>
+      is_member_point<T>
+      is_member_object_pointer<T>
+      is_member_function_pointer<T>
+      is_fundamental<T>                void,integral,floating-point,std::nullptr_t
+      is_scalar<T>                     integral,floating-point,enumeration,pointer,member point,std::nullptr_t
+      is_object<T>                     any type except void,function,reference
+      is_compound<T>                   array,enumeration,union,class,function,reference,pointer
+      is_trivial<T>
+      is_trivially_copyable<T>
+      is_standard_layout<T>
+      is_pod<T>
+      is_literal_type<T>
+
+      is_empty<T>
+      is_polymorphic<T>
+      is_abstract<T>
+      has_virtual_destructor<T>
+
+      is_default_constructible<T>
+      is_copy_constructible<T>
+      is_move_constructible<T>
+      is_copy_assignable<T>
+      is_move_assignable<T>
+      is_destructible<T>
+
+      is_trivially_default_constructible<T>
+      is_trivially_copy_constructible<T>
+      is_trivially_move_constructible<T>
+      is_trivially_copy_assignable<T>
+      is_trivially_move_assignable<T>
+      is_trivially_destructible<T>
+
+      is_nothrow_default_constructible<T>
+      is_nothrow_copy_constructible<T>
+      is_nothrow_move_constructible<T>
+      is_nothrow_copy_assignable<T>
+      is_nothrow_move_assignable<T>
+      is_nothrow_destructible<T>
+
+    Traits for Relations : (result in std::true_type or std::false_type)
+      is_same<T1, T2>
+      is_base_of<T, D>
+      is_convertible<T, T2>
+      is_constructible<T, Args...>
+      is_trivially_constructible<T, Args...>
+      is_nothrow_constructible<T, Args...>
+      
+      is_assignable<T, T2>
+      is_trivially_assignable<T, T2>
+      is_nothrow_assignable<T, T2>
+      uses_allocator<T, Alloc>
+
+    Traits for Type Modifications : (produce a type)
+      remove_const<T>
+      remove_volatile<T>
+      remove_cv<T>
+      add_const<T>
+      add_volatile<T>
+      add_cv<T>
+      make_signed<T>
+      make_unsigned<T>
+      remove_reference<T>
+      add_lvalue_reference<T>
+      add_rvalue_reference<T>
+      remove_pointer<T>
+      add_pointer<T>
+
+    Other Type Traits :
+      rank<T>                                number of dimensions of an array type(or 0)
+      extent<T, I = 0>                       extent of dimension I(or 0)
+      remove_extent<T>
+      remove_all_extents<T>
+      uderlying_type<T>                      underlying type of an enumeration type
+      decay<T>                               transfers to corresponding "by-value" type
+                                             T &, T &&, T * => T
+      enable_if<B, T = void>                 yields T only if B is TRUE
+      conditional<B, T, F>                   B ? T : F
+      common_type<T1, ...>
+      result_of<F, ArgTypes>                 type of calling F with argument types ArgTypes
+      alignment_of<T>                        alignof(T)
+      aligned_storage<Len>
+      aligned_storage<Len, Align>
+      aligned_union<Len, Types...>
         
       
