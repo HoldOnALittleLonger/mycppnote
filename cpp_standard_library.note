@@ -16,6 +16,7 @@ Callable Objects :
 
     member function :
       void Class::func(Class &obj, int a, float b, char c);
+                    /* |                         */
       Class obj;    /* +-> can omit in prototype */
       obj.func(1, 1.1, 'c');
 
@@ -1079,5 +1080,131 @@ Reference Wrappers :
     or of std::reference_wrapper<const @_Tp> as the result returns to caller.
     the type @_Tp of the std::reference_wrapper<> object returned by cref() will becomes const @_Tp,
     thus operator _Tp&() => operator const @type&() .
+
+Auxiliary Functions :
+  Minimum and Maximum :
+    header <algorithm>
+    namespace std
+      min(a, b)                      a < b ? a : b
+      min(a, b, cmp)                 minimum between @a and @b,comparing with @cmp
+      min(init-list)                 minimum between @init-list,comparing with "<"
+      min(init-list, cmp)            minimum between @init-list,comparing with @cmp
+      max(a, b)                      a > b ? a : b
+      max(a, b, cmp)                 maximum between @a and @b,comparing with @cmp
+      max(init-list)                 maximum between @init-list,comparing with ">"
+      max(init-list, cmp)            maximum between @init-list,comparing with @cmp
+      minmax(a, b)                   minimum and maximum of @a and @b,comparing with "<"
+        /* std::pair<int, int> minmax(std::minmax(3, 7)); */
+      minmax(a, b, cmp)              minimum and maximum of @a and @b,comparing with @cmp
+      minmax(init-list)              minimum and maximum of @init-list,comparing with "<"
+      minmax(init-list, cmp)         minimum and maximum of @init-list,comparing with @cmp
+
+  Swap :
+    header <utility>
+    namespace std
+      swap(a, b)                     exchange contents of @a and @b
+                                     ! if either operand is a class type,then member method
+                                       swap() must be defined,and which receive an operand
+                                       is type of another parameter of swap(@a, @b)
+                                       if both operands are class type,then each other must
+                                       defined swap() member method with another type
+
+  Comparison :
+    header <utility>
+    namespace std::rel_ops
+      operator!= <> (a, b)             !(@a == @b)
+      operator> <>  (a, b)             @b < @a
+      operator<= <> (a, b)             !(@b < @a)
+      operator>= <> (a, b)             !(@a < @b)
+
+    the purpose is to reduce the number of operator overloading definitions of a class type.
+    by use of these four template function,a class can only defines operator== and operator<
+    as well.
+
+    e.g.
+      class c {
+      public:
+        bool operator<(const c &p1, const c &p2) const
+        { return p1.__data < p2.__data; }
+
+        bool operator==(const c &p1, const c &p2) const
+        { return p1.__data == p2.__data; }
+
+        ...
+      private:
+        int __data;
+        ...
+      };
+
+      using namespace std::rel_ops;
+
+      c c1(8), c2(16);
+
+      /* from clas definition */
+      c1 < c2;
+      c1 == c2;
+
+      /* implemented by rel_ops */
+      c1 > c2;
+      c1 != c2;
+      c1 >= c2;
+      c1 <= c2;
+
+  Compile-Time Fractional Arithmetic :
+    header <ratio>
+    namespace std
+      template<intmax_t _Num, intmax_t _Den = 1>
+        struct ratio {
+          static_assert(_Den != 0, "denominator cannot be zero");
+          static_assert(_Num >= -__INTMAX_MAX__ && _Den >= -__INTMAX_MAX__,
+                        "out of range");
+
+          /**
+           * header <ratio>
+           * template<intmax_t _Pn>
+           * __static_sign : integral_constant<intmax_t, (_Pn < 0) ? -1 : 1>
+           * { };
+           *
+           * template<intmax_t _Pn>
+           * __static_abs : integral_constant<intmax_t, __Pn * __static_sign<_Pn>::value>
+           * { };
+           *
+           * template<intmax_t _Pn, intmax_t _Qn>
+           * struct __static_gcd : __static_gcd<_Qn, (_Pn % _Qn)>
+           * # stopped when either @_Pn or @_Qn becomes _zero_
+           * # @_Pn == 0 => derive integral_constant<intmax_t, __static_abs<_Qn>::value>
+           * # @_Qn == 0 => derive integral_constant<intmax_t, __static_abs<_Pn>::value>
+           */
+          static constexpr intmax_t num =
+            _Num * __static_sign<_Den>::value / __static_gcd<_Num, _Den>::value;
+
+          static constexpr intmax_t den =
+            __static_abs<_Den>::value / __static_gcd<_Num, _Den>::value;
+
+          typedef ratio<num, den> type;
+        };
+
+        usage :
+          typedef std::ratio<64, 8> sfe; /* 64/8 */
+          auto num(sfe::num); /* @num == 8 */
+          auto den(sfe::den); /* @den == 1 */
+
+        ratio_add<@ratio1, @ratio2>                => using ratio_add = typename __ratio_add<@ratio1, @ratio2>::type
+                                                      returns ratio<>
+        ratio_subtract<@ratio1, @ratio2>           => using raiot_subtract = typename __ratio_subtract<@ratio1, @ratio2>::type
+                                                      returns ratio<>
+        ratio_multiply<@ratio1, @ratio2>           => using ratio_multiply = typename __ratio_multiply<@ratio1, @ratio2>::type
+                                                      returns ratio<>
+        ratio_divide<@ratio1, @ratio2>             => using ratio_divide = typename __ratio_divide<@ratio1, @ratio2>::type
+                                                      returns ratio<>
+
+        ratio_equal<@ratio1, @ratio2>              @ratio1 == @ratio2 <-> @num1 == @num2 AND @den1 == @den2
+        ratio_not_equal<@ratio1, @ratio2>          @ratio1 != @ratio2 => !(@ratio1 == @ratio2)
+        ratio_less<@ratio1, @ratio2>               @ratio1 < @ratio2
+        ratio_less_equal<@ratio1, @ratio2>         @ratio1 <= @ratio2 => @ratio1 < @ratio2 AND @ratio1 == @ratio2
+        ratio_greater<@ratio1, @ratio2>            @ratio1 > @ratio2 =>  !(@ratio1 < @ratio2) AND !(@ratio1 == @ratio2)
+        ratio_greater_equal<@ratio1, @ratio2>      @ratio1 >= @ratio2 => !(@ratio1 < @ratio2)
+                                                   /* comparison returns std::false_type or std::true_type */
+    
         
       
