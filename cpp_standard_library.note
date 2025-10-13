@@ -1205,6 +1205,143 @@ Auxiliary Functions :
         ratio_greater<@ratio1, @ratio2>            @ratio1 > @ratio2 =>  !(@ratio1 < @ratio2) AND !(@ratio1 == @ratio2)
         ratio_greater_equal<@ratio1, @ratio2>      @ratio1 >= @ratio2 => !(@ratio1 < @ratio2)
                                                    /* comparison returns std::false_type or std::true_type */
-    
-        
+
+Clocks and Timers :
+    Chrono Libraray :
+      header <chrono>
+      namespace std::chrono
+
+      design purpose - timers and clocks might be different on different systems and improve over
+                       time in precision,reduce the number of interfaces that needed for switch
+                       time precision.
+                       provide precision-neutral concept by separating duration and point of time
+                       from specific clocks.
+
+      time duration - a time duration is defined as a specific number of ticks over a time unit.
+      time point    - a time point is defined as combination of a duration and a beginning of time(epoch)
       
+      ! the concept of a timepoint is parametrized by a clock,which is the object that defines the epoch of
+        a timepoint.different clocks have different epochs.
+
+          +--> timepoint          +--> timepoint          +--> timepoint
+          |                       |                       |
+      [ - - - - - - - - - - - - - - - - - - - - - - - - - - ]
+                        |                   |
+                        +----> duration <---+
+                        |
+                        +--> epoch of a clock 
+
+    Durations :
+      a duration is a combination of a _value_ representing the number of ticks and a _fraction_
+      representing the unit in seconds.ratio<> is used to specify the fraction.
+
+      <chrono>
+        /**
+         * duration - struct template used to represent time duration
+         * @_Rep:     type of tick
+         * @_Period:  period of ticks
+         *            # ratio<60> => 60/1 seconds -> 1 tick is 60/1 seconds(1minute)
+         *              ratio<1> => 1/1 second   -> 1 tick is 1 second
+         *              ratio<1, 1000> => 1/1000 seconds -> 1 tick is 1/1000 second == 1ms
+         * # @_Rep is floating-point type allows we pass arguments such 0.3, 0.5, and so on
+         *   values to duration's construction.
+         */
+        template<typename _Rep, typename _Period = ratio<1>>
+        struct duration;
+
+        type-definition :
+          using rep = _Rep;
+          using period = typename _Period::type;
+
+        private-data :
+          rep __r;
+
+        constructor :
+          constexpr duration() = default;
+
+          template<typename _Rep2, typename = _Require<is_convertible<const _Rep2&, rep>,
+                                                       __or_<is_float<rep>,
+                                                       __not_<__is_float<_Rep2>>>>>
+          constexpr explict duration(const _Rep2 &__rep)
+          : __r(static_cast<rep>(__rep)) { }
+
+        copy-constructor :
+          duration(const duration &) = default;
+
+          template<typename _Rep2, typename _Period2,
+                   typename = _Require<is_convertible<const _Rep2 &, rep>,
+                                       __or_<__is_float<rep>,
+                                             __and_<is_harmonic<_Period2>,
+                                                    __not_<__is_float<_Rep2>>>>>
+          constexpr duration(const duration<_Rep2, _Period2> &__d)
+          : __r(duration_cast<duration>(__d).count()) { }
+                // cast type of @__d to type of this duration object
+
+        some useful methods :
+          count()           =>        return @__r
+
+          /* these three methods are wrappers of the same name methods from
+           * struct template duration_values<_Rep>
+           */
+          zero()            =>        return rep(0)
+                                      duration of zero length
+          min()             =>        return numeric_limits<rep>::lowest()
+                                      minimum possible duration of this type
+
+          max()             =>        return numeric_limits<rep>::max()
+                                      maximum possible duration of this type
+
+          operator=(d)      =>        *this = @d
+          operator+         =>        +this_duration
+          opeartor-         =>        -this_duration
+
+          operator++()      
+          operator++(int)   
+          operator--()
+          operator--(int)
+          operator+=(d)     =>        @__r += @d.count()
+          operator-=(d)     =>        @__r -= @d.count()
+          operator*=(r)     =>        @__r *= @r
+          operator/=(r)     =>        @__r /= @r
+
+          template <typename _Rep2 = rep>
+          operator%=(d || r)
+                            =>        @__r %= @d.count() || @__r %= @r
+
+          /* there are two non-member methods used to implement "add" and "subtract" */
+          operator+(d1, d2) =>        let ctd as common_type<d1_type, d2_type>
+                                      return ctd(ctd(@d1).count() + ctd(@d2).count())
+
+          operator-(d1, d2) =>        let ctd as common_type<d1_type, d2_type>
+                                      return ctd(ctd(@d1).count() - ctd(@d2).count())
+
+          !! when assign a duration to another duration,the tick types of them one
+             are different,such one is integral,another is floating-point,must explicit
+             convert tick type before assignment.
+             e.g.
+               std::chrono::seconds halfmin;
+               std::chrono::duration<double, std::ratio<60>> thirtyseconds(0.5);
+               halfmin = thirtyseconds; // ERROR
+               halfmin = std::chrono::duration_cast<std::chrono::seconds>(thirtyseconds); // OK
+
+             # this rule should also be followed when period is different,such 1/1 and 60/1,
+               1/1 => 1 tick is 1s,60/1 => 1 tick is 60s(1 minute).
+               e.g.
+                 std::chrono::seconds s(55);
+                 std::chrono::minutes m;
+                 m = s; // ERROR
+                 m = std::chrono::duration_cast<std::chrono::minutes>(s); // OK
+
+             # std::chrono::duration_cast<> is used to cast duration type
+
+        pre-defined special duration :
+          using nanoseconds = duration<_GLIBCXX_CHRONO_INT64_T, nano>;
+          using microseconds = duration<_GLIBCXX_CHRONO_INT64_T, micro>;
+          using milliseconds = duration<_GLIBCXX_CHRONO_INT64_T, milli>;
+          using seconds = duration<_GLIBCXX_CHRONO_INT64_T>;
+          using minutes = duration<_GLIBCXX_CHRONO_INT64_T, ratio<60>>;
+          using hours = duration<_GLIBCXX_CHRONO_INT64_T, ratio<3600>>;
+          using days = duration<_GLIBCXX_CHRONO_INT64_T, ratio<86400>>;
+          using weeks = duration<_GLIBCXX_CHRONO_INT64_T, ratio<604800>>;
+          using months = duration<_GLIBCXX_CHRONO_INT64_T, ratio<2629746>>;
+          using years = duration<_GLIBCXX_CHRONO_INT64_T, ratio<31556952>>;
