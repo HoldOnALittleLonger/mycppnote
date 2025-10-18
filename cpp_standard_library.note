@@ -1345,3 +1345,122 @@ Clocks and Timers :
           using weeks = duration<_GLIBCXX_CHRONO_INT64_T, ratio<604800>>;
           using months = duration<_GLIBCXX_CHRONO_INT64_T, ratio<2629746>>;
           using years = duration<_GLIBCXX_CHRONO_INT64_T, ratio<31556952>>;
+
+    Clocks and Timepoints :
+      relationship between clock and timepoint -
+        a clock defines an epoch and a tick period,and a clock provides a type for any timepoint
+        specified according to this clock.
+        a timepoint represents a specific point in time by associating a positive or negative
+        duration to a given clock.
+
+      type definition and static member for each clock -
+        clock::duration        duration type of this clock
+        clock::rep             tick type of this clock
+        clock::period          unit type of this clock  /* duration::period */
+        clock::time_point      timepoint of this clock
+        clock::is_steady       is it steady?
+        clock::now()           yield a time_point for the current point in time
+
+      C++ standard library clocks :
+        std::system_clock - <chronon> as a structure
+          represents timepoints associated with the usual real-time clock of the current system
+          /**
+           * provides static member methods for map to C api
+           *   static std::time_t to_time_t(const time_point &__t) noexcept;
+           *   # implementation make use of duration_cast<> and force type convert std::time_t()
+           *   static time_point from_time_t(std::time_t __t) noexcept;
+           *   # implementation make use of time_point_cast<>
+           */
+
+        std::steady_clock - <chronon> as a structure
+          steady clock,never gets adjusted,thus timepoint values never decrease as the physical
+          time advances,and they advance at a steady rate relative to real time
+          /* monotonic clock */
+        
+        std::high_resolution_clock - <chronon> as a structure
+          represents a clock with the shortest tick period possible on the current system
+          /* using high_resolution_clock = system_clock; */
+
+        ! standard does not provide requirements for the precision,the epoch,the range of the
+          clocks.
+        ! the durations of system_clock and steady_clock are the same chrono::nanoseconds.
+        ! if a program have to compare or compute the difference of two times,should make use of
+          steady_clock than system_clock,because steady_clock never adjusted.
+      
+      the time_point object :
+        <chrono>
+          namespace - std::chrono
+
+          template<typename _Clock, typename _Dur>
+          struct time_point {
+            typedef _Clock clock;
+            typedef _Dur duration;
+            typedef typename duration::rep rep;
+            typedef typename duration::period period;
+
+            // default constructor
+            constexpr time_point() : __d(duration::zero())
+            { }
+
+            // constructor
+            constexpr explicit time_point(const duration &__dur)
+            : __d(__dur)
+            { }
+
+            // copy-constructor
+            template<typename _Dur2, typename = _Require<is_convertible<_Dur2, _Dur>>>
+            constexpr time_point(const time_point<clock, _Dur2>& __t)
+            : __d(__t.time_since_epoch())
+            { }
+
+            // observer
+            constexpr duration
+            time_since_epoch() const
+            { return __d; }
+
+            ...
+        
+          private:
+            duration __d;
+          };
+
+          some useful operations :
+            min()                    -    time_point(duration::min())
+            max()                    -    time_point(duration::max())
+            operator+=(__dur)        -    @__d += @__dur   
+            operator-=(__dur)        -    @__d -= @__dur
+
+            // the following methods are make use of time_since_epoch() method
+            operator+(tp, dur)       -    @tp.time_since_epoch() + @dur
+            operator+(dur, tp)       -    @dur + @tp.time_since_epoch()
+            operator-(tp, dur)       -    @tp.time_since_epoch() - @dur
+            operator-(tp1, tp2)      -    @tp1.time_since_epoch() - @tp2.time_since_epoch()
+            operator==(tp1, tp2)     -    @tp1 == @tp2
+            operator!=(tp1, tp2)     -    !(@tp1 == @tp2)
+            operator<(tp1, tp2)      -    @tp1 < @tp2
+            operator<=(tp1, tp2)     -    @tp1 <= @tp2
+            operator>(tp1, tp2)      -    @tp1 > @tp2
+            operator>=(tp1, tp2)     -    @tp1 >= @tp2
+
+          time_point_cast :
+            /**
+             * time_point_cast<> - cast time_point
+             * @_ToDur:            duration of the time_point that convert to
+             * @_Dur:              duration of the time_point that is original
+             * @_Clock:            clock of the time_point(s)
+             * @__t:               original time_point object
+             * return:             a new time_point<_Clock, _ToDur> object
+             * # function make use of methods duration_cast<> and __t.time_since_epoch()
+             */
+            template<typename _ToDur, typename _Clock, typename _Dur>
+            constexpr typename enable_if<__is_duration<_ToDur>::value,
+                                         time_point<_Clock, _ToDur>>::type
+            time_point_cast(const time_point<_Clock, _Dur>& __t);
+
+      ! timepoint can not less than its epoch or greater than its maximum duration.
+      ! C++ does not defined time stamp string casting routines in addition,because
+        C library provided routine ctime() to handle this work.
+        but only the timepoint of system_clock is able to be converted to time_t type.
+      ! time_point always associated with a clock,only a timepoint without clock is no sense.
+      ! C library routine gmtime() can get UTC time stamp from time_t type,the result is
+        stored in structure tm.
