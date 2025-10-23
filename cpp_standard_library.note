@@ -1464,3 +1464,26 @@ Clocks and Timers :
       ! time_point always associated with a clock,only a timepoint without clock is no sense.
       ! C library routine gmtime() can get UTC time stamp from time_t type,the result is
         stored in structure tm.
+
+The Standard Template Library :
+    STL Components :
+      containers - used to manage collections of objects of a certain kind.
+      iterators  - used to step through the elements of collections of objects.
+                   major advantage :
+                     offer a small but common interface for any arbitraty container type.
+      algorithms - used to process the elements of collections.
+                   and programmer is able to supply certain auxiliary functions called by
+                   the algorithms to suit needs even if that needs is very special or complex.
+
+      the concept of the STL is based on a separation of data and operations. /* generic */
+                                                                              /* object-oriented */
+      the data is managed by container classes,and the operations are defined by configurable
+      algorithms.iterators are the glue between these two components,they let any algorithm
+      interact with any container.
+      /* thanks to template,we can delay type determining to compile-time,compiler will produce
+       * the appropriate code for us.
+       */
+
+      all components are templates for any type,provided that type is able to perform the required
+      operations.
+      containers and algorithms are generic for arbitrary types and classes,respectively.
