@@ -1487,3 +1487,57 @@ The Standard Template Library :
       all components are templates for any type,provided that type is able to perform the required
       operations.
       containers and algorithms are generic for arbitrary types and classes,respectively.
+
+    Containers :
+      container classes(containers) manage a collection of elements.
+
+      C++ STL containers -
+        Sequence Containers :
+          ordered collections in which every elements has a certain position,this position depends
+          on the time and place of the insertion,but it is independent of the value of the element.
+            array
+            vector
+            deque(circularity)
+            list(doubly-linked)
+            forward-list
+
+        Associative Containers :
+          sorted collections in which the position of an element depends on its value(or key - key/value pair)
+          due to a certain sorting criterion.
+            set
+            multi set
+            map
+            multi map
+
+        Unordered Containers : (unordered associative containers)
+          unordered collections in which the position of an element does not matter.the only important question
+          is whether a specific element is in such a collection.value and order of insertion have no influence
+          on the position,and the position might change over the lifetime of the container.
+            unordered set
+            unordered multi set
+            unordered map
+            unordered multi map
+
+        ! STL collection types are completely distinct from one another and have very different implementations
+          that are not derived from one another.
+        ! automatic sorting is only a useful "side effect" of the implementation of an associative container,
+          designed to enable better performance;but sequence containers also support to manually sorting.
+
+      Sequence Container - vector : <vector>
+        a vector manages its elements in a dynamic array.
+          enable random access operator[]
+          appending and removing elements at the end of the array is very fast
+          // appending elements is amortized very fast,an individual append may be slow when
+             a vector has to reallocate new memory and to copy existing elements into the new memory.
+             # but such reallocations are rather rare.
+               actually,vector reallocate memory the size is 2 * old_size .
+          inserting an element in the middle or at the beginning of the array takes time(must move following elements)
+
+      Sequence Container - deque : <deque>
+        deque is an abbreviation for "double-ended queue".
+          implemented in a dynamic array and can grow in both directions
+          inserting elements at the end and at the beginning is fast
+          inserting elements in the middle takes time(must move following elements)
+          # because queue follows the rule FIFO,thus,it should not be used to insert element in the middle;
+            new element is queued in the end,and old element dequeued from head.
+
