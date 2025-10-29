@@ -1541,3 +1541,34 @@ The Standard Template Library :
           # because queue follows the rule FIFO,thus,it should not be used to insert element in the middle;
             new element is queued in the end,and old element dequeued from head.
 
+      Sequence Container - array : <array>
+        an array(object of class array<>) manages its elements in an array of fixed size.
+          size of array can not be changed
+          values of elements are changeable
+          must specify the size of array at creation time
+          enable random access operator[]
+        /**
+         * the traditional C array is a pointer,thus we can specify the size of array during running-time.
+         * for resize an array,must invoke C library routines realloc() or reallocarray().
+         */
+
+      Sequence Container - list : <list> / <forward_list>
+        since C++11,two different list containers are provided by the STL -
+          1> class list<>         // ordinary list
+          2> class forward_list<> // forward list
+             /* just a restricted list,and in practice,this difference is not so important */
+        
+        a list<> is implemented as a doubly linked list of elemtns.
+          disable random access
+          to successor or to predecessor by make use of the links(constant time)
+          insert a new element and remove a existed element in the list at any position are very fast
+          move element from old position to new position is very fast
+
+        a forward_list<> is implemented as a singly linked list of elements.
+          disable random access
+          only allow to successor by make use of the link
+          because only a link to successor,insertion have to know the element in the front of given position
+          /* remove is the same */
+          do not support move backward operations and others that would cause a performance penalty
+          /* do not provide push_back() and size() member methods */
+
