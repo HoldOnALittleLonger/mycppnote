@@ -1508,6 +1508,18 @@ The Standard Template Library :
             multi set
             map
             multi map
+          ! the criterion of sorting takes the form of a function that compares either the value or,
+            if it is a key/value pair,the key.
+            the default comparison is operator<,but support to customized comparison routine.
+          ! typically implemented as binary tree,key of left child < key of parent < key of right child.
+          ! support type and duplicates handling are depend on the container.
+          ! for containers map and multimap,the element type is std::pair<>,thus,methods first() and second()
+            of std::pair<> are able to be called on the element of these containers.
+          ! since C++11,for elements that have the same key,newly inserted elements are inserted at the end of
+            equivalent elements that multisets and multimaps already contain.
+            in addition,the order of equivalent lements is guaranteed to remain stable if insert(),emplace(),
+            or erase() is called.
+            
 
         Unordered Containers : (unordered associative containers)
           unordered collections in which the position of an element does not matter.the only important question
@@ -1571,4 +1583,48 @@ The Standard Template Library :
           /* remove is the same */
           do not support move backward operations and others that would cause a performance penalty
           /* do not provide push_back() and size() member methods */
+
+      Associative Container - set : <set>
+        a set is a collection in which elements are sorted according to their own values,and
+        duplicates are not allowed.
+        
+        e.g.
+          std::set<int> int_set{1, 2, 3, 7, 5, 4, 9, 8, 6};  // initializer-list
+          // sorted to {1, 2, 3, 4, 5, 6, 7, 8, 9}
+          int_set.insert(0);
+          // int_set : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+          // int_set.insert(3); => ERROR,duplicate
+
+      Associative Container - multiset : <set>
+        a multiset is the same as a set except that duplicates are allowed.
+
+        e.g.
+          std::multiset<int> int_multiset{0, 0, 2, 6, 1, 4, 7, 5, 3, 9, 8};
+          // int_multiset : {0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+          int_multiset.insert(3);
+          // int_multiset : {0, 0, 1, 2, 3, 3, 4, 5, 6, 7, 8, 9}
+
+      Associative Container - map : <map>
+        a map contains element that are key/value pairs.each element has a key that is the basis
+        for the sorting criterion and a value.
+        each key may occur only once.
+        a map can also be used as an "associative array",an array that has an arbitrary index type.
+
+        e.g.
+          std::map<std::string, int> str_int_map{{"one", 1}, {"two", 2}, {"three", 3}};
+          // str_int_map : {[one, 1], [three, 3], [two, 2]}
+          //               sorting criterion is the keyA < keyB
+
+      Associative Container - multimap : <map>
+        a multimap is the same as a map except that duplicates are allowed,thus it may contains the
+        elements that have the same key.
+        a multimap can also be used as "dictionary".
+
+        e.g.
+          std::multimap<std::string, int> str_int_multimap{{"one", 1}, {"two", 2}, {"three", 3}};
+          // str_int_multimap : {[one, 1], [three, 3], [two, 2]}
+          //                    sorting criterion is the keyA < keyB
+          str_int_multimap.insert({"one, 3"});  // call to void multimap::insert(std::initializer_list)
+          // str_int_multimap : {[one, 1], [one, 3], [three, 3], [two, 2]}
+          
 
