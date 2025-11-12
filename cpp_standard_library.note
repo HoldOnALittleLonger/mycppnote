@@ -1501,6 +1501,7 @@ The Standard Template Library :
             list(doubly-linked)
             forward-list
 
+
         Associative Containers :
           sorted collections in which the position of an element depends on its value(or key - key/value pair)
           due to a certain sorting criterion.
@@ -1512,6 +1513,7 @@ The Standard Template Library :
             if it is a key/value pair,the key.
             the default comparison is operator<,but support to customized comparison routine.
           ! typically implemented as binary tree,key of left child < key of parent < key of right child.
+            time complexity for reading is O(logN).
           ! support type and duplicates handling are depend on the container.
           ! for containers map and multimap,the element type is std::pair<>,thus,methods first() and second()
             of std::pair<> are able to be called on the element of these containers.
@@ -1529,6 +1531,13 @@ The Standard Template Library :
             unordered multi set
             unordered map
             unordered multi map
+
+          ! features provided since C++11.
+          ! a specific element is "somewhere" in the container.
+          ! typically implemented as a hash table,array of linked lists.
+          ! use of unordered containers provides amortized constant complexity(access O(1)),provided
+            that it has a good function.
+
 
         ! STL collection types are completely distinct from one another and have very different implementations
           that are not derived from one another.
@@ -1626,5 +1635,40 @@ The Standard Template Library :
           //                    sorting criterion is the keyA < keyB
           str_int_multimap.insert({"one, 3"});  // call to void multimap::insert(std::initializer_list)
           // str_int_multimap : {[one, 1], [one, 3], [three, 3], [two, 2]}
+
+      Unordered Container - unordered_set : <unordered_set>
+        an unordered set is a collection of unordered elements,where each element may occur only once.
+
+      Unordered Container - unordered_multiset : <unordered_set>
+        an unordered multiset is the same as an unordered set except that duplicates are allowed.
+
+      Unordered Container - unordered_map : <unordered_map>
+        an unordered map contains elements that are key/value pairs.each key may occur only once.
+        an unordered map can also be used as an "associative array",an array that has an arbitrary
+        index type.
+
+        ! value type of unordered_map<> is std::pair<const _Key, _Tp>,where _Key is type of key and
+          _Tp is type of value.
+      
+      Unordered Container - unordered_multimap : <unordered_map>
+        an unordred multimap is the same as an unordred map except that duplicates(same key) are allowed. 
+        an unordered multimap can also be used as "dictionary".
+
+      Associative Arrays :
+        both maps and unordered maps are collections of key/value pairs with unique keys,such a collection
+        can also be thought of as an "associative array",an array whose index is not integer value.
+        both of them have provided overload of operator[] -
+          mapped_type &operator[](const key_type& __k);
+          // also provided member function at() .
+          
+        e.g.
+          std::unordered_map<std::string, int> uo_map; // structure or class has constructor refuse
+                                                       // {0} - zero initializer
+          uo_map["one"] = 1;
+          uo_map["two"] = 2;
+          uo_map["eight"] = 8;
+
+          int x(uo_map["eight"]);
+
           
 
