@@ -1670,5 +1670,105 @@ The Standard Template Library :
 
           int x(uo_map["eight"]);
 
-          
+      Other Containers :
+        std::basic_string<>, std::string, std::wstring -
+          std::string is specialization of std::basic_string<> for char type.
+          std::wstring is specialization of std::basic_string<> for wchar type.
+  
+          C++ string is similar to vectors but specified for characters.
 
+        C-Style Arrays -
+          an ordinary array that has a declared fixed size or a dynamic size managed
+          by memory allocator.
+          but ordinary array for character do not provide iterators,the actions based on
+          pointer of char type.
+          ! nevertheless,STL's design allow call algorithms for them.
+
+        User-Defined Containers -
+          user can provide customized containers,and all of them should follow the STL rules.
+          -
+            provide iterator
+            provide begin(),end(),and provide opeator!=() for iterator to the container in range-for
+            provide member-acess operator overload
+            provide derefer operator overload
+            provide random access operator overload if support to random accessing
+            provide overload versions for some STL interfaces to support the customized containers
+            ...
+
+    Container Adapters :
+      the C++ STL provides "container adapters" which are predefined containers that provide a
+      restricted interface to meed special needs.these container adapters are implemented by
+      using the fundamental container classes.
+
+      Stack : <stack>
+        a stack manages its elements by the LIFO policy.
+        at any time,only the top element is visble.
+
+      Queue : <queue>
+        a queue manages its elements by the FIFO policy,that is,it is an ordinary buffer.
+
+      Priority Queue : <queue>
+        a priority queue is a container in which the elements may have different priorities.
+        the priority is based on a sorting criterion.
+        a priority queue is,in effect,a buffer in which the next element is always one having
+        the highest priority inside the queue,if more than one element has the highest priority,
+        the order of these elements is undefined.
+        // binary-heap, binomial-heap
+
+    Iterators :
+      iterator is the object that fulfill the concept that an object represents positions of elements
+      in a container.
+      an iterator is an object that can iterate over elements,these elements may be all or a subset
+      of the elements of an STL container,the iterator represents a certain position in a container.
+
+      fundamental operations -
+        operator* => returns the element of the current position
+        operator-> => access the member of the element of the current position
+        operator++() => prefix increase
+        operator--() => postfix decrease
+        operator++(int) => postfix increase
+        operator--(int) => postfix decrease
+        operator== => logical equal
+        operator!= => logical not equal
+        operator= => assignment
+
+      ! C++ iterators also support to ordinary C-Style array.
+        when use iterator with C-Style array,it may be smart pointers.
+      ! the internal behavior of iterators depends on the data structure over which
+        they iterate,thus,each container type supplies its own kind of iterator.
+        as a result,iterators share the same interface but have different types.
+
+      iterator types -
+        input_iterator         =>    read only
+        output_iterator        =>    write only
+        forward_iterator       =>    input_iterator + output_iterator,forward(++) only
+        bidirectional_iterator =>    forward + backward(--)
+        random_access_iterator =>    iterator + offset
+        contiguous_iterator    =>    points to objects stored contiguously in memory
+                                     // actually,it generalised random_access_iterator
+
+      basic member functions that containers provide -
+        begin() => return an iterator points to the position of the first element
+        end() => return an iterator points the next position of the last element
+                 // also called past-the-end iterator
+        ! if container is empty,then begin() and end() both of them should return the
+          position what end() will returns.
+
+      e.g.
+        range-for :
+          std::list<int> ilist;
+          ...
+          for (auto& item : ilist) {
+            ...
+          }
+
+        for :
+          std::list<int> ilist;
+          ...
+          auto end_pos(ilist.end());
+          auto begin_pos(ilist.begin());
+
+          for (auto i(begin_pos); i != end_pos; ++i) {
+            auto& item(*i);
+            ...
+          }
