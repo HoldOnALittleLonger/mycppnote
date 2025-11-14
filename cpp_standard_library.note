@@ -1738,7 +1738,7 @@ The Standard Template Library :
         they iterate,thus,each container type supplies its own kind of iterator.
         as a result,iterators share the same interface but have different types.
 
-      iterator types -
+      iterator category -
         input_iterator         =>    read only
         output_iterator        =>    write only
         forward_iterator       =>    input_iterator + output_iterator,forward(++) only
@@ -1753,6 +1753,20 @@ The Standard Template Library :
                  // also called past-the-end iterator
         ! if container is empty,then begin() and end() both of them should return the
           position what end() will returns.
+        cbegin() => constant iterator version of begin()
+        cend() => constant iterator version of end()
+        ! if invoke begin() on a const object,the begin() will also return a constant
+          iterator,invoke end() is the same.
+          constant iterator forbid modification to the element.
+
+      ! in the most cases,iterator for a container is defined in the same header,as 
+        a general structure outside to the container or a nested structure in the container
+        definition.
+        they usually associated with an iterator tag,that describe what kinds of operations
+        is supported by the iterator.for example,std::list<> do not support random access,
+        so the tag of its itrator should be "bidirectional_iterator_tag",
+        but for std::forward_list<>,the tag of its iterator should be "forward_iterator_tag".
+        the tag describe what is the category of this iterator.
 
       e.g.
         range-for :
@@ -1772,3 +1786,14 @@ The Standard Template Library :
             auto& item(*i);
             ...
           }
+
+          /**
+           * ++i VS i++
+           *   ++iter
+           *     ++iter
+           *     return *iter
+           *   iter++
+           *     auto tmp(*iter)  // will create temporary object
+           *     iter++
+           *     return tmp
+           */
