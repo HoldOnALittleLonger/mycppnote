@@ -1604,6 +1604,18 @@ The Standard Template Library :
           // int_set : {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
           // int_set.insert(3); => ERROR,duplicate
 
+          std::set<int, std::greater<int>> intSet; // use descending order
+          intSet.insert(3);
+          intSet.insert(1);
+          ...
+          intSet.insert( {33, 65, 21, 78, 20, 13} ); // C++11,initializer-list
+
+
+          // std::greater<>,a template function defined in <bits/stl_function.h>.
+          // it has defined operator()(@arg1, @arg2),returns @arg1 > @arg2.
+
+          ! usage for multiset is similar to set.
+
       Associative Container - multiset : <set>
         a multiset is the same as a set except that duplicates are allowed.
 
@@ -1641,6 +1653,17 @@ The Standard Template Library :
 
       Unordered Container - unordered_multiset : <unordered_set>
         an unordered multiset is the same as an unordered set except that duplicates are allowed.
+
+        e.g.
+          std::unordered_multiser<int> int_multiset;
+          int_multiset.insert( {3, 9, 2, 1, 4, 2, 5, 7, 4, 10, 3, 0, 2} );
+          // int_multiset : unordered,any new element inserted into the set may change the positions
+          //                of all elements in the container.
+          //                ! elements have equal values are adjacent to each other.
+
+          ! the iterator over this container is alike to array traversing.
+            from index 0 to index N - 1,traverse each list at current index.
+                 // array size is N
 
       Unordered Container - unordered_map : <unordered_map>
         an unordered map contains elements that are key/value pairs.each key may occur only once.
@@ -1738,14 +1761,28 @@ The Standard Template Library :
         they iterate,thus,each container type supplies its own kind of iterator.
         as a result,iterators share the same interface but have different types.
 
-      iterator category -
-        input_iterator         =>    read only
-        output_iterator        =>    write only
+      iterator category - define only the abilities of iterator
+        input_iterator         =>    read only,forward only
+
+        output_iterator        =>    write only,forward only
+
         forward_iterator       =>    input_iterator + output_iterator,forward(++) only
+                                     // std::forward_list<> use forward_iterator
+                                     // unordered_set,unordered_multiset,unordered_map,
+                                     // unordered_multimap are "at least" use forward
+                                     // iterator
+
         bidirectional_iterator =>    forward + backward(--)
-        random_access_iterator =>    iterator + offset
+                                     // list,set,multiset,map,multimap
+
+        random_access_iterator =>    bidirectional_iterator + offset
+                                     // vector,deque,array,string
+
         contiguous_iterator    =>    points to objects stored contiguously in memory
                                      // actually,it generalised random_access_iterator
+
+        ! about logical operation,have to pay attention for that not all iterators supported
+          operator<,operator> and etc.but all iterators have supported operator!= .
 
       basic member functions that containers provide -
         begin() => return an iterator points to the position of the first element
