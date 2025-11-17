@@ -1834,3 +1834,125 @@ The Standard Template Library :
            *     iter++
            *     return tmp
            */
+
+    Algorithms :
+      the STL provides several standard algorithms for processing elements of collections.
+      algorithms are not member functions of the container classes but instead are global
+      functions that operate with iterators. /* generic functional programming paradigm */
+                                             /* these algorithms can also be used with 
+                                              * user-defined container types.
+                                              */
+      !! disadvantages :
+           > the usage is not intuitive
+           > some combinations of data structures and algorithms
+             might not work
+             /* OR can be combined but not useful */
+
+      <bits/stl_algo.h> // this header is inclued by header <algorithm>
+                        // namespace : std
+        /**
+         * min_element - return position of minimum element in the given range
+         * @_ForwardIterator:
+         *               template parameter,forwad iterator
+         *               template need the iterator support to operator++
+         * @__first:     starting of the range
+         * @__last:      end of the range
+         * return:       forward iterator which points to the minimum element
+         * # the default comparator of elements is operator<
+         * # there is another overload version which require third parameter
+         *   as comparator of elements
+         */
+        template<typename _ForwardIterator>
+        _GLIBCXX14_CONSTEXPR
+        _ForwardIterator
+        inline min_element(_ForwardIterator __first, _ForwardIterator __last);
+
+        e.g.
+          std::list<int> int_list{3, 2, 5, 7, 1 ,4, 6, 10, 9};
+          auto min = std::min_element(int_list.begin(), int_list.end());
+          // @min points to element 1
+
+        /**
+         * max_element - return position of maximum element in the given range
+         * # similar to min_element(),the default comparator still is operator<,
+         *   but exchanged the order of arguments
+         * # there is another overload version which require third parameter
+         *   as comparator of elements
+         */
+        template<typename _ForwardIterator>
+        _GLIBCXX14_CONSTEXPR
+        inline _ForwardIterator
+        max_element(_ForwardIterator __first, _ForwardIterator __last);
+
+        /**
+         * sort - sort the elements of a sequence
+         * @_RandomAccessIterator:
+         *        template parameter,iterator type should be random access iterator
+         * @__first:
+         *        starting of the range
+         * @__last:
+         *        end of the range
+         * # sorts the elements in the range [@__first, @__last) in ascending order
+         * # the relative ordering of equivalent elements is not preserved
+         * # there is another overload version which require third parameter
+         *   as comparator of elements
+         */
+        template<typename _RandomAccessIterator>
+        _GLIBCXX20_CONSTEXPR
+        inline void
+        sort(_RandomAccessIterator __first, _RandomAccessIterator __last);
+
+        /**
+         * stable_sort - sort the elements of a sequence,preserving the relative
+         *               order of equivalent elements
+         * # stable_sort() is similar to sort(),but two equivalent elements have the
+         *   same relative ordering
+         * # the default comparator is operator<
+         * # there is another overload version which require third parameter
+         *   as comparator of elements
+         */
+        template<typename _RandomAccessIterator>
+        inline void
+        stable_sort(_RandomAccessIterator __first, _RandomAccessIterator __last);
+
+        /**
+         * find - attempt to find and return position of given element in the
+         *        given range
+         * @_InputIterator:
+         *        template parameter,input iterator,read only
+         * @_Tp:  type of the value of the element,for some containers they identify
+         *        element by key,@_Tp can be the type of the key
+         * @__first:
+         *        starting of the range
+         * @__last:
+         *        end of the range
+         * @__val:
+         *        the value is going to be found
+         * return:
+         *        position of the element in the range if found
+         *        return @__last if no such element
+         * # if the container support same identifier,then this routine will returns
+         *   the first position where such element is placed
+         * # the default comparator is operator==(v1, v2)
+         * # there is another interface find_if() which require a predicate as third
+         *   parameter,it will return the position where the given predicate is TRUE,
+         *   or return @__last if no such iterator exists
+         */
+        template<typename _InputIterator, typename _Tp>
+        _GLIBCXX20_CONSTEXPR
+        inline _InputIterator
+        find(_InputIterator __first, _InputIterator __last, const _Tp& __val);
+
+        /**
+         * reverse - reverse a sequence
+         * @_BidirectionalIterator:
+         *           template parameter,iterator type should be bidirectional iterator
+         * @__first: starting of the range
+         * @__last:  end of the range
+         * # this routine reverse the order of the elements in the range [@__first, @__last)
+         * # do not pass constant iterator to this routine,because it processes modification
+         */
+        template<typename _BidirectionalIterator>
+        _GLIBCXX20_CONSTEXPR
+        inline void
+        reverse(_BidirectionalIterator __first, _BidirectionalIterator __last);
