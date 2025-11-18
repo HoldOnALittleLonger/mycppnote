@@ -1956,3 +1956,93 @@ The Standard Template Library :
         _GLIBCXX20_CONSTEXPR
         inline void
         reverse(_BidirectionalIterator __first, _BidirectionalIterator __last);
+
+      Ranges :
+        the API of algorithms for STL containers usually request user pass to them the
+        range of elements they will operates on.
+        caller must ensure the range is valid,that is the end of the range is reachable from
+        the beginning by iterating through the elements.
+        // programmer have to ensure that both iterators belong to the same container and
+        // that the begining is not behind the end.
+
+        every algorithm processes half-open ranges - [begin, end).
+        the half-open-range concept has the advantages that it is simple and avoids special
+        handling for empty collections.
+        of course,it still has some disadvantages -
+          we have known that find() return @__last if no such iterator exists,so that
+            auto pos = find(begin, end, val);
+            // pos == @end
+            reverse(pos, end);  // reverses an empty range [@end, @end)
+                                // @end == @end,return to caller with do nothing
+            auto posB = find(begin, end, valid_val);
+            auto maxA = max_element(begin, posB); // maximum in range - [begin, posB)
+                                                  // so we will skip the element at
+                                                  // position @posB
+                                                  // for deal with this problem,must
+                                                  // invoke the routine with ++@posB
+
+        Multiple Ranges :
+          !! when call algorithms for multiple ranges,make sure that the second and
+             additional ranges have at least as many elements as the first range.
+
+          some algorithm API can receives more than one ranges,when using them,must
+          follow the rule at above.
+
+          <bits/stl_algobase.h>
+            /**
+             * equal - tests a range for element-wise equality
+             * @_II1:  template parameter,type of iterator of range1
+             *         should be input iterator
+             * @_II2:  template parameter,type of iterator of range2
+             *         should be input iterator
+             * @__first1:
+             *         begin of range1
+             * @__last1:
+             *         end of range1
+             * @__first2:
+             *         begin of range1
+             * return: TRUE => ALL(eI OF Range1 -> eI == pI OF Range2)
+             *         FALSE => NOT ALL(eI OF Range1 -> eI == pI OF Range2)
+             * # Range1 is defined by [@__first1, @__last1)
+             *   Range2 is defined by [@__first2, @__first2 + (@__last1 - @__first1))
+             */
+            template<typename _II1, typename _II2>
+            _GLIBCXX20_CONSTEXPR
+            inline bool
+            equal(_II1 __first1, _II1 __last1, _II2 __first2);
+
+            e.g.
+              std::list<int> int_list1{1, 2, 3, 4, 5, 6};
+              std::list<int> int_list2{3, 4, 5};
+              equal(std::find(int_list1.begin(), int_list1.end(), 3),
+                    std::find(int_list1.begin(), int_list1.end(), 6},
+                    int_list2.begin());
+              // return TRUE
+
+            /**
+             * copy - copies elements of the first range into result
+             * @_II:  type of iterator of the Range1
+             *        should be input iterator
+             * @_OI:  type of iterator of the result
+             *        should be output interator
+             * @__first:
+             *        begin of Range1
+             * @__last:
+             *        end of Range1
+             * @__result:
+             *        begin of Result
+             * return:
+             *        end of Result = @__result + (@__last - @__first)
+             * # the end of the output range is permitted to be contained
+             *   within [@__first, @__last) - must ensure it is large enough
+             * # overwrite rather than insert,thus no automatical allocating
+             *   can take place
+             *   for enable automatical allocating,must use insert iterator
+             *   to instead output iterator
+             * # associative and unordered containers can not be used as a 
+             *   destination for overwriting algorithms
+             */
+            template<typename _II, typename _OI>
+            _GLIBCXX20_CONSTEXPR
+            inline _OI
+            copy(_II __first, _II __last, _OI __result);
