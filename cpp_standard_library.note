@@ -2046,3 +2046,105 @@ The Standard Template Library :
             _GLIBCXX20_CONSTEXPR
             inline _OI
             copy(_II __first, _II __last, _OI __result);
+
+    Iterator Adapters :
+      iterators are pure abstructions - anything that behaves like an iterator is an iterator.
+      user can write classes that have the interface of iterators but do something completely
+      different.
+
+      the predefined special iterators : iterator adapters
+        1> insert iterators
+        2> stream iterators
+        3> reverse iterators
+
+      insert iterators :
+        insert iterators or inserters are used to let algorithms operate in insert mode rather
+        than in overwrite mode.this will let containers grow accordingly - std::copy(),etc.
+
+        <bits/stl_iterator.h>
+          /**
+           * front_insert_iterator - iterator adapter used to insert element to specified
+           *                         container
+           * @_Container:            template parameter,container type
+           * # this adapter is used to solve the destination has not valid space to
+           *   contain the coming element in STL algorithm
+           *   for achieve the purpose,class has defined operator=() overload which
+           *   will invoke member method push_front() of @container,this method cause
+           *   automatical memory allocating
+           * # this adapter do not support iterator step
+           */
+          template<typename _Container>
+          class front_insert_iterator
+          : public iterator<output_iterator_tag, void, void, void, void>
+          {
+          protected:
+            _Container *container;
+          public:
+            typedef _Container container_type;
+            using difference_type = ptrdiff_t; // NEED __cplusplus > 201703L
+            ...
+          };
+
+          /* front_inserter - makeup a front_insert_iterator object from given container */
+          template<typename _Container>
+          _GLIBCXX20_CONSTEXPR
+          inline front_insert_iterator<_Container>
+          front_inserter(_Containter& __x);
+
+          /**
+           *  back_insert_iterator - similar to front_insert_iterator,but invoke member method
+           *                         push_back() on given container
+           */
+          template<typename _Container>
+          class back_insert_iterator
+          : public iterator<output_iterator_tag, void, void, void, void>
+          {
+            ...
+          };
+
+          /* makeup back_insert_iterator object from the given container */
+          template<typename _Container>
+          _GLIBCXX20_CONSTEXPR
+          inline back_insert_iterator<_Container>
+          back_inserter(_Container& __x);
+
+          /**
+           * insert_iterator - iterator adapter for inserting
+           * @container:       container object
+           * @iter:            container iterator whose type is
+           *                   _Container::iterator
+           * # this class is similar to front inserter and back inserter,
+           *   except operator=() invoke member method insert() of @container
+           *   which usually insert element at position front to @iter,
+           *   and then increase @iter
+           * # except std::array and std::forward_list,such insert() method
+           *   have been implementd in the predefined containers include
+           *   associative and unordered containers
+           *   - for associative containers and unordered containers,the position
+           *     specified by insert() method would as a "hint" where the searching
+           *     of correct position to starting
+           * # iterator step is no-op
+           */
+          template<typename _Container>
+          class insert_iterator
+          : public iterator<output_iterator_tag, void, void, void, void>
+          {
+          protected:
+            _Container *container;
+            _Iter iter;
+          };
+
+          /* makeup general inserter */
+          template<typename _Container>
+          constexpr insert_iterator<_Container>
+          inserter(_Container& __x, typename _Container::iterator __i);
+
+        ! in normal case,the procedure of copying A to B is seem like this :
+
+            for (i = begin, j = end, r = result; i != j; ++i, ++r)
+              *r = *i;
+
+          when make use of inserter,operator++() returns "*this" - the inserter
+          itself,but operator=() have overloaded,thus result iterator step is
+          hand over to the member method of container(front_inserter / back_inserter),
+          or invoke operator++() on the internal iterator of container(inserter).
