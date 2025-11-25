@@ -2148,3 +2148,97 @@ The Standard Template Library :
           itself,but operator=() have overloaded,thus result iterator step is
           hand over to the member method of container(front_inserter / back_inserter),
           or invoke operator++() on the internal iterator of container(inserter).
+
+      stream iterators :
+        stream iterators are used for read from or write to a stream,support input/output
+        stream redirect.
+
+        <bits/stream_iterator.h> // namespace : std
+
+          /**
+           * istream_iterator<> - input stream iterator template
+           * @_Tp:                template parameter,type of buffer
+           * @_CharT:             template parameter,character type
+           * @_Traits:            template parameter,character traits
+           * @_Dist:              template parameter,iterator position dist
+           * @_M_stream:          pointer to input stream object
+           * @_M_value:           buffer for content from stream
+           * @_M_ok:              false => end-of-stream
+           */
+          template<typename _Tp, typename _CharT = char,
+                   typename _Traits = char_traits<_CharT>, typename _Dist = ptrdiff_t>
+          class istream_iterator
+          : public iterator<input_iterator_tag, _Tp, _Dist, const _Tp *, const _Tp&>
+          {
+          public:
+            typedef _CharT char_type;
+            typedef _Traits traits_type;
+            typedef basic_istream<_CharT, _Traits> istream_type;
+            ...
+          private:
+            istream_type *_M_stream;
+            _Tp _M_value;
+            bool _M_ok;
+            ...
+          };
+
+          some member methods :
+            const _Tp& operator*() const        => return @_M_value
+            const _Tp* operator->() const       => member access operator
+            istream_iterator& operator++()      => prefix ++
+            istream_iterator& operator++(int)   => postfix ++
+
+            // private methods
+
+            void _M_read()                      => private member
+                                                   read content from input stream at
+                                                   current position,save it in to
+                                                   @_M_value
+                                                   if end-of-stream,set @_M_stream to 0,
+                                                   set _M_ok to false
+                                                   # this method will step input stream
+                                                     position
+            bool _M_equal(const istream_iterator& __x) const
+            => (@_M_ok == @__x._M_ok) && (!@_M_ok || @_M_stream == @__x._M_stream)
+
+            friend bool operator==(const istream_iterator& __x, const istream_iterator& __y)
+            => @__x._M_equal(@__y)
+
+            friend bool operator!=(const istream_iterator& __x, const istream_iterator& __y)
+            => !operator==()
+
+            friend bool operator==(const istream_iterator& __i, default_sentinel_t)
+            => !@__i._M_stream
+
+          usage :
+            // all content from input stream @cin are readed and stored into @container
+            std::copy(std::istream_iterator<std::string>(cin), std::istream_iterator<string>(),
+                      std::back_inserter(@container));
+
+          /**
+           * ostream_iterator<> - similar to istream_iterator<>,but for output
+           * @_Tp:                template parameter,type to write to the output stream
+           * @_CharT:             template parameter,type of delimiter
+           * @_Traits:            template parameter,@_CharT traits
+           */
+          template<typename _Tp, typename _CharT = char,
+                   typename _Traits = char_traits<_CharT> >
+          class ostream_iterator
+          : public iterator<output_iterator_tag, void, void, void, void>
+          {
+          public:
+            typedef _CharT char_type;
+            typedef _Traits traits_type;
+            typedf basic_ostream<_CharT, _Traits> ostream_type;
+            ...
+          private:
+            ostream_type *_M_stream; /* sink */
+            const _CharT *_M_string; /* delimiter,this string will be written into
+                                      * output stream after every @_Tp written
+                                      * into the output stream
+                                      */
+            ...
+          };
+
+
+        
