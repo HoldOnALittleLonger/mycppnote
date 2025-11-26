@@ -2061,7 +2061,7 @@ The Standard Template Library :
         insert iterators or inserters are used to let algorithms operate in insert mode rather
         than in overwrite mode.this will let containers grow accordingly - std::copy(),etc.
 
-        <bits/stl_iterator.h>
+        <bits/stl_iterator.h> // namespace : std
           /**
            * front_insert_iterator - iterator adapter used to insert element to specified
            *                         container
@@ -2182,11 +2182,25 @@ The Standard Template Library :
             ...
           };
 
+          constructor :
+            _GLIBCXX_CONSTEXPR istream_iterator();
+            istream_iterator(istream_type& __s);
+
+          allow : copy assignment
+          disallow : move
+
           some member methods :
             const _Tp& operator*() const        => return @_M_value
             const _Tp* operator->() const       => member access operator
             istream_iterator& operator++()      => prefix ++
-            istream_iterator& operator++(int)   => postfix ++
+                                                   @_M_value has updated
+                                                   // invoke _M_read()
+            istream_iterator operator++(int)    => postfix ++
+                                                   @_M_value is not updated
+                                                   the returned object is
+                                                   older,but the orinal object
+                                                   will be updated because
+                                                   _M_read() is invoked
 
             // private methods
 
@@ -2198,6 +2212,9 @@ The Standard Template Library :
                                                    set _M_ok to false
                                                    # this method will step input stream
                                                      position
+                                                   # this method invoke operator>>() of
+                                                     @_M_stream on @_M_value
+
             bool _M_equal(const istream_iterator& __x) const
             => (@_M_ok == @__x._M_ok) && (!@_M_ok || @_M_stream == @__x._M_stream)
 
@@ -2235,10 +2252,164 @@ The Standard Template Library :
             ostream_type *_M_stream; /* sink */
             const _CharT *_M_string; /* delimiter,this string will be written into
                                       * output stream after every @_Tp written
-                                      * into the output stream
+                                      * into the output stream if it is not NULL
                                       */
             ...
           };
 
+          constructor :
+            ostream_iterator(ostream_type& __s, const _CharT* __c);
 
+          allow : copy asssignment
+          disallow : move
+
+          some member methods :
+            ostream_iterator& operator=(const _Tp& __value)    => insert @__value
+                                                                  into output stream,
+                                                                  if @_M_string is not
+                                                                  nullptr,insert it at
+                                                                  the end
+            operator*()                                        => return *this
+            operator++()                                       => return *this
+                                                                  // no updating
+            operator++(int)                                    => return *this
+                                                                  // no updating
+
+      reverse iterators :
+        reverse iterators let algorithms operate backward by switching the call of
+        an increment operator internally into a call of the decrement operator,and vice versa.
+
+        ! all containers have bidirectional iterators or random-access iterators can create
+          reverse iterators via their member function rbegin() and rend().
+        ! std::forward_list<> and unordered containers,have no backward-iteration interface
+          is provided.
+
+        <bits/stl_iterator.h> // namespace : std
+          /**
+           * reverse_iterator - reverse iterator step direction
+           * # usually,the member function rbegin() of a container returns a reverse iterator
+           *   constructed through the end() of the container;and member function rend()
+           *   returns a reverse iterator constructed through the begin() of the container
+           */
+          template<typename _Iterator>
+          class reverse_iterator
+          : public iterator<typename iterator_traits<_Iterator>::iterator_category,
+                            typename iterator_traits<_Iterator>::value_type,
+                            typename iterator_traits<_Iterator>::difference_type,
+                            typename iterator_traits<_Iterator>::pointer,
+                            typename iterator_traits<_Iterator>::reference>
+          {
+          protected:
+            _Iterator current;
+            typedef iterator_traits<_Iterator> __traits_type;
+            ...
+          public:
+            typedef _Iterator iterator_type;
+            typedef typename __traits_type::difference_type difference_type;
+            typedef typename __traits_type::pointer pointer;
+            typedef typename __traits_type::reference reference;
+            ...
+          private:
+            template<typename _Tp>
+            static _GLIBCXX17_CONSTEXPR _Tp *
+            _S_to_pointer(_Tp *__p)
+            { return __p; }
+
+            template<typename _Tp>
+            static _GLIBCXX17_CONSTEXPR pointer
+            _S_to_pointer(_Tp __t)
+            { return __t.operator->(); }
+          };
+
+          constructor :
+            _GLIBCXX17_CONSTEXPR
+            reverse_iterator() : current() { }
         
+            explicit _GLIBCXX17_CONSTEXPR
+            reverse_iterator(iterator_type __x) : current(__x) { }
+
+          allow : copy assignment convert-copy /* a template of copy-constructor */
+          disallow : move
+
+          some member methods :
+            _GLIBCXX17_CONSTEXPR iterator_type base() const
+            => return @current
+
+            _GLIBCXX17_CONSTEXPR reference operator*() const
+            => return a reference to a temporary object constructed
+               from @current,the result is "*--temp_object"
+               /* requirement:
+                *   for the underlying iterator type,T x,a reference obtained
+                *   by *x remains valid after T x has been modified or destroyed
+                */
+
+            _GLIBCXX17_CONSTEXPR pointer
+            operator->() const
+            => construct a temporary iterator from @current,decrease the temporary
+               object,then invoke private member function _S_to_pointer() on it
+               to get the pointer of the element this temporary iterator pointed to
+            
+            operator++()          => --@current,return *this
+            operator++(int)       => --@tmp constructed from @current,return @tmp
+            operator--()          => ++@current,return *this
+            operator--(int)       => ++@tmp constructed from @current,return @tmp
+            operator+(diff_t @n)  => return a reverse_iterator constructed through
+                                    @current - @n
+            operator-(diff_t @n)  => return a reverse_iterator constructed through
+                                    @current + @n
+            operator+=(diff_t @n) => @current -= @n,return *this
+            operator-=(diff_t @n) => @current += @n,return *this
+
+            operator[](diff_t @n) const
+            => return *(*this + @n)
+
+            friend constexpr iter_rvalue_reference_t<_Iterator>
+            iter_move(const reverse_iterator& __i)
+            => return ranges::iter_move(decrease((auto __tmp = @__i.base())))
+               /* a new temporary object would be created */
+
+            template<indirectly_swappable<_Iterator> _Iter2>
+            friend constexpr void iter_swap(const reverse_iterator& __x,
+                                            const reverse_iterator<_Iter2>& __y)
+            => makeup two temporary objects
+                 @tobj1 = @__x.base(), @tobj2 = @__y.base()
+                 ranges::iter_swap(--@tobj1, --@tobj2)
+
+          logical operations :
+            == < !=  > <= >=
+            <=>
+          
+          arithmetic operations :
+           rt1 - rt2
+           rt1 + rt2
+
+          helper :
+            template<typename _Iterator>
+            inline _GLIBCXX17_CONSTEXPR reverse_iterator<_Iterator>
+            make_reverse_iterator(_Iterator __i)
+
+          usage :
+            std::list<int> int_list; // doubly linked list
+            ...
+            for (auto i(int_list.rbegin()); i != int_list.rend(); ++i) {
+              ...
+            }
+
+            std::list<int> int_list2; // doubly linked list
+            std::copy(int_list.rbegin(), int_list.rend(), int_list2.begin());
+
+      move iterators :
+        move iteraotes are provided since C++11,they convert any access to the underlying element
+        into a move operation.
+
+        header : <bits/stl_iterator.h>
+        namespace : std
+
+        template<typename _Iterator>
+        class move_iterator
+        {
+          ...
+        };
+
+        // type-definition @reference is defined as rvalue reference,thus the operations
+           that return the type @reference are return a rvalue reference.
