@@ -2413,3 +2413,80 @@ The Standard Template Library :
 
         // type-definition @reference is defined as rvalue reference,thus the operations
            that return the type @reference are return a rvalue reference.
+
+    User-Defined Generic Functions :
+      STL is an extensible framework,thus user can write his own functions and algorithms to process
+      elements of collections.but must follow the rule: these operations should also be generic if it
+      is possible.
+
+      e.g.
+        template<typename _TContainer>
+        void print(const _TContainer& container, const std::string& prefix = "")
+        {
+          std::cout << prefix << std::endl;
+          for (auto e : container)  // print each element in the container
+            std::cout << e << " ";
+          std::cout << std::endl;
+        }
+
+        ! in the example,elements in the container must support to
+          operator<<(std::ostream& c = std::cout, element).
+          if it is user-defined element type,user can provide this operator overload.
+          because here has make use of range-for,thus the container must provide the member methods
+          begin(),end(),and iterator type must provide the overloads operator!=(),operator*().
+
+    Manipulating Algorithms :
+      "Removing" Elements :
+        <bits/stl_algo.h>
+          /**
+           * remove - function template to remove elements from a sequence
+           * @_ForwardIterator:
+           *          template parameter,the type of iterators
+           * @_Tp:    template parameter,the type of value(key)
+           * @__first:
+           *          starting of the range
+           * @__last: end of the range
+           * @__value:
+           *          the target to be removed
+           * return:  an iteraotr designating the end of the resulting sequence
+           * # this routine is stable,the relative order of elements that are not
+           *   removed is unchanged
+           * # elements between the end of the resulting sequence and @__last are
+           *   still present,but their value is unspecified
+           */
+          template<typename _ForwardIterator, typename _Tp>
+          _GLIBCXX20_CONSTEXPR
+          inline _ForwardIterator
+          remove(_ForwardIterator __first, _ForwardIterator __last, const _Tp& __value);
+
+          brief description of remove<>() :
+            this routine usually overwrite the element which is going to be removed with
+            the next element,and the next element is overwrite by the next next element,
+            and so on.
+            at the end,it returns the iterator points to the end of resulting sequence,
+            but size and end of the container remains unchanged.
+
+            [ 1, 2, 3, 4, 5, 6, 7, 8, 2, 3, 1, 2, 5]
+            remove 2
+                                            +--> value unspecified
+                                            |  |  |
+            [ 1, 3, 4, 5, 6, 7, 8, 3, 1, 5, 5, 5, 5]  => other elements' relative order unchanged
+                                            |        |
+                                            |        +--> container's end
+                                            +--> removed() return
+
+            for to remove realy the elements from the container,must invoke the member method
+            erase() of the container,pass it the range [removed() return, @__last).
+            that is
+              container.erase(remove(container.begin(), container.end(), 2), container.end());
+            if we want to print the result sequence without erasing,can make use of the algorithm
+            std::copy() with an output stream iterator.
+              std::copy(container.begin(), std::remove(container.begin(), container.end(), 2),
+                        std::ostream_iterator(std::cout, " "));
+            after the member method erase() was called,member methods size() and end() of the container
+            would return the updated values.
+
+          !! std::remove<>() can only be applied on sequence containers,because the order of elements
+             follow the inserting order;we can not easily overwrite the parent node with its right/left
+             child node in a binary tree to implement removing.
+            
