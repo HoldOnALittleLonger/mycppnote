@@ -2489,4 +2489,44 @@ The Standard Template Library :
           !! std::remove<>() can only be applied on sequence containers,because the order of elements
              follow the inserting order;we can not easily overwrite the parent node with its right/left
              child node in a binary tree to implement removing.
+
+      Manipulating Associative and Unordered Containers :
+        in order to avoid compromising the internal order,every iterator for an associative and unordered
+        container is declared as an iterator for a constant value or key,thus manipulating elements of
+        or in associative and unordered containers results in a failure at compile time.
+        /* typedef const_iterator iterator */
+
+        every associative and unordered container provides member functions to remove elements,that is the
+        erase() method.
+        e.g.
+          std::unordered_set<int> int_unorder_set;
+          int_unorder_set.insert(1);
+          ...
+          int_unorder_set.erase(1);
+
+        usually,the method erase() returns the number of removed elements,if no such element,it would returns
+        0;but,if called the overload version which requires another type of argument,the return value is
+        different.
+        /* only the one needs the value of to be removing element will returns the number of removed elements,
+         * for duplicate disallowed container,the return value always is 1 or 0.
+         */
+
+      Algorithms VS Member Functions :
+        in some cases,a container might have member functions that provide much better performance than algorithm
+        functions.
+        suppose we using a list,for remove an element,just unlink it from the list - find out the element,
+        unlink prev and next,splice previous element and next element.
+        but std::remove() always overwrite elements,thus it is more expensive cost for implement generic.
+        std::list<> provide member function remove(),it has good performance than std::remove().
+        e.g.
+          std::list<int> int_list{1, 4, 6, 2, 5, 8, 3, 10};
+          int_list.remove(2);
+          // std::remove(int_list.begin(), int_list.end(), 2);
+
+        prefer a member function over an algorithm if good performance is the goal.
+        // need to know the container have provided such member function and which
+           has a good performance.
+           but the code applied this method would lost generic abstraction,that is,
+           for different container type,must change the code to responding to it.
+            
             
