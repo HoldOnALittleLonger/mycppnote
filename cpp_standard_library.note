@@ -2528,5 +2528,105 @@ The Standard Template Library :
            has a good performance.
            but the code applied this method would lost generic abstraction,that is,
            for different container type,must change the code to responding to it.
+
+      Functions as Algorithm Arguments :
+        Using Functions as Algorithm Arguments :
+          e.g.
+            template<typename _ForwardIterator, typename _FuncTp>
+            void for_each(_ForwardIterator& start, _ForwardIterator& end, _FuncTp func)
+            {
+              for (_ForwardIterator& it(start); it != end; ++it) {
+                func(it);
+              }
+            }
+
+            template<typename _Tp>
+            void print(const _Tp& e, const std::string& delimiter = " ")
+            { std::cout << e << delimiter; }
+
+            template<typename _Tp>
+            requires integral<_Tp>
+            void square(_Tp& e)
+            { e *= e; }
+
+
+            std::list<int> int_list;
+            ...
+            for_each(int_list.begin(), int_list.end(), print);
+            for_each(int_list.begin(), int_list.end(), square);
+            for_each(int_list.begin(), int_list.end(), print);
+
+          algorithms use auxiliary functions in several variants -
+            some optional
+            /**
+             * search criterion
+             * sorting criterion
+             */
+
+            some mandatory
+            /**
+             * define a manipulation while transferring elements from one collection to another
+             * std::transform()
+             */              
+            
+          <bits/stl_algo.h>
+            /**
+             * transform - routine used to transform elements in a given collection to another,
+             *             the elements will pass through a modifier
+             * @_InputIterator:
+             *             template parameter,type of iterator of input collection
+             * @_OutputIterator:
+             *             template parameter,type of iterator of output collection
+             * @_UnaryOperation:
+             *             template parameter,type of modifier
+             * @__first:   starting of the range
+             * @__last:    end of the range
+             * @__result:  starting of the result collection
+             * @__unary_op:
+             *             modifier
+             * return:     @__result
+             * namespace:  std
+             * # this routine actually do for each element in range [@__first, @__last),
+             *   pass it as argument of @__unary_op,and insert the return value to @__result
+             */
+            template<typename _InputIterator, typename _OutputIterator, typename _UnaryOperation>
+            _GLIBCXX20_CONSTEXPR
+            _OutputIterator
+            transform(_InputIterator __first, _InputIterator __last,
+                      _OutputIterator __result, _UnaryOperation __unary_op);
+
+            /**
+             * variant of transform(f, l, r, unary_op)
+             * for each pair of elements in range [@__first1, @__last1) and
+             * in [@__first2, (@__first2 + (@__last1 - @__first1))),pass them to
+             * @__binary_op as the first and the second parameter,respectively,
+             * insert the return value to the collection starting at @__result
+             *
+             * return:    @__result
+             * namespace: std
+             */
+            template<typename _InputIterator1, typename _InputIterator2,
+                     typename _OutputIterator, typename _BinaryOperation>
+            _GLIBCXX20_CONSTEXPR
+            _OutputIterator
+            transform(_InputIterator1 __first1, _InputIterator1 __last1,
+                      _InputIterator2 __first2, _OutputIterator __result,
+                      _BinaryOperation __binary_op);
+
+          e.g.
+            template<typename _Tp>
+            _Tp square(const _Tp& v)
+            {
+              _Tp ret(v * v);
+              return ret;
+            }
+
+            // now we can pass square<>() to the first transform routine as
+            // mandatory unary operation.
+            // this way is similar to mapping,we map the elements in a given
+            // collection to the squared value,but the output collection is
+            // the same input collection.
+            // (map collection (lambda (v) (* v v)))
+
             
             
