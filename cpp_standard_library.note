@@ -1896,6 +1896,7 @@ The Standard Template Library :
          * # the relative ordering of equivalent elements is not preserved
          * # there is another overload version which require third parameter
          *   as comparator of elements
+         *     sort(@__first, @__last, @__comp)
          */
         template<typename _RandomAccessIterator>
         _GLIBCXX20_CONSTEXPR
@@ -2628,5 +2629,57 @@ The Standard Template Library :
             // the same input collection.
             // (map collection (lambda (v) (* v v)))
 
+        Predicates :
+          a predicate is a special kind of auxiliary function,which return a boolean value
+          and are often used to specify a sorting or a search criterion.there are unary predicate
+          and binary predicate,depends on its purpose.
+          /* STL requires that predicates be stateless,they should always yield the same result
+           * for the same value.
+           */
+
+          e.g. // unary
+            bool isPrime(int n)
+            {
+              n = abs(n);
+              if (n == 0 || n == 1)
+                return false;
+
+              return improved_FermatPrime(n);
+            }
+            ...
+            auto pos = std::find_if(int_list.begin(), int_list.end(), isPrime);
+
+          e.g. // binary
+            bool sortCriterion(auto x, auto y)
+            {
+              if (x > 2 * y)
+                return false;
+              else if (x < y - 3)
+                return false;
+
+              return (x < y);
+            }
+            ...
+
+            std::sort(int_deque.begin(), int_deque.end(), sortCriterion);
+
+          <bits/stl_algo.h>
+            /**
+             * find_if - find the first element's position if it passed predicate
+             * @_InputIterator:
+             *           template parameter,type of input iterator
+             * @_Predicate:
+             *           template parameter,type of predicate
+             * @__first: the beginning
+             * @__last:  the end
+             * @__pred:  predicate
+             * return:   position of the element OR @__last if no such element
+             * namespace:
+             *           std
+             */
+            template<typename _InputIterator, typename _Predicate>
+            _GLIBCXX20_CONSTEXPR
+            inline _InputIterator
+            find_if(_InputIterator __first, _InputIterator __last, _Predicate __pred);
             
             
