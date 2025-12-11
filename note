@@ -2095,6 +2095,24 @@
     operator++(int)
     operator--(int)
 
+# methods to get how many bytes been written
+  1> calculate write pointer of ofstream object.
+     record the position before writing,and get the position after writing,
+     let after pos sub before pos to get size of data been written.
+     /* tellp() member method */
+  2> C++ library have provided filesystem related feature.
+     the header is <filesystem>,and namespace is std::filesystem.
+     the namespace stuff file_size() function is used to get a file's size.
+     but the file size only be updated when the file holding by an ofstream
+     object invoked close() member method - do sync.
+     so,in most cases,the method 1 is better.
+     /**
+      * C++ filesystem provides a lot of useful features,such function exists()
+      * is used to check whether the file been exist.
+      * because ofstream always attempt to create the file if it is not exist,
+      * we can make use of std::filesystem::exists() to check whether the target
+      * file is exist before construct an ofstream object and open it.
+      */
   
 
 
