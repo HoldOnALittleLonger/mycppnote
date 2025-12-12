@@ -2681,5 +2681,86 @@ The Standard Template Library :
             _GLIBCXX20_CONSTEXPR
             inline _InputIterator
             find_if(_InputIterator __first, _InputIterator __last, _Predicate __pred);
+
+    Function Objects :
+      functional arguments can be objects that behave like functions,such an object is
+      called a function object,or functor.
+      /* object provides a function call operator */
+
+      C++ STL provides the new feature function object since C++11.
+
+      <bits/std_function.h> // <functional>
+        /**
+         * function<> - primary class template for std::function
+         * # polymorphic function wrapper
+         */
+        template<typename _Res, typename... _ArgTypes>
+        class function<_Res(_ArgTypes...)>
+        : public _Maybe_unary_or_binary_function<_Res, _ArgTypes...>,
+          private _Function_base
+        {
+          ...
+        public:
+          typedef _Res result_type;
+          ...
+        private:
+          /* function pointer type -
+           * return-type (*)(any_data&, arguments&&)
+           *                 ^For class member function
+           * type @_Any_data is defined in class _Function_base
+           */
+          using _Invoker_type = _Res (*)(const _Any_data&, _ArgTypes&&...);
+          _Invoker_type _M_invoker; /* function pointer object */
+        };
+
+        operator() :
+          _Res operator()(_ArgTypes... __args) const;
+          -> template<typename _Res, typename... _ArgTypes>
+             _Res
+             function<_Res(_ArgTypes...)>::operator()(_ArgTypes... __args) const
+             {
+               ...
+               /* _M_functor is a public member of class _Function_base */
+               return _M_invoker(_M_functor, std::forward<_ArgTypes>(__args)...);
+             } /* this routine may throw bad function call if _Function_base::_M_empty()
+                * returned TRUE
+                */
+
+        normal usage :
+          int int_add(int, int);
+          ...
+          std::function<int(int, int)> iadd(int_add);
+                                       /*   ^function pointer */
+          iadd(@x, @y);
+
+          ! C++ lambda is similar to std::function,but it has a catch-list defined what
+            is visible in the body.
+            auto iadd = [@catch-list](int, int) -> int {
+              ...
+            }; /* std::function<int(int, int)> iadd(anonymous_func);
+                *                                   @catch-list is visible in the body of
+                *                                   anonymous_func()
+                */
+
+
+      user can define customized callable object through C++ class or structure,the
+      hard requirement is the object must contains operator() the operator overloading.
+      e.g.
+        struct int_add {
+          int operator()(int x, int y) const
+          {
+            return x + y;
+          }
+        };
+
+        int x(3), y(4);
+        int_add iadd;
+        auto result = iadd(x, y); // invoke member method "int operator()(int, int) const"
+
+      we can pass user-defined callable object or lambda object or std::function object to
+      the STL algorithms.                         /* lambda object and std::function object
+                                                   * also are callable objects
+                                                   */
+
             
             

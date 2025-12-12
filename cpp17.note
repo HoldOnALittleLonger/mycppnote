@@ -402,7 +402,11 @@ Deprecated :
       syntax :
         explicit-specifier(optional) template-name(parameter-declaration-clause) -> simple-template-id;
 
-    //  it is same as trailing return type syntax but uses template-name as function-name.
+        e.g.
+          template<typename T, typename U>
+          @name(T, U) -> @name<T, U>;
+
+        //  it is same as trailing return type syntax but uses template-name as function-name.
 
       user-defined deduction guides must name a class template and must be introduced within the same semantic scope of 
       the class template and,for a member class template,must have the same access,but deduction guides do not become
@@ -410,19 +414,20 @@ Deprecated :
 
       //  a deduction guide is not a function and does not have a body.
       //  deduction guides are not found by name lookup and do not participate in overload resolution except for the
-            overload resolution against other deduction guides when deducing class template argumnets.
+          overload resolution against other deduction guides when deducing class template argumnets.
       //  deduction guides cannot be redeclared in the same translation unit for the same class template.
 
       e.g.
         template<class T>
-    struct container {
-      container(T t) {}
-      template<class Iter>
-      container(Iter beg, Iter end);
-    };
+        struct container {
+          container(T t) {}
+          template<class Iter>
+          container(Iter beg, Iter end);
+        };
 
-    template<class Iter>
-    container(Iter beg, Iter end) -> container<typename std::iterator_traits<Iter>::value_type>;
+        template<class Iter>
+        container(Iter beg, Iter end) -> container<typename std::iterator_traits<Iter>::value_type>;
+                                         // tempalte<class T> struct container<T>
 
     note :
       class template argument deduction is only performed if no template argument list is present.
