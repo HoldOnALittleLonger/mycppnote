@@ -2762,5 +2762,21 @@ The Standard Template Library :
                                                    * also are callable objects
                                                    */
 
-            
-            
+      Advantages of function object :
+        1> function objects are "functions with state".
+           objects that behave like pointers are smart pointers,this is similarly true for
+           objects that behave like functions -
+             "smart functions" because they may have abilities beyond operator(),can have
+             other members to represent the state
+           ! the same functionality represented by two different function objects of the same
+             type,may have different states at the same time.
+           ! can initialize them at runtime before use/call them.
+
+        2> each function object has its own type.
+           ordinary functions have different types only when their signatures differ,but function
+           objects can has different types even when their signatures are the same.
+           /* useful for generic programming */
+        
+        3> function objects are usually faster than ordinary functions.
+           the concept of templates usually allows better optimization because more details are
+           defined at compile time.
