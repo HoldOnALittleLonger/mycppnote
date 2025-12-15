@@ -2780,3 +2780,52 @@ The Standard Template Library :
         3> function objects are usually faster than ordinary functions.
            the concept of templates usually allows better optimization because more details are
            defined at compile time.
+
+      Predefined Function Objects :
+        <bits/stl_function.h> // namespace : std
+          template<typename _Tp>
+          struct greater : public binary_function<_Tp, _Tp, bool>
+          {
+            _GLIBCXX14_CONSTEXPR
+            bool
+            operator()(const _Tp& __x, const _Tp& __y) const
+            { return __x > __y; }
+          };
+
+          template<typename _Tp>
+          struct less : public binary_function<_Tp, _Tp, bool>
+          {
+            ... /* similar to greater<>,but applied operator< for comparison. */
+          };
+
+          template<typename _Tp>
+          struct multiplies : public binary_function<_Tp, _Tp, _Tp>
+          {
+            ... /* similar to above,but applied operator* for calculating. */
+          };
+
+          template<typename _Tp>
+          struct divides : public binary_function<_Tp, _Tp, _Tp>
+          {
+            ... /* x / y */
+          };
+
+          template<typename _Tp>
+          struct modulus : public binary_function<_Tp, _Tp, _Tp>
+          {
+            ... /* x % y */
+          };
+
+          template<typename _Tp>
+          struct negate : public unary_function<_Tp, _Tp>
+          {
+            ... /* x => -x */
+          };
+
+          struct plus<>                 /* binary function */
+          struct minus<>                /* binary function */
+          struct greater_equal<>        /* binary function */
+          struct less_equal<>           /* binary function */
+          struct equal_to<>             /* binary function */
+          struct not_equal_to<>         /* unary  function */
+          
