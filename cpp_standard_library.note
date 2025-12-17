@@ -2828,4 +2828,134 @@ The Standard Template Library :
           struct less_equal<>           /* binary function */
           struct equal_to<>             /* binary function */
           struct not_equal_to<>         /* unary  function */
+
+      Binders :
+        C++ defined special function adapters,or so-called binders,to combine predefined function objects
+        with other values or use special cases.
+
+        <functional>
+          /**
+           * bind - function template to product a function object
+           * @_Func:
+           *        template parameter,function
+           * @_BoundArgs:
+           *        template parameter pack collect arguments' types
+           * @__f:  rvalue type of function object,for ordinary function,it is the function address
+           * @__args:
+           *        arguments pack
+           * return:
+           *        an object is type of _Bind<decay<_Func>::type(decay<_BoundArgs>::type...)>
+           * namespace:
+           *        std 
+           * # _Bind<> is a template class,which require a @_Functor,
+           *   and a collection of arguments @_Bound_args
+           *   of course,it also defined operator(),it invoke private method __call_c(),
+           *   and that method make use of std::__invoke() to invoke the functor with proper
+           *   arguments
+           *   # __call() => call unqualified
+           *     __call_c() => call as const
+           *     __call_v() => call as volatile
+           *     __call_c_v() => call as const volatile
+           *   # _Bind<> has data member named @_M_f is type of _Functor to store functor
+           *     _Bind<> has data member named @_M_bound_args is type of tuple<_Bound_args...>
+           *     to store arguments
+           */
+          template<typename _Func, typename... _BoundArgs>
+          inline _GLIBCXX20_CONSTEXPR typename
+          _Bind_helper<__is_socketlike<_Func>::value, _Func, _BoundArgs...>::type
+          bind(_Func&& __f, _BoundArgs&&... __args);
+
+          /**
+           * bind - overload version for resutl type specified
+           * @_Result:
+           *        template parameter,type of result
+           * @_Func:
+           *        template parameter,function type
+           * @_BoundArgs:
+           *        template parameter pack,types of arguments
+           * @__f:  rvalue reference to function
+           * @__args:
+           *        arguments
+           * return:
+           *        an object is type of _Bind_result<_Result, decay<_Func>::type(decay<_BoundArgs>::type...)>
+           * # _Bind_result<> is also a template class,it similar to _Bind<>,but it require specify the
+           *   type of result in template parameters
+           */
+          template<typename _Result, typenam _Func, typename... _BoundArgs>
+          inline _GLIBCXX20_CONSTEXPR
+          typename _Bindres_helper<_Result, _Func, _BoundArgs...>::type
+          bind(_Func&& __f, _BoundArgs&&... __args);
+
+          ! std::bind() can be used bind class method and class object.
+
+          /**
+           * placeholders - placeholder
+           *                can be combined with std::bind to defer argument specify
+           * namespace:     std
+           * # placeholders do not allow hole,that is such format (_1, _3, _7, ...)
+           *   is illegal.
+           *   if placeholder _1 has applied,then next must to be _2,and so on
+           *   but the format (@functor, _1, @arg, _2) for std::bind() is OK
+           *                   # do not require continuous placeholders
+           */
+          namespace placeholders {
+            extern const _Placeholder<1> _1;
+            extern const _Placeholder<2> _2;
+            ...
+            extern const _Placeholder<29> _29;
+          }
+
+          e.g.
+            int func(int x, int y)
+            {
+              return x + 2 + y;
+            }
+
+            std::set<int> int_set{...};
+            std::set<int> res_set;
+
+            std::transform(int_set.begin(), int_set.end(),
+                           res_set.begin(), std::bind(func, std::placeholders::_1, 4));
+            /**
+             * when traversing the @int_set,each element is passed into the callable object
+             * returned by std::bind(),and the functor is func().
+             * so @x => @_1,@_1 => current element
+             *    @y => 4
+             * the elements are transformed(inserting) into @res_set is
+             *   func(current element, 4) => current element + 2 + 4
+             */
+
+            auto callable_obj = std::bind(func, 2, 5); /* no defer */
+            int r = callable(); /* invoke func(2, 5) => 2 + 2 + 5,@r == 9 */
+
+            class AddInt {
+            public:
+              int add(int x, int y)
+              {
+                return x + y;
+              }
+            ...
+            };
+
+            AddInt addint;
+            auto callable_obj(std::bind(&AddInt::add, std::ref(addint), _1, _2));
+            /**
+             * std::bind() make up a callable object,and bind a class object for
+             * it because the functor is a class method.
+             * use placeholders _1,_2 to defer arguments specify for @x and @y
+             * ! class method has a implicit parameter that is the class object
+             *   this method called from,it is the first parameter and can be
+             *   omitted,it is also deferrable.
+             *   e.g.
+             *     auto callable_obj = std::bind(&AddInt::add, std::placeholders::_1, ...);
+             *     AddInt addint;
+             *     (void)callable_obj(std::ref(addint), 2, 3);
+             *                        ^lvalue reference to @addint
+             *                         member method add() called from @addint
+             */
+
+            int x(callable_obj(2, 3)); /* invoke addint.add(2, 3) */
+            
+
+
           

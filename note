@@ -2004,7 +2004,9 @@
       class A {
       public:
         struct INT *operator->();
-        ANY_TYPE operator->*(ANY_TYPE);
+        ANY_TYPE operator->*(ANY_TYPE); /* invoke member method
+                                         * another is operator.*
+                                         */
       ...
       };  
   
@@ -2052,7 +2054,7 @@
       };
   
       A a;
-      std::cout<<a->*(3)<<std::endl;
+      std::cout << a->*(3) << std::endl;
   
     there is no restricts on these two overloading requires const or non-const on them.
 
