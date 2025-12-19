@@ -2955,7 +2955,37 @@ The Standard Template Library :
              */
 
             int x(callable_obj(2, 3)); /* invoke addint.add(2, 3) */
-            
 
+    Container Elements :
+      elements of containers must meet certain requirements because containers handle them in a special
+      way.
 
-          
+      Requirements for Container Elements :
+        fundamental requirements -
+          1> an element must be copyable or movable.
+          2> an element must be (move)assignable by the assignment operator.
+          3> an element must be destroyable by a destructor. /* destructor can not be private,and no throw */
+
+        soft requirements -
+          1> for some member functions of sequence containers,the default constructor must be available.
+          2> for several operations,the test of equality with operator== must be defined and is especially
+             needed when elements are searched.
+             /* for unordered containers,user can provide his own definition of equivalence if the elements
+              * do not support operator==
+              */
+          3> for associative containers,the operations of the sorting criterion must be provided by the
+             elements.
+          4> for unordered containers,a hash function and an equivalence criterion must be provided for the
+             elements.
+
+      Value Semantics or Reference Semantics :
+        copying values means that the STL containers provide "value semantics".
+        the containers contain references to the objects that are their elements provide "reference semantics".
+
+        C++ STL containers do not support "reference semantics",but we can implement it through several methods :
+          1> let STL containers hold ordinary pointers.
+             /* must prevent dangle pointer */
+          2> let STL containers hold smart pointers.
+             /* do not use ordinary pointers anymore */
+          3> let STL containers hold std::reference_wrapper<> objects. /* let containers hold references */
+             /* must prevent dangle reference */
