@@ -2989,3 +2989,47 @@ The Standard Template Library :
              /* do not use ordinary pointers anymore */
           3> let STL containers hold std::reference_wrapper<> objects. /* let containers hold references */
              /* must prevent dangle reference */
+
+    Errors and Exceptions inside the STL :
+      Error Handling :
+        the design goal of the STL was the best performance rather than the highest security.
+         two reasons about do not introduce more error checking -
+           1> error checking reduces performance,and speed is still a general goal of programs.
+           2> error checking is selectable for user.
+
+           ! error checking is possible but usually not required inside the STL.
+
+        use of the STL requires that the following be met :
+          1> iterators must be valid.
+          2> iterators that refer to the past-the-end position have no element to which to refer.
+          3> ranges must be valid.
+          4> if more than one source range is used,the second and later ranges usually must have at
+             least as many elements as the first one.
+          5> destination ranges must have enough elements that can be overwritten;otherwise,insert
+             iterators must be used.
+        
+      Exception Handling :
+        the standard requires that only the usual standard exceptions may occur,such as bad_alloc for lack
+        of memory or exceptions of user-defined operations.
+        /* STL do not check logical errors,there are only two function calls for which the standard
+         * requires that it migth cause an exception directly: at() method and reserve() method.
+         */
+
+        C++ standard library now guarantees the following :
+          1> in general,no erase(), clear(), pop_back(), pop_front(), or swap() function throws and
+             exception.also,no copy constructor or assignment operator of a returned iterator throws
+             an exception.
+          2> for all node-based containers,including the unordered containers,any failure to construct
+             a node simply leaves the containers as it was.furthermore,removing a node can not fail,
+             provided that destructors do not throw.
+             however,for multiple-element insert operations of associative containers,the need to keep
+             elements sorted makes full recovery from throws impractical,thus all single-element insert
+             operations of associative and unordered containers support commit-or-rollback behavior,
+             provided that the hash function for unordered containers does not throw.      /* atomic */
+             the container's compare function does not throw.
+          3> all array-based continers do not fully recover when an element gets inserted.
+             pop back,push back do not require that existing elements get copied,if they throw,it is
+             guaranteed that they have no effect.
+             if element's copy constructor and assignment operator do not throw,every container operation
+             for the element either succeeds or has no effect.
+             
