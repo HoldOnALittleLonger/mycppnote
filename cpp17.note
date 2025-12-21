@@ -492,21 +492,21 @@ Deprecated :
 
       for example :
         namespace A :: B :: C { ... } is equivalent to
-      namespace A {
-        namespace B {
-          namespace C {
-            ...
+        namespace A {
+          namespace B {
+            namespace C {
+              ...
+            }
           }
         }
-      }
 
     //  inline namespace definition(since c++11)
-          inline namespace <ns-name> { <declarations> }
+        inline namespace <ns-name> { <declarations> }
         inline namespace definition for the namespace <ns-name>.
         declarations inside <ns-name> will be visible in its enclosing namespace.
 
     //  namespace alias definition
-          namespace <name> = <qualified-namespace>;
+        namespace <name> = <qualified-namespace>;
         namespace-alias-definition makes name a synonym for another namespace.
 
 
@@ -516,19 +516,19 @@ Deprecated :
       using <declarator-list>;
       
       declarators-list : comma-separated list of one or more declarators of the typename(optional)
-                          nested-name-specifier unqualified-id.
-             soem or all of the declarators may be followed by an ellipsis ...
-             to indicate pack expansion.
+                         nested-name-specifier unqualified-id.
+                         soem or all of the declarators may be followed by an ellipsis ...
+                         to indicate pack expansion.
 
     e.g.
       namespace A {
         int a;
-    int b;
-    char c;
+        int b;
+        char c;
     
-    name space B {
-      float d;
-    }
+        name space B {
+          float d;
+        }
       }
 
       using A::a, A::b, A::c, A::B::d;
@@ -610,3 +610,78 @@ Deprecated :
       #include<stdio.h>
           ...
       #endif
+
+
+> library feature std::variant
+  header <variant>
+  namespace std
+
+  /**
+   * variant<> - the class template std::variant represents a type-safe union
+   * # an instance of variant at any given time either holds a value of one of its
+   *   alternative types,or in the case of error -- no value(valueless_by_exception)
+   * # if a variant holds a value of some object type T,the T object is nested within
+   *   the variant object
+   * ! variant is not allowed to hold references,arrays,or the type void,but it is permitted
+   *   to hold the same type more than once,and to hold differently cv-qualified versions of
+   *   the same type
+   * # a default-constructed variant holds a value of its first alternative,unless that alternative
+   *   is not default-constructible -- the variant also is not default-constructible
+   *   helper class std::monostate can be used to make such variants default-constructible
+   * ! forbid explicit or partial specialization of std::variant
+   */
+  template<class... Types>
+  class variant;
+
+  some member methods :
+    operator=(@rvalue-variant)        =>        assigns a variant
+    index()                           =>        index of the alternative held by this variant
+    valueless_by_exception()          =>        checks if the variants is in the invalid state
+    emplace<I>(ValueType&& v)         =>        construct alternative from @v and place it at
+                                                appropriate position,where @I is the zero-based
+                                                index of alternatives,if the type T of alternative
+                                                in the variant is unique,then can use T to instead index
+                                                e.g.
+                                                  std::variant<int, std::string> v;
+                                                  v.emplace<std::string>("xxx");
+                                                  // v.emplace<1>("xxx");
+    swap(rhs)                         =>        swap *this with another variant object
+
+  non-member methods:
+    visit<>(visitor, values)          =>        invoke @visitor with the arguments held by one ore more variants
+                                                -- std::invoke(std::forward<Vistor>(@vistor),
+                                                               std::get<indices>(std::forward<VariantBases>(values))...);
+                                                   @indices : as-variant(values).index()...
+                                                   /* as-variant<> - makeup a variant to hold @value
+                                                    *                @value should be placed at currect index
+                                                    *                in the variant
+                                                    */
+                                                   template<class... Ts>
+                                                   auto&& as-variant(std::variant<Ts...>& value);
+                                                since C++26,this method as a public method
+    holds_alternative<T>()            =>        checks if a variant currently holds a given type T
+    get<i>(variant)                   =>        get alternative at index @i or the unique type @i of the @variant
+    get_if<i>(*variant)               =>        obtains a pointer to the value of a pointed-to variant
+                                                returns NULL on error
+                                                @i is index or unique type
+    std::swap(v1, v2)                 =>        swap variant @v1 with variant @v2
+
+  logical operations : /* compares variant objects as their contained values */
+    operator==
+    operator!=
+    operator<
+    operator<=
+    operator>
+    operator>=
+    operator<=>
+
+  e.g.
+    std::variant<int, float, std::string> v;
+    v.emplace<int>(3);
+    v.emplace<float>(3.2);
+    v.emplace<std::string>("hello world");
+
+    std::get<float>(v); /* 3.2 */
+    auto x(std::get<std::string>(v)); /* type of @x is std::string
+                                       * value is "hello world"
+                                       */
