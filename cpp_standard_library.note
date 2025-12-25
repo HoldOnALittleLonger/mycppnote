@@ -3032,4 +3032,63 @@ The Standard Template Library :
              guaranteed that they have no effect.
              if element's copy constructor and assignment operator do not throw,every container operation
              for the element either succeeds or has no effect.
-             
+
+STL Containers :
+    Common Container Abilities and Operations :
+      Container Abilities :
+        most abilities are requirements that in general every STL container should meet.
+
+        core abitilies >
+          1> all containers provide value rather than reference semantics.
+             containters copy and/or move elements internally when they are inserted        
+             rather than managing references to them.
+             /* implicitly require the element can be copied or moved */
+          2> the elements inside a container have a specific order.each container type provides
+             operations that return iterators to iterate over the elements.
+          3> in general,operations are not "safe" in the sense that they check for every possible error.
+             the caller must ensure that the parameters of the operations meet the requirements
+             these operations have.
+             /* usually,the STL does not throw exception,but user-defined routine called by STL container
+              * may throw exception.
+              */
+
+      Container Operations :
+        a list of requirements that standard specified >
+          Operations are Required : /* general container requirements */
+            default constructible
+            copy constructible
+            copy assignment
+            move constructible                    /* not for array<> */
+            move assignment                       /* not for array<> */
+            destructible
+            is container empty?
+            size of container                     /* not for forward_list<> */
+            max size of container
+            ==
+            !=
+            swap
+            begin
+            end
+            cbegin
+            cend
+
+          Operations are optional :
+            constructible from range              ContType c(start, end) /* not for array<> */
+            constructible from initialize-list    ContType c({...})      /* not for array<> */
+            initialize-list assignment            ContType c = {...}, c = {...} /* not for array<> */
+            <                                     /* not for unordered containers
+            >                                      * ...
+            <=                                     * ...
+            >=                                     * ... */
+            clear                                 remove all elements /* not for array<> */
+
+            ! by using std::istream_iterator<>,we can construct container with the elements
+              from stdin,but the container must be constructible from range.
+              e.g.
+                /* new uniform initialization syntax */
+                std::deque<int> d{std::istream_iterator<int>(std::cin),
+                                  std::istream_iterator<int>()};
+
+                /* another uniform,if no brackets,we are declaring a function */
+                std::deque<int> dd((std::istream_iterator<int>(std::cin)),
+                                   (std::istream_iterator<int>()));
