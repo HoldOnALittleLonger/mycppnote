@@ -3061,16 +3061,24 @@ STL Containers :
             move constructible                    /* not for array<> */
             move assignment                       /* not for array<> */
             destructible
-            is container empty?
+            is container empty?                   /* @begin == @end */
             size of container                     /* not for forward_list<> */
             max size of container
-            ==
-            !=
+            ==                                    /* @c1 == @c2 if (@E1i in @c1 == @E2i in @c2 AND have same order)
+                                                   * for unordered containers,just check value equal
+                                                   */
+            !=                                    /* not == */
             swap
             begin
             end
             cbegin
             cend
+
+            ! process copying on containers is expensive,but move semantics and swap operation
+              provide constant complexity.if there is not need to duplicate container,it is
+              best to make use of move operations.
+              these two kinds of operations do not influence iterators and references of the
+              elements.
 
           Operations are optional :
             constructible from range              ContType c(start, end) /* not for array<> */
@@ -3092,3 +3100,26 @@ STL Containers :
                 /* another uniform,if no brackets,we are declaring a function */
                 std::deque<int> dd((std::istream_iterator<int>(std::cin)),
                                    (std::istream_iterator<int>()));
+
+          !! compare operations require the same container type.
+             for different container types,must use the comparing algorithms.
+
+      Member Access :
+        usually,use iterator interface provided by container can let us access to the element
+        in the container at specified position.
+        it is not all container provided random-access operator[].general,sequence containers
+        should provide such method,but for list container,no random-access operator is provided.
+      
+      Container Types :
+        Required Type Definitions >
+          size_type               unsigned integral type for size values
+          difference_type         signed integral type for difference values
+          value_type              type of the elements
+          reference               type of element references
+          const_reference         type of constant element references
+          iterator                type of iterators
+          const_iterator          type of iterators to read-only elements
+
+        Optional Type Definitions >
+          pointer                 type of pointers to elements            /* since C++11 */
+          const_pointer           type of pointers to read-only elements  /* since C++11 */
