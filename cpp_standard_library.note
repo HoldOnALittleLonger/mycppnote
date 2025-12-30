@@ -3083,7 +3083,8 @@ STL Containers :
           Operations are optional :
             constructible from range              ContType c(start, end) /* not for array<> */
             constructible from initialize-list    ContType c({...})      /* not for array<> */
-            initialize-list assignment            ContType c = {...}, c = {...} /* not for array<> */
+            initialize-list assignment            ContType c = {...}
+                                                  c = {...}              /* not for array<> */
             <                                     /* not for unordered containers
             >                                      * ...
             <=                                     * ...
@@ -3123,3 +3124,71 @@ STL Containers :
         Optional Type Definitions >
           pointer                 type of pointers to elements            /* since C++11 */
           const_pointer           type of pointers to read-only elements  /* since C++11 */
+
+    Arrays :
+      std::array<> models a static array,that is the ordinary C-style array,but array<> provides
+      some STL container interfaces.
+      safer and has no worse performance than an ordinary array.
+
+      <array>
+        /**
+         * array<> - ordinary C-style array in C++
+         * @_Tp:     template parameter,the type of element
+         * @_Nm:     template parameter,the size of array
+         * namespace:
+         *           std
+         */
+        template<typename _Tp, std::size_t _Nm>
+        struct array {
+          ...
+          /**
+           * support for zero-sized arrays mandatory
+           * @_M_elems:    type is _Tp[_Nm],defined in _AT_Type,so it
+           *               is an ordinary C-style array in the class object
+           */
+          typedef _GLIBCXX_STD_C::__array_traits<_Tp, _Nm> _AT_Type;
+          typename _AT_Type::_Type _M_elems;
+          ...
+        };
+
+        array<> provides all container types.
+        array<> provides random iterator,reverse_iterator,const_reverse_iterator.
+                      /* ^actually it is value_type * */
+        array<> provides rbegin() and rend().
+        array<> supports almost all required container operations,but the following operations
+        are provided by compiler :
+          constructor
+          destructor
+          copy-constructor
+        array<> does not support move semantics.
+        array<> supports all logical operations.
+        array<> only supports initialization from initializer-list - array<T> a = {...};
+
+        some other operations :
+          fill(@v)        fill array with value @v
+          at(@n)          get reference to element [@n]
+          operator[](@n)  get reference to element [@n] - random access operator
+          front()         get reference to the first element
+          back()          get reference to the last element
+          data()          get pointer to the internal array object -- address of the memory chunk
+                          /* address of @_M_elems */
+
+        some external methods :
+          get<@n>(@array) get reference to element at @array[@n]
+                          /* has rvalue version,even array<> is not moveable,but the element
+                           * in it can be moved if which support move semanticas
+                           */
+          to_array<@_Tp, @_Nm>(@_Tp (&@__a)[@_Nm])        makeup a std::array<remove_cv_t<_Tp>, _Nm>
+                                                          object from a collection from elements,
+                                                          returned by value.
+                                                          e.g.
+                                                            auto arr = std::to_array<int, 3>(1, 2, 3);
+                                                            /* to_array<>() is a constexpr function,
+                                                             * thus the statement should be expanded
+                                                             * to "std::array<int, 3> arr = {1, 2, 3};"
+                                                             */
+
+
+        
+
+
