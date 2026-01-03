@@ -3145,6 +3145,7 @@ STL Containers :
            * support for zero-sized arrays mandatory
            * @_M_elems:    type is _Tp[_Nm],defined in _AT_Type,so it
            *               is an ordinary C-style array in the class object
+           * ! so,array<> provide guarantee the elements re in contiguous memory
            */
           typedef _GLIBCXX_STD_C::__array_traits<_Tp, _Nm> _AT_Type;
           typename _AT_Type::_Type _M_elems;
@@ -3160,13 +3161,23 @@ STL Containers :
           constructor
           destructor
           copy-constructor
-        array<> does not support move semantics.
+          move-constructor
+          copy-assignment-operator
+          move-assignment-operator
+        array<> swapping requires same element type and same number of elements. /* linear complexity */
+                /* iterators and references do not swap containers with their elements */
+        array<> support move semantics.
+        array<> can be declared with 0 size,in this case,element access operations are cause undefined behavior.
         array<> supports all logical operations.
         array<> only supports initialization from initializer-list - array<T> a = {...};
+                              /* if initializer-list is not fully initialize all elements,the remain
+                               * elements are implicitly initialized to 0 of the fundamental type.
+                               */
 
         some other operations :
           fill(@v)        fill array with value @v
           at(@n)          get reference to element [@n]
+                          /* will perform range checking,throw std::out_of_range if @n exceeded array size */
           operator[](@n)  get reference to element [@n] - random access operator
           front()         get reference to the first element
           back()          get reference to the last element
@@ -3187,6 +3198,23 @@ STL Containers :
                                                              * thus the statement should be expanded
                                                              * to "std::array<int, 3> arr = {1, 2, 3};"
                                                              */
+
+        in header <array>,the std::tuple<> for std::array<> interface have provided.the header contains
+        some partial specialization to support std::array<> type.
+        /* partial specializations about std::tuple_size<>,std::tuple_element<>,and std::__is_tuple_like_impl<> */
+        e.g.
+          using Int5Array = std::array<int, 5>;
+          Int5Array ar = { 1, 2 };
+
+          /* template<typename _Tp, std::size_t _Nm> std::tuple_size;
+           *                   #^type           #^size
+           * template<std::size_t _Int, typename _Tp, std::size_t _Nm> std::tuple_element;
+           *                      #^index                         #^size
+           * std::tuple_size<Int5Array>::value ==> 5
+           * std::tuple_element<Int5Array>::type ==> int
+           */
+           
+          auto a = std::get<1>(ar); /* @a yield value 2 */
 
 
         
