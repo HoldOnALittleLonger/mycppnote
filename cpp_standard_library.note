@@ -3216,7 +3216,92 @@ STL Containers :
            
           auto a = std::get<1>(ar); /* @a yield value 2 */
 
+    Vectors :
+      a vector models a dynamic array,but the standard does not specify that the implementation uses a dynamic array.
 
+      <bits/stl_vector.h>
+        /**
+         * _Vector_base<> - std::vector's impl
+         */
+        template<typename _Tp, typename _Alloc>
+        struct _Vector_base {
+          ...
+          struct _Vector_impl_data {
+            ...
+          };
+          ...
+        };
+
+        /**
+         * vector<> - STL vector,a container models a dynamic array
+         * @_Tp:      template parameter,type of elements
+         * @_Alloc:   template parameter,the exact allocator which handle
+         *            allocation to @_Tp object
+         * namespace: std
+         */
+        template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
+        class vector : protected _Vector_base<_Tp, _Alloc> {
+          ...
+        };
         
+      Abilities of Vectors :
+        a vector copies its elements into its internal dynamic array.
+        insert/delete element at the end of container get a good performance,but at the
+        middle of container,get a worse performance - elements have to be moved to another position.
+        elements in vector always have a certain order,so it is a kind of ordered collection.
 
+        Size and Capacity :
+          member method size()        -        return current size of container
+          member method empty()       -        check if container currently is empty
+          member method max_size()    -        return the maximum size of container
+          member method capacity()    -        return the number of elements a vector
+                                               could contain in its actual memory
+                                               // vector would automatically reallocate memory
+                                                  when size exceeded capacity
+          member method reserve(@n)   -        ensure a certain capacity before really need
+                                               // reserve() can not shrink vector
+          member method shrink_to_fit()   -    shrink vector's memory,reduce current capacity
+                                               to current size
+                                               // invalidate all references,pointers,and iterators
+                                                  they are refer to the holes
 
+          // reallocation -
+               when capacity has been exceeded,reallocation is happen,it will
+               invalidate all references,pointers,and iterators for elements in the vector.
+               and reallocation is cost expensive.
+               # except reserve(),we can pass additional elements to its constructor to avoid
+                 reallocation,this require the elements must provide a default constructor.
+                 for fundamental types,zero initialization is guaranteed.
+                 if it is not necessary,use reserve() to instead this way - construct element
+                 take times.
+
+          balance between speed and memory use is implementation defined.for avoid internal
+          fragmentation,many implementations allocate a whole block of memory at the first
+          time when insert element into vector - if no reserve() is called before,thus,for
+          the case that amount of will coming elements is not very large,call reserve() can
+          avoid waste of a lot of memory.
+
+          delete element would not invalidate references,pointers,and iterators,provided that
+          they refer to a position before the manipulated elements;but,insertions invalidate
+          all these when capacity has exceeded.
+
+          before C++11,no member method shrink_to_fit(),for shrink a vector,have to invoke
+          swap() method,it we want to drop all elements in current container,we can swap it
+          with a empty container - newly constructed.
+          after swap,all references,pointers,and iterators swap their containers,they still refer
+          to the elements to which they referred on entry.
+          e.g.
+            void swap(std::vector<int>& v)
+            {
+              std::vector<int> tmp(v); // copy-construct
+              v.swap(tmp);             // swap internal vector data
+            }
+
+            std::vector<int> v{1, 2, 3, 4, 5};
+            auto it(v.begin());
+            swap(v);
+            auto swapped_it(v.begin());
+
+            assert(it != swapped_it);  // *@it will get 0 - invalid value on my machine,
+                                       // no exception happens.
+                                       // container swapped.
