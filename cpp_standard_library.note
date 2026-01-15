@@ -3305,3 +3305,81 @@ STL Containers :
             assert(it != swapped_it);  // *@it will get 0 - invalid value on my machine,
                                        // no exception happens.
                                        // container swapped.
+
+      Operations :
+        create,copy,destroy >
+          vector()                          default constructor
+          vector(@size)                     create a vector with @size elements created by the default constructor
+          vector(@size, @value)             create a vector initialized with @size copies of element @value
+          vector(@begin_it, @end_it)        create a vector initialized with the elements of the range  [@begin_it, @end_it)
+          vector(initializer-list)          create a vector from initializer-list
+          vector(const vector&)
+          vector(vector&&)
+          operator=(initializer-list)
+          operator=(cv)
+          operator=(rv)
+          ~vector()                         destroys all elements and frees the memory
+
+        nonmodifying operations >
+          empty()                           is this vector empty?
+          size()                            current size of elements in this vector
+          max_size()                        maximum number of elements possible
+          capacity()                        maximum possible number of elements without reallocation
+          reserve(@size)                    enlarges capacity,if not enough yet
+          shrink_to_fit()                   reduce capacity to fit number of elements
+          operator==
+          operator!=
+          operator<
+          operator>
+          operator<=
+          operator>=
+
+        assignments >
+          v1 = v2                           invoke operator=(const vector&)
+          v1 = rv2                          invoke operator=(vector&&)
+          v1 = initializer-list             invoke operator=(initializer-list)
+          assign(@size, @value)             assign @size copies of element @value
+          assign(@begin_it, @end_it)        assign the elements of the range [@begin_it, @end_it)
+          assign(initializer-list)          assign all the elements of the initializer list
+          swap(@v2)                         swap the data of "this" and @v2
+          swap(@v1, @v2)                    swap the data of @v1 and @v2
+
+        element access >
+          operator[@idx]                    return the element with index @idx
+          at(@idx)                          return the element with index @idx(range-error exception test)
+          front()                           return the first element
+          back()                            return the last element
+
+        iterator routines >
+          begin()
+          end()
+          cbegin()
+          cend()
+          rbegin()                          reverse begin
+          rend()                            reverse end
+          crbegin()
+          crend()
+
+        inserting and removing >
+          push_back(@value)                 append a copy of @value at the end
+          pop_back(@value)                  remove the last element(does not return it)
+          insert(@pos, @value)              insert a copy of @value before iterator position @pos,return the
+                                            position of the new element
+          insert(@pos, @size, @value)       insert @size copies of @value before iterator position @pos,return
+                                            the position of the first new element(or @pos,if no new element)
+          insert(@pos, @begin_it, @end_it)  insert a copy of all elements of the range [@begin_it, @end_it) before
+                                            @pos,return the position of the first new element(or @pos if no new element)
+          insert(@pos, initializer-list)    insert a copy of all elements of the initializer-list before @pos,
+                                            return the position of the first new element(or @pos,if no new element)
+          emplace(@pos, @args...)           insert a copy of an element initialized with @args... before @pos,return
+                                            the position of the new element
+          emplace_back(@args...)            append a copy of an element initialized with @args... at the end
+          erase(@pos)                       remove element at @pos,return the position of the next element
+          erase(@begin_it, @end_it)         remove elements of the range [@begin_it, @end_it),return the position
+                                            of the next element
+          /* may occur memory allocation */
+          resize(@new_size)                 change the number of elements to @size(if size grows,new elements are constructed
+                                            by their default constructor)
+          resize(@new_size, @value)         change the number of elements to @size(if size grows,new elements are copied from
+                                            @value)
+          clear()                           remove all elements(empty the container,but without free memory)
