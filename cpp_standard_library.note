@@ -3383,3 +3383,41 @@ STL Containers :
           resize(@new_size, @value)         change the number of elements to @size(if size grows,new elements are copied from
                                             @value)
           clear()                           remove all elements(empty the container,but without free memory)
+
+      Exception Handling :
+        vectors provide only minimal support for logical error checks.the only member function for which the
+        standard requires that it may throw an exception is at().in addition,the standard requires that only
+        the usual standard exceptions may occur.
+
+        if user-defined functions called by vector throw exceptions,the C++ standard library provides the
+        following guarantees :
+          1> if an element gets inserted with push_back(),and an exception occurs,this function has no
+             effect.
+          2> insert(),emplace(),emplace_back(),push_back() either succeed or have no effect,provided that
+             the copy/move operations of the elements do not throw.
+          3> pop_back() does not throw any exceptions.
+          4> erase() does not throw if the copy/move operations of the elements do not throw.
+          5> swap() and clear() do not throw.
+          6> if elements are used that never throw exceptions on copy/move operations,every operation is
+             either successful or has no effect.
+             such elements might be "plain old data"(POD),POD describes types that use no special C++
+             feature.(e.g. every ordinary C structure is POD)
+
+        !! all guarantees are based on the requirements that destruction do not throw.
+
+      The vector<bool> specialization :
+        the specialization vector<bool> of vector<> is a optimized version than the usual vector<bool type>.
+        for vector<bool type>,each element at least occupied 1 byte;but for vector<bool>,each element only
+        occupied 1 bit.so,the goal of this specialization reduce memory consuming.
+        but,this specialization is not meet all requirements of other vectors,and operations on it have to
+        be transformed to bitwise operations,of course,it also requires special handling for reference and iterators.
+        the size of vector<bool> is dynamic changing,similar to a dynamic size bit-field;different from
+        bitset class,which is static size.
+
+        some additional operations :
+          flip()                negate all boolean elements(complement of all bits)
+          v[@idx].flip()        negate the boolean element with index @idx(single bit)
+          v[@idx] = @value      assign @value to the boolean element with index @idx
+          v[@idx1] = v[@idx2]   assign the value of the element with index @idx2 to the element
+                                with index @idx1
+        
