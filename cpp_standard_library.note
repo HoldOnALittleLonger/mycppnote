@@ -3420,4 +3420,122 @@ STL Containers :
           v[@idx] = @value      assign @value to the boolean element with index @idx
           v[@idx1] = v[@idx2]   assign the value of the element with index @idx2 to the element
                                 with index @idx1
-        
+
+    Deques :
+      a deque is very similar to a vector,it manages its elements with a dynamic array,provides random access,
+      and has almost the same interface as a vector.the difference is that with a deque,the dynamic array is
+      open at both ends.
+
+              <-- ... | | | | | | | ... -->
+
+              ! insertions and deletions at both the end and the beginning are fast.
+
+        internal structure of a deque >
+
+                the deque is typically implemented as bunch of individual blocks,the first block
+                growing in one direction,and the last block growing in the opposite direction.
+            
+                +-+ +-+  ^
+                | | | |  |
+                +-+ +-+  |
+                | | | | +-+
+                +-+ +-+ | |
+           <=   | | | | +-+   =>
+                +-+ +-+ | |
+                | | | | +-+
+                +-+ +-+ | |
+                 |  | | +-+
+                 |  +-+ | |
+                 V      +-+
+
+      <bits/stl_deque.h>
+        /**
+         * deque<> - the standard template libraray continer Deque.
+         * @_Tp:     template parameter,type of element
+         * @_Alloc:  template parameter,type of element allocator,for memory model
+         * @_Base:   type-definition,base of deque<>
+         * @_M_impl: implementation of _Base
+         * namespace:
+         *           std
+         */
+        template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
+        class deque : protected _Deque_base<_Tp, _Alloc> {
+          ...
+        private:
+          typedef _Deque_base<_Tp, _Alloc> _Base;
+          ...
+          using _Base::_M_impl;
+        };
+
+        /* _Deque_iterator<> - iterator template for deque<> */
+        template<typename _Tp, typename _Ref, typename _Ptr>
+        struct _Deque_iterator {
+          ...
+        };
+
+        /* _Deque_base<> - base of deque<> */
+        template<typename _Tp, typename _Alloc>
+        class _Deque_base {
+        protected:
+          typedef typename __gnu_cxx::__alloc_traits<_Alloc>::template
+            rebind<_Tp>::other _Tp_alloc_type;
+          typedef __gnu_cxx::__alloc_traits<_Tp_alloc_type> _Alloc_traits;
+
+          // __cplusplus >= 201103L
+          typedef _typename _Alloc_traits::pointer _Ptr;
+          typedef _typename _Alloc_traits::const_pointer _Ptr_const;
+
+          ...
+          typedef _Deque_iterator<_Tp, _Tp&, _Ptr> iterator;
+          typedef _Deque_iterator<_Tp, const _Tp&, _Ptr_const> const_iterator;
+          ...
+          typedef typename iterator::_Map_pointer _Map_pointer;
+
+          /* _Deque_impl_data - implementation data of deque<> base */
+          struct _Deque_impl_data {
+            _Map_pointer _M_map;
+            size_t _M_map_size;
+            iterator _M_start;
+            iterator _M_finish;
+            ...
+          };
+          ...
+
+          /* _Deque_impl<> - implementation of deque<> base */
+          struct _Deque_impl : public _Tp_alloc_type, public _Deque_impl_data {
+            ...
+          };
+          ...
+
+          /* _M_impl - implementation object */
+          _Deque_impl _M_impl;
+        };
+
+
+      Abilities of Deque :
+        abilities of deque differ from std::vector<> :
+          1> inserting and removing elements is fast at both the beginning and the end.
+             these operations are done in amortized constant time.
+          2> the internal structure has one more indirection to access the elements,so with
+             deques,element access and iterator movement are usually a bit slower.
+          3> iterators must be smart pointers of a special type rather than ordinary pointers,
+             because they must jump between different blocks.
+          4> in systems that have size limitations for blocks of memory,a deque might contain
+             more elements because it uses more than one block of memory,thus,max_size()
+             might be large for deques.
+          5> deque provide no support to control the capacity and the moment of reallocation.
+             in particular,any insertion or deletion of elements other than at the beginning or
+             end invalidates all pointers,references,and iterators that refer to elements of the
+             deque.
+             ! deque do not have to copy all elements on reallocation,thus its reallocation is
+               better than vector.
+          6> blocks of memory might get freed when they are no longer used,so the memory size of
+             a deque might shrink.
+
+        abilities of vector also apply to deque :
+          1> inserting and deleting elements in the middle is relatively slow because all
+             elements up to either end may be moved to make room or to fill a gap.
+          2> iterations are random-access iteratos.
+
+        ! the interface of vectors and deques is almost the same,so trying both is very easy when
+          no special feature of a vector or a deque is necessary.
