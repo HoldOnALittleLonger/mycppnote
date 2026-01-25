@@ -3539,3 +3539,77 @@ STL Containers :
 
         ! the interface of vectors and deques is almost the same,so trying both is very easy when
           no special feature of a vector or a deque is necessary.
+
+      Operations of Deque :
+        deque()                          default constructor
+        deque(const deque<>&)            copy constructor
+        operator=(const deque<>&)        copy assignment
+        deque(deque<>&&)                 move constructor
+        operator=(deque<>&&)             move assignment
+        deque(@n)                        create a deque object contains @n elements are default constructed
+        deque(@n, @v)                    create a deque object contains @n elements copied from @v
+        deque(initialize-list)           create a deque object from initializer-list
+        operator=(initializer-list)       create a deque object from initializer-list
+        ~deque()                         destructor
+
+        /* do not provide capacity() and reserve().
+         * do provide direct functions to insert and to delete the first element.
+         */
+
+        empty()                          is container empty?
+        size()                           current size(not capacity)
+        max_size()                       maximum size
+        shrink_to_fit()                  request to reduce capacity to fit number of elements
+                                         // invalidate references,pointers,iterators,
+                                         // but it is nonmodifying operation,because it does not
+                                         // manipulate the logical contents of the container.
+                                         // memory that all the pointers to the blocks of memory usually
+                                         // does not shrink.
+                                         // Since C++11
+        operator==                       @c1 == @c2 <-> (c1.size() == c2.size() && Vi(c1[i] == c2[i])
+        operator!=                       @c1 != @c2 => not @c1 == @c2
+        operator<                        @c1 < @c2  <-> (c1.size() == c2.size() && Vi(c1[i] < c2[i]))
+        operator>                        @c1 > @c2  => not @c1 < @c2 && not @c1 == @c2
+        operator<=                       @c1 <= @c2 => not @c1 > @c2
+        operator>=                       @c1 >= @c2 => not @c1 < @c2
+        operator[](@idx)                 random access
+        at(@idx)                         similar to operator[],but might throw range-error exception if invalid @idx
+        front()                          return the first element
+        back()                           return the last element
+        begin()                          begin iterator of container
+        end()                            end iterator of container
+        cbegin()                         const begin iterator
+        cend()                           const end iterator
+        rbegin()                         reverse begin iterator => end
+        rend()                           reverse end iterator   => begin
+        crbegin()                        const rbegin
+        crend()                          const rend
+            
+        /**
+         * insertion or deletion might cause reallocation,thus any intertion or deletion invalidate all pointers,
+         * references,and iterators that refer to other elements of the deque.
+         * exception is when elements are inserted at the front or back,in this case,pointers and references stay
+         * valid,but iterators do not.
+         */
+
+        assign(@n, @v)                   assign @n copies of element @v to container
+        assign(@begin_it, @end_it)       assign the elements of the range [@begin_it, @end_it) // automatically allocate space
+        assign(initializer-list)         assign all the elements of the initializer list
+        @c1.swap(@c2)                    member method swap(),swap data of @c1 and @c2
+        swap(@c1, @c2)                   external swap(),swap data of @c1 and @c2
+        push_back(@v)                    append an element copied from @v at the back
+        pop_back()                       remove an element at the back(do not return it)
+        push_front(@v)                   insert an element copied from @v at the beginning
+        pop_front()                      remove an element at the beginning(do not return it)
+        insert(@pos, @v)                 insert an element copied from @v before @pos,return the position of new element
+        insert(@pos, @n, @v)             insert @n elements copied from @v before @pos,return the position of first new element
+        insert(@pos, @begin_it, @end_it) insert a copy of all elements of the range [@begin_it, @end_it),return the position of first new element
+        insert(@pos, initializer-list)   insert a copy of all elements of initializer-list before @pos,return the position of first new element
+        emplace(@pos, @args...)          insert a copy of an element initialized with @args before @pos,return the position of new element
+        emplace_back(@args...)           similar to emplace(),but append new element
+        emplace_front(@args...)          similar to emplace(),but insert new element at the beginning
+        erase(@pos)                      remove the element at @pos and return the position of next element
+        erase(@begin_it, @end_it)        remove the elements in range [@begin_it, @end_it)
+        resize(@size)                    change the number of elements to @size,grows new elements are created by their default constructor
+        resize(@size, @v)                change the number of elements to @size,new elements are copied from @v
+        clear()                          remove all elements in container(empties it)
