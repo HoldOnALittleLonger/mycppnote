@@ -2250,7 +2250,7 @@ The Standard Template Library :
             typedf basic_ostream<_CharT, _Traits> ostream_type;
             ...
           private:
-            ostream_type *_M_stream; /* sink */
+            ostream_type *_M_stream; /* sink,usually specified when construct object */
             const _CharT *_M_string; /* delimiter,this string will be written into
                                       * output stream after every @_Tp written
                                       * into the output stream if it is not NULL
@@ -2275,6 +2275,13 @@ The Standard Template Library :
                                                                   // no updating
             operator++(int)                                    => return *this
                                                                   // no updating
+
+          usage :
+            std::deque<std::string> local_deque;
+            ...
+            // print element in the @local_deque to standard output stream.
+            std::copy(local_deque.cbegin(), local_deque.cend(),
+                      std::ostream_iterator<std::string>(std::cout, "\n"));
 
       reverse iterators :
         reverse iterators let algorithms operate backward by switching the call of
@@ -3613,3 +3620,37 @@ STL Containers :
         resize(@size)                    change the number of elements to @size,grows new elements are created by their default constructor
         resize(@size, @v)                change the number of elements to @size,new elements are copied from @v
         clear()                          remove all elements in container(empties it)
+
+      Exception Handling :
+        almost deques provide the same support for exception handling that vectors do,except push_front() and pop_front() interfaces.
+        they behave according to push_back() and pop_back(),respectively.
+        the C++ standard library provides the following behavior :
+          1> if an element gets inserted with push_back() or push_front() and an exception occurs,these functions have no effect.
+          2> neither pop_back() nor pop_front() throws any exceptions.
+
+          1>
+          e.g.
+            std:::deque<int> local_deque;
+            local_deque.push_back(0);
+            local_deque.push_back(1);
+            local_deque.push_back(2);
+        
+            // print "0 1 2 3"
+            for (auto e : local_deque)
+              std::cout << e << " " << std::endl;
+            std::cout << std::endl;
+
+            try {
+              local_deque.push_back(3);
+            } catch (std::exception &) {
+              std::cerr << "Exception Detected." << std::endl;
+
+              // if exception occurs,element "3" should not be pushed at back of @local_deque.
+              for (auto e : local_deque)
+                std::cout << e << " " << std::endl;
+              std::cout << std::endl;
+            }
+
+            
+
+        
