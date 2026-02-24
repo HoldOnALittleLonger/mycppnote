@@ -3651,6 +3651,131 @@ STL Containers :
               std::cout << std::endl;
             }
 
-            
 
-        
+    Lists :
+      a list manages its elements as a doubly linked list.
+              ... <=> [ item0 ] <=> [ item1 ] <=> ... <=> [ itemN ] <=> ... <=> [ item0 ] <=> ...
+
+      <bits/stl_list.h>
+        /**
+         * _List_base<> - template for basic implementation of stl list<>
+         * @_Tp:          template parameter,type of elements
+         * @_Alloc:       template parameter,type of allocator
+         */
+        template<typename _Tp, typename _Alloc>
+        class _List_base {
+          ...
+        };
+
+        /**
+         * list<> - STL list class template
+         * @_Tp:    type of element
+         * @_Alloc: type of allocator
+         */
+        template<typename _Tp, typename _Alloc = std::allocator<_Tp> >
+        class list : protected _List_base<_Tp, _Alloc> {
+          ...
+        };
+
+      Abilities of Lists :
+        list<> provides two pointers so-called "anchors",which refer to the first and last elements.
+        each element has pointers to the previous and next elements(or back to the anchor).
+                    +-----------------> +--------+ ----------------------+
+                    |                   | anchor |                       |
+                    |    +------------- +--------+ <------------------+  |
+                    |    |                                            |  |
+                    |    +----> +--------+ --> ... --> +--------+ ----+  |
+                    |           |  item  |             |  item  |        |
+                    +---------- +--------+ <-- ... <-- +--------+ <------+
+                                  first                   last
+
+        ! actually,implmentation of list<> in GCC 15.1 do not use two "anchors".it used a header node,          
+          in which the first element and the last element are recorded.
+                  ... <-> last <-> [ header ] <-> first <-> ...
+
+        a list differs in several major ways from arrays,vectors,deques :
+          > a list does not provide random access,we can only access elements in a step by step way.
+          > inserting and removing elements is fast at each position,and not only at one or both ends.
+          > inserting and deleting elements does not invalidate pointers,references,and iterators to
+            other elements.
+          > a list supports exception handling in such a way that almost every operation succeeds or
+            is a no-op. /* no intermediate state,that means the operation is an atomic operation */
+
+        list do not provide subscript operator and at() routine.
+        list do not provide operations for capacity,reallocation.
+        list provide many special member functions for moving and removing elements,these member functions
+        are faster versions of general algorithms that have the same names.
+            /* faster,because they only redirect pointers rather than copy and move the values */
+
+      Operations of List :
+        list()                                 default constructor
+        list(const list& copy_from)            copy constructor
+        operator=(const list& rhs)             copy-assignment
+        list(list&& move_from)                 move constructor
+        operator=(list&& rhs)                  move-assignment
+        list(@n, @v)                           construct list with @n elements that are copied from @v
+        list(@begin_it, @end_it)               construct list by copy values in range [@begin_it, @end_it] for elements
+        list(initializer-list)                 construct list from an initializer-list
+        operator=(initializer-list)            construct list and initialize it from initializer-list
+                                               also can be used to re-assign all elements,hole nodes remain un-changed
+        ~list()                                destructor
+
+        empty()                                whether list is empty?
+        size()                                 current number of elements
+        max_size()                             maximum number of elements possible
+
+        operator==(@rhs)                       @this == @rhs <-> Vi(@this[i] == @rhs[i]) /* must has same size */
+        operator!=(@rhs)                       not @this == @rhs
+        operator<(@rhs)                        similar to operator==(),but it is less than
+        operator>(@rhs)                        similar to operator<(),but it is greater than
+        operator<=(@rhs)                       not operator>()
+        operator>=(@rhs)                       not operator<()
+
+        assign(@n, @e)                         assign @n copies of @e
+        assign(@begin_it, @end_it)             assign the elements of the range [@begin_it, @end_it)
+        assign(initializer-list)               assign all the elements of the initializer list
+        swap(@rhs)                             swap the data of @this and @rhs
+        ::swap(@lhs, @rhs)                     common swap method for swap data of @lhs and @rhs
+
+        begin()                                return an iterator refers to the first element
+        end()                                  return an iterator refers to the position next to last element
+                                               /* for list,it is the header */
+        cbegin()                               const version
+        cend()                                 const version
+        rbegin()                               return an reverse iterator start from end()
+        rend()                                 return an reverse iterator start from begin()
+        crbegin()                              const version
+        crend()                                const version
+
+        front()                                return reference to first element
+        push_front(const _Tp& x)               insert a new element right after header
+        push_front(_Tp&& x)                    rvalue version
+        pop_front()                            pop up the first element,no return
+        reference back()                       return reference to last element
+        push_back(const _Tp& x)                insert a new element right after current last element
+        push_back(_Tp&& x)                     rvalue version
+        pop_back()                             pop up the last element,no return
+        insert(@pos, @e)                       insert a copy of @e at position @pos,return the pos of new element
+                                               /* old element will be moved to next position */
+        insert(@pos, @n, @e)                   insert @n copies of @e at position @pos,return the pos of first new element
+        insert(@pos, @begin_it, @end_it)       insert copies in range [@begin_it, @end_it) at position @pos,return the pos
+                                               of first new element
+        insert(@pos, initializer-list)         similar to ranged insertion,but elements are copied from initializer-list
+        emplace(@pos, @args...)                construct a new element from @args...,and insert it at position @pos,return
+                                               the pos of this new element
+        emplace_back(@args...)                 similar to position emplace,but insert the new element at end of list
+        emplace_front(@args...)                similar to emplace_back(),but insert the new element at front of list
+        erase(@pos)                            remove the element at position @pos,return the pos of next element
+        erase(@begin_it, @end_it)              remove all elements of the range [@begin_it, @end_it),return the next
+                                               element's position
+        remove(@v)                             remove all elements with value @v
+        remove_if(@op)                         remove all elements for which @op(element) yield TRUE
+        resize(@n)                             change the number of elements to @n,new elements will be default constructed
+                                               if have any
+        resize(@n, @e)                         change the number of elements to @n,new elements are copied from @e if have any
+        clear()                                remove all elements
+
+      ! list<> also allow us to move elements from instance @l1 to another instance @l2,the things need to do is redirect
+        pointers.but @l1 and @l2 must be the same type.
+        to support this ability,it provide not only remove(),but also additional modifying member functions to change the
+        order of and relink elements and ranges.these methods can move elements inside a single list or between two lists.
