@@ -823,7 +823,7 @@
         //  decltype(p) is same as int * (p is int *)
 
     #  Attention :
-                because decltype(obj) returns type of obj,this maybe occurs
+             because decltype(obj) returns type of obj,this maybe occurs
              error while template.
 
              template<class T>
@@ -840,6 +840,9 @@
              std::ifstream *f;
              s<decltype(f)> sf1;   //  with T = std::ifstream *  !!!
              s<decltype(*f)> sf2;  //  with T = std::ifstream &  !!!
+
+             ! decltype(x) => typeof(x)
+               decltype((x)) => typeof(x)&
 
 
 # parameter packs

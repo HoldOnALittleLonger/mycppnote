@@ -3774,8 +3774,87 @@ STL Containers :
                                                if have any
         resize(@n, @e)                         change the number of elements to @n,new elements are copied from @e if have any
         clear()                                remove all elements
+        unique()                               remove duplicates of consecutive elements with the same value
+        unique(@op)                            remove duplicates of consecutive elements,for which @op() yield TRUE
+        splice(@pos, @l2)                      move all elements of @l2 to @this in front of the iterator position @pos
+        splice(@pos, @l2, @l2_pos)             move all elements of @l2 from position @l2_pos to @this in front of the 
+                                               iterator position @pos
+        splice(@pos, @l2, @l2_begin_it, @l2_end_it)
+                                               move all elements of @l2 in range [@l2_begin_it, @l2_end_it) to @this in
+                                               front of the iterator position @pos
+        sort()                                 sort all elements with operator<()
+        sort(@op)                              sort all elements with @op()
+        merge(@l2)                             assuming that both containers contain the elements sorted,move all elements
+                                               of @l2 into @this so that all elements are merged and still ordered
+        merge(@l2, @op)                        assuming that both containers contain the elements sorted due to the
+                                               sorting criterion @op(),move all elements of @l2 into @this so that all
+                                               elements are merged and still sorted according to @op()
+                                               ! merge() do not remove duplicates.
+        reverse()                              reverse the order of all elements
+
+        # some of these operations have provided rvalue reference version,thus we can invoke them by pass the argument 
+          returned from std::move(@arg).
 
       ! list<> also allow us to move elements from instance @l1 to another instance @l2,the things need to do is redirect
         pointers.but @l1 and @l2 must be the same type.
         to support this ability,it provide not only remove(),but also additional modifying member functions to change the
         order of and relink elements and ranges.these methods can move elements inside a single list or between two lists.
+
+      Exception Handling :
+        almost all list operations provide guarantee that the operation either succeed or have no effect.
+        but there is still some exceptions :
+
+          assignment operations
+          member method sort()
+                                       provide "basic guarantee",no resource leak or no violate container
+                                       invariants when exception happened.
+
+          remove(), remove_if()
+          unique()
+                                       provide guarantee that comparing the elements(or predicate) no throw.
+                                       /* this require such logical operation on the elements do not throw */
+
+          pop_back(), pop_front()
+          erase(), clear()
+          splice(), reverse()
+          swap()
+                                       provide guarantee that no exception throw
+
+          merge()
+                                       provide guarantee that either succeed or has no effect if comparing
+                                       the elements do not throw
+
+      Usage :
+        std::list<int> int_list;
+        for (int i(0); i < 33; ++i)
+          int_list.push_back(i);
+
+        std::list<int> int_list2;
+        for (int i(33); i < 65; ++i)
+          int_list.push_back(i);
+
+        // int_list : [0, 32]
+        // int_list2 : [33, 64]
+
+        std::list<int> int_list3;
+        int_list3.push_back(2);
+        int_list3.push_back(20);
+        int_list3.push_back(-2);
+        int_list3.push_back(-1);
+        int_list3.push_back(0);
+
+        int_list3.sort();
+
+        // int_list3 : [-2, -1, 0, 2, 20]
+
+        int_list.merge(int_list2);
+        
+        // int_list : [0, 64]
+
+        int_list.merge(int_list3);
+        
+        // int_list : [-2, -1, 0, 0, 1, 2, 2, ..., 20, 20, ..., 64]
+
+        int_list.reverse();
+
+        // int_list : [64, ..., 20, 20, ..., 2, 2, 1, 0, 0, -1, -2]
