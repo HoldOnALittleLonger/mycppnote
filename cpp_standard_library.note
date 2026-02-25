@@ -3858,3 +3858,8 @@ STL Containers :
         int_list.reverse();
 
         // int_list : [64, ..., 20, 20, ..., 2, 2, 1, 0, 0, -1, -2]
+
+        int_list.reverse();
+        int_list.unique();
+
+        // int_list : [-2, 64]
