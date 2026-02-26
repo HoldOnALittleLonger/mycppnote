@@ -3661,6 +3661,7 @@ STL Containers :
          * _List_base<> - template for basic implementation of stl list<>
          * @_Tp:          template parameter,type of elements
          * @_Alloc:       template parameter,type of allocator
+         * namespace:     std
          */
         template<typename _Tp, typename _Alloc>
         class _List_base {
@@ -3863,3 +3864,170 @@ STL Containers :
         int_list.unique();
 
         // int_list : [-2, 64]
+
+    Forward Lists :
+      a forward list manages its elements as a singly linked list.
+              [ header ] -> [ item0 ] -> [ item1 ] -> ... -> [ itemN ]
+
+      <bits/forward_list.h>
+        /**
+         * forward_list<> - STL forward list class template
+         * @_Tp:            template parameter,type of element
+         * @_Alloc:         template parameter,type of allocator for element
+         * namespace:       std
+         */
+        template<typename _Tp, typename _Alloc = allocator<_Tp>>
+        class forward_list : private _Fwd_list_base<_Tp, _Alloc> {
+          ...
+        };
+
+        /**
+         * _Fwd_list_base<> - class template for base of forward_list<>
+         * @_Tp:              template parameter,type of element
+         * @_Alloc:           template parameter,type of allocator for element
+         */
+        template<typename _Tp, typename _Alloc>
+        struct _Fwd_list_base {
+          ...
+        };
+
+      Abilities of Forward Lists :
+        conceptionally,a forward list is a list restricted such that it is not able to
+        iterate backward.the functionality does not provided by list<>,it also not provided
+        by forward_list<>.
+        ! "It is intended that forward_list<> have zero space or time overhead relative
+           to a hand-written C-style linked list.Features that would conflict with that
+           goal have been omitted."
+
+        the limits on forward_list<> :
+          1> forward list provides only forward iterators,not bidirectional iterators.
+             /* no reverse iterator.
+              * => no rbegin(), rend(), crbegin(), crend()
+              */
+          2> forward list does not provide a size() member function.
+             /* violate the goal.
+              * for get current size,either to compute size of elements everytime size()
+              * is called,or use an additional variable to store it.
+              * both of these will bring time or space overhead than original C-style list.
+              * if you want it,then you'll can keep track outside the forward_list<>,or
+              * select list<>.
+              */
+          3> header has no pointer to the last element.
+             /* thus,no back(), push_back(), pop_back() */
+          4> for all member functions that modify forward list in a way that elements are inserted
+             or deleted at a specific position,special versions for forward list are provided.
+             /* we need to pass the position of the element before the first element that gets
+              * manipulated.
+              * so,the member functions has suffix "_after" followed.
+              * such insert(), insert_after().
+              */
+          5> forward list provides before_begin() and cbefore_begin() methods,there are used to
+             get the position of header,a virtual element,before the first element.
+             /* by this way,the built-in algorithms ending with "_after" to manipulate the first
+              * element.
+              */
+
+        ability others than above mentioned,forward_list<> behave just like list<>.
+        but when element positions are involved,have to pass the preceding position,and the
+        member function has the suffix "_after" in its name.
+        /* exception handling,either succeed or no-op */
+
+      Operations of Forward list :
+        forward_list()                                default constructor
+        forward_list(const forward_list&)             copy-constructor
+        operator=(const forward_list&)                copy-assignment
+        forward_list(forward_list&&)                  move-constructor
+        operator=(forward_list&&)                     move-assignment
+        
+        forward_list(@n)                              construct a forward_list with @n elements default constructed
+        forward_list(@n, @v)                          construct a forward_list with @n elements copied from @v
+        forward_list(@begin_it, @end_it)              construct a forward_list init with the elements of [@begin_it, @end_it)
+        forward_list(initializer-list)                construct a forward_list from initializer-list
+        operator=(initializer-list)                   construct a forward_list from initializer-list
+        ~forward_list()                               destructor
+
+        empty()                                       is current empty?
+        max_size()                                    maximum number of elements possible
+        operator==(@fl2)                              @this == @fl2 <-> Vi(@this[i] == @fl2[i])
+        operator!=(@fl2)                              not (@this == @fl2)
+        operator<(@fl2)                               similar to operator==(),but operation is less than
+        operator>(@fl2)                               similar to operator<(),but operation is greater than
+        operator<=(@fl2)                              not (@this > @fl2)
+        operator>=(@fl2)                              not (@this < @fl2)
+
+        assign(@n, @e)                                assign @n copies of @e
+        assign(@begin_it, @end_it)                    assign the elements of the range [@begin_it, @end_it)
+        assign(initializer-list)                      assign all the elements of initializer-list
+        swap(@fl2)                                    swap data of @this and @fl2
+        ::swap(@fl1, @fl2)                            common swap method,swap data of @fl1 and @fl2
+
+        front()                                       return the first element(no check whether it is exists)
+        
+        begin()                                       return a bidirectional iterator points to the first element
+        end()                                         return a bidirectional iterator points to the position next to
+                                                      the last element
+        cbegin()                                      const version
+        cend()                                        const version
+        before_begin()                                return a forward iterator for the position before the first element
+        cbefore_begin()                               const version
+
+        push_front(@e)                                insert @e at beginning
+        pop_front()                                   pop up the element at beginning(no return)
+        insert_after(@pos, @e)                        insert @e after position @pos,return iterator to the new element
+        insert_after(@pos, @n, @e)                    insert @n copies of @e after position @pos,return iterator to the
+                                                      first new element
+        insert_after(@pos, @begin_it, @end_it)        insert elements of range [@begin_it, @end_it) after position @pos,
+                                                      return the iterator to the first new element
+        insert_after(@pos, initializer-list)          insert elements copied from initializer-list after position @pos,
+                                                      return the iterator to the first new element
+        emplace_after(@pos, @args...)                 construct a new element from @args...,and emplace it after position
+                                                      @pos,return iterator to the new element
+        emplace_front(@args...)                       similar to emplace_after(),but position is the front(return nothing)
+        erase_after(@pos)                             erase element after position @pos(return nothing)
+        erase_after(@begin_it, @end_it)               erase elements from range [@begin_it, @end_it)
+        remove(@v)                                    remove all elements with value @v
+        remove_if(@op)                                remove all elements for which @op(element) yield TRUE
+        resize(@size)                                 change the number of elements to @size,for new elements,they are
+                                                      default constructed
+        resize(@size, @e)                             similar to resize(@size),but new elements are copied from @e
+        clear()                                       remove all elements
+
+        unique()                                      remove duplicates of consecutive elements with the same value
+        unique(@op)                                   remove duplicates of consecutive elements,for which @op()
+                                                      yield TRUE
+        splice_after(@pos, @fl2)                      move all elements of @fl2 to @this right behind the iterator @pos
+        splice_after(@pos, @fl2, @fl2_pos)            move all elements of @fl2 start from position @fl2_pos to @this
+                                                      right behind the iterator @pos
+        splice_after(@pos, @fl2, @fl2_begin_it, @fl2_end_it)
+                                                      move all elements of @fl2 of range (@fl2_begin_it, @fl2_end_it) to
+                                                      @this right behind the iterator @pos
+        sort()                                        sort all elements by operator<()
+        sort(@op)                                     sort all elements by @op(@e1, @e2)
+        merge(@fl2)                                   assuming that both containers contain the elements sorted,move
+                                                      all elements of @fl2 into @this so that all elements are merged
+                                                      and still ordered
+        merge(@fl2, @op)                              assuming that both containers contain the elements sorted by the
+                                                      sorting criterion @op(),move all elements of @fl2 into @this so that
+                                                      all elements are merged and still sorted according to @op()
+        reverse()                                     reverse order
+
+      Exception Handling :
+        forward list has the same guarantee that list give regarding exception handling,provided that the
+        corresponding member function is available.
+        /* same as list's exception handling */
+
+      Usage :
+        because "_after" followed member function need the preceding position,we may need to keep track of "before position"
+        outside the traverse operation.
+        
+        std::forward_list<int> fwlist = { ... };
+        auto before_it(fwlist.before_begin());
+
+        for (const auto& e : fwlist) {
+          if (@operation(e))
+            break;
+          ++before_begin;
+        }
+
+        fwlist.member_method_after(before_it, ...);
+
