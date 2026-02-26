@@ -2475,34 +2475,34 @@ Chapter6> Inheritance and Object-Oriented Design
 
      Item36 : Never redefine an inherited non-virtual function
          redefine non-virtual function in derived class inherited from bace class will cause 
-        base::non-virtual function was hidden by derived::non-virtual function.
-        e.g.
-          struct A {
-            void func(void) {}
-          };
-
-          struct B : public A {
-            void func(void) {}
-          };
-
-          A *pA = new B;
-          pA->func();        //  calls A::func
-
-          B *pB = new B;
-          pB->func();        //  class B::func
-
-          //  because,if function is not virtual,it will be statically bound.
-          //  if function is virtual,it will be dynamically bound.
-
-          statically bound :
-            when use base class pointer points to derived class,call member function via this poiner always
-            calls the member function in the type of pointer of.
-
-          dynamically bound :
-            when use base class pointer points to derived class,call member function via this pointer always
-            calls the member function in the type of the object this pointer points to.
-
-          //  reference has same behavior.
+         base::non-virtual function was hidden by derived::non-virtual function.
+         e.g.
+           struct A {
+             void func(void) {}
+           };
+ 
+           struct B : public A {
+             void func(void) {}
+           };
+ 
+           A *pA = new B;
+           pA->func();        //  calls A::func
+ 
+           B *pB = new B;
+           pB->func();        //  class B::func
+ 
+           //  because,if function is not virtual,it will be statically bound.
+           //  if function is virtual,it will be dynamically bound.
+ 
+           statically bound :
+             when use base class pointer points to derived class,call member function via this poiner always
+             calls the member function in the type of pointer of.
+ 
+           dynamically bound :
+             when use base class pointer points to derived class,call member function via this pointer always
+             calls the member function in the type of the object this pointer points to.
+ 
+           //  reference has same behavior.
 
         redefine an inherited non-virtual function had been violated "is-a" fundamental.
         in "is-a",a non-virtual function means :
@@ -2514,8 +2514,8 @@ Chapter6> Inheritance and Object-Oriented Design
         !!  never redefine an inherited non-virtual function.  !!
 
 
-         Item37 : Never redefine a function's inherited default parameter value
-         because Item36 had been introduced why never redefine an inherited non-virtual function,so
+    Item37 : Never redefine a function's inherited default parameter value
+        because Item36 had been introduced why never redefine an inherited non-virtual function,so
         just discuss virtual function at there.
 
         virtual function is dynamic binding,but default value is static binding.
@@ -2540,9 +2540,9 @@ Chapter6> Inheritance and Object-Oriented Design
             are dynamically bound.  !!
 
 
-         Item38 : Model "has-a" or "is-simplemented-in-terms-of" through composition
-         composition has a lot of synonyms : 
-          layering, containment, aggregation, embedding.
+    Item38 : Model "has-a" or "is-simplemented-in-terms-of" through composition
+        composition has a lot of synonyms : 
+        layering, containment, aggregation, embedding.
 
         when composition occurs between objects in the application domain,it expresses a
         has-a relationship.
@@ -2603,7 +2603,7 @@ Chapter6> Inheritance and Object-Oriented Design
 
 
      Item39 : Use private inheritance judiciously
-         a class inherit from another privately does not mean "is-a",public inheritance means "is-a".
+        a class inherit from another privately does not mean "is-a",public inheritance means "is-a".
         if A private inherit from B,then public members of A will becomes private members of B,other
         zones no changes.
 
