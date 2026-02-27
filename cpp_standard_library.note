@@ -2298,6 +2298,7 @@ The Standard Template Library :
            * # usually,the member function rbegin() of a container returns a reverse iterator
            *   constructed through the end() of the container;and member function rend()
            *   returns a reverse iterator constructed through the begin() of the container
+           * # STL disallow combine normal iterator and reverse iterator.
            */
           template<typename _Iterator>
           class reverse_iterator
@@ -3362,8 +3363,8 @@ STL Containers :
           end()
           cbegin()
           cend()
-          rbegin()                          reverse begin
-          rend()                            reverse end
+          rbegin()                          reverse begin,points to the last element
+          rend()                            reverse end,points to the position before begin()(just as a end mark)
           crbegin()
           crend()
 
@@ -3587,8 +3588,8 @@ STL Containers :
         end()                            end iterator of container
         cbegin()                         const begin iterator
         cend()                           const end iterator
-        rbegin()                         reverse begin iterator => end
-        rend()                           reverse end iterator   => begin
+        rbegin()                         reverse begin iterator
+        rend()                           reverse end iterator
         crbegin()                        const rbegin
         crend()                          const rend
             
@@ -3743,8 +3744,8 @@ STL Containers :
                                                /* for list,it is the header */
         cbegin()                               const version
         cend()                                 const version
-        rbegin()                               return an reverse iterator start from end()
-        rend()                                 return an reverse iterator start from begin()
+        rbegin()                               return an reverse iterator start from last element
+        rend()                                 return an reverse iterator points to the position before first element
         crbegin()                              const version
         crend()                                const version
 
@@ -4031,3 +4032,151 @@ STL Containers :
 
         fwlist.member_method_after(before_it, ...);
 
+    Sets and Multisets :
+      set and multiset containers sort their elements automatically according to a certain sorting criterion.
+      set does not allow duplicates,but multiset does allow.
+
+      # header : <set>
+      # the sorting criterion must define "strict weak ordering".
+      # strict weak ordering :
+          1> it has to be antisymmetric.
+          2> it has to be transitive.
+          3> it has to be irreflexive.
+          4> it has to have transitivity of equivalence.
+        !! operator<=() does not fulfill this requirement.
+
+      <bits/stl_set.h>
+        /**
+         * set<> - STL container set
+         * @_Key:  template parameter,type of element
+         * @_Compare:
+         *         template parameter,type of callable object used for sort criterion
+         * @_Alloc:
+         *         template parameter,type of allocator for element
+         * namespace:
+         *         std
+         * # does not allow duplicates
+         */
+        template<typename _Key, typename _Compare = std::less<_Key>, typename _Alloc = std::allocator<_Key>>
+        class set {
+          ..
+        };
+
+      <bits/stl_multiset.h>
+        /**
+         * multiset<> - STL container multiset
+         * @_Key:       template parameter,type of element
+         * @_Compare:   template parameter,type of callable object for sort criterion
+         * @_Alloc:     template parameter,type of allocator for element
+         * namespace:   std
+         * # order of equivalent elements is random but stable.
+         */
+        template<typename _Key, typename _Compare = std::less<_Key>, typename _Alloc = std::allocator<_Key>>
+        class multiset {
+          ...
+        };
+
+      Abilities of Sets and Multisets :
+        set and multiset,usually are implemented by balanced binary tree(typically implemented as red-block tree).
+        /* standard does not specify the implementation,but it follows from the complexity of set and multiset
+         * operations.
+         */
+        the major advantage of automatic sorting is that a binary tree performs well when elements with a certain
+        value are searched.(O(logN))
+        the disadvantage is,user can not modity the value in container directly.so,for to change the value of element
+        have to remove the old one,and insert a new one.
+
+        > set and multiset do not provide operations for direct element access.
+        > indirect access via iterators has the constraint that,from the iterator's point of view,the element
+          value is constant.
+
+      Set and Multiset Operations :
+        set()                                default constructor
+        set(@op)                             construct a set,and pass it sorting criterion
+                                             # of course,we can pass sorting criterion as a template parameter
+        set(const set&)                      copy-constructor
+        operator=(const set&)                copy-assignment
+        set(set&&)                           move-constructor
+        operator=(set&&)                     move-assignment
+        set(@begin_it, @end_it)              construct a set from elements in range [@begin_it, @end_it)
+        set(@begin_it, @end_it, @op)         construct a set from elements in range [@begin_it, @end_it),the
+                                             sorting criterion is @op
+        set(initializer-list)                construct a set from initializer-list(by copy)
+        operator=(initializer-list)          assign a set from initializer-list(by copy)
+        ~set()                               destructor
+
+        key_comp()                           return the comparison criterion
+        value_comp()                         return the comparison criterion for values as a whole
+                                             (same as key_comp())
+        empty()                              is container empty now?
+        size()                               return current number of elements
+        max_size()                           maximum number of elements possible
+        operator==(@s2)                      @this == @s2 <-> Vi(@this(i) == @s2(i))
+        operator!=(@s2)                      not (@this == @s2)
+        operator<(@s2)                       similar to operator==(),but comparison is "less than"
+        operator>(@s2)                       similar to operator<(),but comparison is "greater than"
+        operator<=(@s2)                      not (@this > @s2)
+        operator>=(@s2)                      not (@this < @s2)
+
+                                             ! for compare two sets,they must have the same type.
+                                               # that means,same element type and same sorting criterion.
+                                                 for the case that they are not the same type,have to
+                                                 compare them through comparing algorithm.
+
+        count(@v)                            return the number of elements with value @v
+        find(@v)                             return the position of the first element with value @v(or end(),unfound)
+        lower_bound(@v)                      return the first position,where @v would get inserted
+                                             # position where the element is greater than or equal to @v
+        upper_bound(@v)                      return the last position,where @v would get inserted
+                                             # position where the element is greater than @v
+        equal_range(@v)                      return a range with all elements with a value equal to @v
+                                             # the first and last position,where @v would get inserted
+                                               return a std::pair object of set iterators,that is
+                                               results of lower_bound() and upper_bound()
+
+        swap(@s2)                            swap the data of @this and @s2
+        ::swap(@s1, @s2)                     common function swap data of @s1 and @s2
+
+        begin()                              return a bidirectional iterator for the first element
+        end()                                return a bidirectional iterator for the position after last element
+        cbegin()                             const version
+        cend()                               const version
+        rbegin()                             return a reverse iterator for the first element of a reverse iteration
+        rend()                               return a reverse iterator for the position after the last element of
+                                             a reverse iteration
+        crbegin()                            const version
+        crend()                              const version
+
+        /* return an iterator to the new element */
+        insert(@v)                           insert a new element copied from @v into container
+        insert(@pos, @v)                     insert a new element copied from @v into container at position @pos,but
+                                             @pos just as a hint for where to start search
+        insert(@begin_it, @end_it)           insert elements copied from range [@begin_it, @end_it)
+        insert(initializer-list)             insert elements copied from initializer-list
+        emplace(@args...)                    insert element constructed from @args...
+        emplace_hint(@pos, @args...)         insert element constructed from @args...,@pos as a search hint
+        /* return an iterator to the new element */
+
+        erase(@v)                            remove element from container with value @v,return iterator to next element
+        erase(@pos)                          remove element from container at position @pos(no return since C++11)
+        erase(@begin_it, @end_it)            remove elements in range [@begin_it, @end_it) from container
+        clear()                              remove all elements
+
+        
+        /**
+         * std::set::insert(@v) return an object is type of std::pair<iterator, bool>.
+         * if the insertion was successfully,the second object of the pair is set to TRUE,and the iterator
+         * points to it;otherwise,the second object is set to FALSE,and the iterator either is invalid,
+         * or points to the existing element which has the same value with @v.
+         * 
+         * std::set::insert(@pos, @v) return an iterator to the newly inserted element.
+         *
+         * std::set::emplace(@args...) as same as no @pos version of insert() member method.
+         *
+         * for std::multiset<>,insert() methods and emplace*() methods all return an iterator to the
+         * newly inserted element.
+         */
+
+
+        
+        
