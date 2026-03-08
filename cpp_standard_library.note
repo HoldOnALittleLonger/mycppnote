@@ -970,7 +970,7 @@ Type Traits and Type Utilities :
 Reference Wrappers :
     class std::reference_wrapper<> decalred in header <functional>,which is used primarily to "feed"
     references to function templates that take their parameter by value.
-    std::reference_wrapper<> can also be used in some STL containers such std::vector<>,std::pari<>,
+    std::reference_wrapper<> can also be used in some STL containers such std::vector<>,std::pair<>,
     std::tuple<> and std::array<>,etc.for specify that type of element is the reference to type T.
     /* just use template argument @type& will failed on compile */
 
@@ -4202,7 +4202,140 @@ STL Containers :
           auto u = s2.upper_bound(3);
 
           std::cout << "lower position of 2 : " << *l << std::endl; // 3
-          std::cout << "upper position of 3 : " << *u << std::endl; // 4
+          std::cout << "upper position of 3 : " << *u << std::endl; // 5
+
+    Maps and Multimaps :
+      maps and multimaps are contains that manage key/value pairs as elements.sort automatically,according to
+      a certain sorting criterion that is used for the key.
+      multimaps,support duplicates.
+
+      <bits/stl_map.h>
+        /**
+         * map<> - the STL container map template class
+         * @_Key:  template parameter,type of key
+         * @_Tp:   template parameter,type of value
+         * @_Compare:
+         *         template parameter,sorting criterion
+         * @_Alloc:
+         *         template parameter,type of allocator for std::pair<>
+         * namespace:
+         *         std
+         */
+        template<typename _Key, typename _Tp, typename _Compare = std::less<_Key>,
+                 typename _Alloc = std::allocator<std::pair<const _Key, _Tp> > >
+        class map {
+          ...
+        };
+
+      <bits/stl_multimap.h>
+        /**
+         * multimap<> - the STL container multimap template class
+         * @_Key:       template parameter,type of key
+         * @_Tp:        template parameter,type of value
+         * @_Compare:   template parameter,sorting criterion
+         * @_Alloc:     template parameter,type of allocator for std::pair<>
+         * namespace:   std
+         * # support duplicates
+         */
+        template<typename _Key, typename _Tp, typename _Compare = std::less<_Key>,
+                 typename _Alloc = std::allocator<std::pair<const _Key, _Tp> > >
+        class multimap {
+          ...
+        };
+
+      ! both key and value must be copyable or movable.
+        the key must be comparable with the sorting criterion.
+        only key will be used for sorting,no matter what value is.
+
+      Abilities of Maps and Multimaps :
+        like all standardized associative container classes,maps and multimaps are usually implemented
+        as balanced binary trees.the standard does not rule how to implement them,but if follows from
+        the complexity of the container operations.
+        maps and multimaps have all abilities and operations of sets and multisets,in concept,the sets
+        and multisets is the maps and multimaps in which key and value is the same object.
+
+        ! maps can be used as associative arrays.
+          we can not modify key directly,but we can modify the value of the element directly,if @_Tp
+          is not constant type.
+
+      Map and Multimap Operations :
+        ! WHEN WE CONSTRUCT MAP FROM OTHER ELEMENTS,WE MUST ENSURE THE ELEMENT CAN BE CONVERTED TO
+          std::pair.
+
+        map()                                        default constructor
+        map(@op)                                     constructor requires a certain sorting criterion
+        map(const map&)                              copy-constructor
+        operator=(const map& @rhs)                   copy-assignment
+        map(map&&)                                   move-constructor
+        operator=(map&& @rhs)                        move-assignment
+        map(@begin_it, @end_it)                      construct map from elements in range [@begin_it, @end_it)
+        map(@begin_it, @end_it, @op)                 same but requires a certain sorting criterion
+        map(initializer-list)                        construct map from initializer-list
+        operator=(initializer-list)                  assign map from initializer-list
+        ~map()                                       destructor
+
+        ! if we pass sorting criterion,then we can adjust it during runtime.
+
+        key_comp()                                   return the comparison criterion
+        value_comp()                                 return the comparison criterion for values as a whole
+        empty()                                      is container empty?
+        size()                                       current number of elements
+        max_size()                                   the maximum number of elements possible
+        operator==(@map2)                            @this == @map2 <-> Vi(@this[i].key == @map2[i].key)
+        operator!=(@map2)                            not (@this == @map2)
+        operator<(@map2)                             @this < @map2 <-> Vi(@this[i].key < @map2[i].key)
+        operator<=(@map2)                            (@this < @map2) OR (@this == @map2)
+        operator>(@map2)                             not (@this <= @map2)
+        operator>=(@map2)                            not (@this < @map2)
+
+        count(@k)                                    return the number of elements with key @k
+        find(@k)                                     return the position of the first element with key @k,return
+                                                     end() if unfound
+        lower_bound(@k)                              return the first position where an element with key @k would
+                                                     get inserted(the first element with a key >= @k)
+        upper_bound(@k)                              return the last position where an element with key @k would
+                                                     get inserted(the first element with a key > @k)
+        equal_range(@k)                              return a range with all elements with a key equal to @k
+                                                     (the first and last positions,where an element with key @k would
+                                                      get inserted)
+
+        swap(@map2)                                  swap the data of @this and @map2
+        ::swap(@map2)                                common interface to swap the data of @this and @map2
+
+        begin()                                      iterator to the first element
+        end()                                        iterator to the position next to last element
+        cbegin()                                     constant version
+        cend()                                       constant version
+        rbegin()                                     reverse iterator to the last element
+        rend()                                       reverse iterator to the position next to first element
+                                                     (not the second,because our directions is from back to front)
+        crbegin()                                    constant version
+        crend()                                      constant version
+    
+        insert(@e)                                   insert an element copied from @e,return iterator to the new element
+        insert(@pos, @e)                             insert an element copied from @e,@pos as a searching hint,return
+                                                     iterator to the new element
+        insert(@begin_it, @end_it)                   insert elements copied from range [@begin_it, @end_it),return nothing
+        insert(initializer-list)                     insert elements copied from initializer-list,return nothing
+        emplace(@args...)                            construct a new element from @args... and insert it,return iterator
+                                                     to the new element
+        emplace_hint(@pos, @args...)                 similar,but @pos used as searching hint
+        erase(@v)                                    remove all elements equal to @v and return the number of removed elements
+        erase(@pos)                                  remove the element at @pos,return the following position
+        erase(@begin_it, @end_it)                    remove all elements of the range [@begin_it, @end_it),return the following
+                                                     position
+        clear()                                      remove everything
+
+        ! WHEN WE NEED TO INSERT NEW ELEMENT,WE CAN REFER THE TYPE std::map<...>::value_type,USE IT AS THE TYPE OF ELEMENT
+          WE WANT TO INSERT.THE TYPE USUALLY IS std::pair<const KEY, V>.
+
+        !! nonconstant std::map<> provides subscript operator,that means we can access element through [key].
+             operator[](@k)                directly access element has key @k,require @this is not a constant
+             at(@k)                        directly access element has key @k,for both constant and nonconstant @this
+           so we can use std::map<> as an associative array.
+
+      Exception Handling :
+        maps and multimaps provide the same behavior as sets and multisets with respect to exception safety.
           
 
 
