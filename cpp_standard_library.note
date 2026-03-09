@@ -4336,6 +4336,203 @@ STL Containers :
 
       Exception Handling :
         maps and multimaps provide the same behavior as sets and multisets with respect to exception safety.
+
+    Unordered Containers :
+      conceptionally,unordered containers contain all the elements we insert in an arbitrary order,and we
+      acesss them in a random order.
+
+      > unordered sets and multisers store single values of a specific type,whereas in unordered maps and
+        multimaps,the elements are key/value pairs,where the key is used to store and find a specific element,
+        including its associated value.
+      > unordered sets and maps allow no duplicates,whereas unordered multisers and multimaps do allowing.
+
+      Abilities of Unordered Containers :
+        ! all standardized unordered container classes are implemented as hash tables,as usual.
+
+        C++ standard library does not specify the implementation,but has few specified abilities :
+          > the hash tables use the "chaining" approach,whereby a hash code is associated with a linked
+            list.
+          > whether these linked lists are singly or doubly linked is open to the implement.for this reason,
+            the standard guarantees only that the iteratos are "at least" forward iterators.
+          > possible rehashing strategies :
+              - with the traditional approach,a complete reorganization of the internal data happens from
+                time to time as a result of a single insert or erase operation.
+              - with incremental hashing,a resizing of the number of bucket or slots is performed gradually,
+                which is especially useful in real-time environments,where the price of enlarging a hash
+                table all at once can be too high.
+              ! allow both two strategies,but do not guarantee the conflict.
+
+      Operations :
+        ! a lot of operations are almost remain unchanged,but have some additional operations.
+
+        hash_function()                                return the hash function
+                                                       /* we can provide customized hash function */
+        key_eq()                                       return the equivalence predicate
+                                                       /* we can provide customized equivalence criterion */
+        bucket_count()                                 return the current number of buckets
+        max_bucket_count()                             maximum number of buckets possible
+        load_factor()                                  current load factor
+        max_load_factor()                              current maximum load factor
+        max_load_factor(@v)                            set the maximum load factor to @v
+        rehash(@bucket_num)                            rehash the container so that it has a bucket size of at
+                                                       least @bucket_num        
+        reserve(@num)                                  reshash the container so that is has space for at least
+                                                       @num elements
+        find(@v)                                       return the position of the first element with value @v
+                                                       or end() if unfound
+
+        ! allow copy-construction,copy-assignment
+          allow move-construction,move-assignment
+          allow swap()
+          provide general iteraots
+          when doing insertion,@pos factor as a hint
+
+        /* bucket interface */
+        bucket_count()                                 return the current number of buckets
+        bucket(@v)                                     return the index of the bucket in which @v would/could be found
+        bucket_size()                                  return the number of elements in the bucket with index @buckidx
+        begin(@buckidx)                                return a forward iterator for the first element of the bucket with
+                                                       index @buckidx
+        end(@buckidx)                                  return a forward iterator for the position after the last element
+                                                       of the bucket with index @buckidx
+        cbegin(@buckidx)                               constant version
+        cend(@bucidx)                                  constant version
+
+        ! unordered map also can be used as associative arrays like the ordered map. /* operator[], at() */
+
+      Exception Handling :
+        unordered containers are node-based containers,so the operation either is succeed or has no effect.
+        but a rehashing may occur comes into account,thus the following guarantees apply to all unordered
+        containers :
+          1> single-element insertions have the commit-or-rollback behavior,require the hash function does not throw.
+          2> erase() does not throw an exception,require the hash function and the equivalence criterion do not throw.
+          3> no clear() throws.
+          4> no swap() throws,require the copy-constructor or the copy-assignment of the hash or equivalence functions
+             do not throw.
+          5> rehash() hash the commit-or-rollback behavior,require the hash and equivalence functions do not throw.
+
+    Approaches to making containers "STL-able" :
+      > the invasive approach.
+        - simply provide the interface that an STL container requires.
+      > the noninvasive approach.
+        - write or provide special iterators that are used as an interface between the algorithms
+          and special containers. /* can step through all the elements of container */
+      > the wrapper approach.
+        - combining the two previous approaches(invaise and noninvasive),write a wrapper class
+          that encapsulates any data structure with an STL containter-like interface.
+
+      ! we can use ordinary C-style array as STL containers,the noninvasive approach(built-in).
+
+    When to Use Which Container :
+      some useful rules >
+        - by default,use a vector.
+        - if insert and/or remove elements often at the beginning and the end of a sequence,use a deque.
+          if it is important that the amount of internal memory used by the container shrinks when
+          elements are removed,use a deque.
+        - if insert,remove,and move elements often in the middle of a container,should use a list.
+        - if need a container that handles exceptions so that each operation either succeeds or has
+          no effect,should use either a list or an associative/unordered container.
+        - if need to search for elements according to a certain criterion,use an unordered set or
+          multiset that hashes according to this criterion.
+          but hash table is unordered,if need to rely on element order,should use a set or a multiset
+          that sorts elements according to the search criterion.
+        - to process key/value pairs,use an unordered (multi)map,or if the element order matters,use
+          a (multi)map.
+        - if need an associative array,use an unordered map or,if the element order matters,use map.
+        - if need a dictionary,use an unordered multimap,or if the element order matters,use a multimap.
+
+    Type Definitions :
+      value_type : the type of elements.
+                   for (unordered)sets and multisets,it is constant.
+                   for (unordered)maps and multimaps,it is pair std::pair<const key_type, mapped_type>.
+                   provided by >
+                     array,vector,deque,list,forward list,set,multiset,map,multimap,unordered set,
+                     unordered multiset,unordered map,unordered multimap,string
+
+      reference  : the type of element references.
+                   value_type&
+                   for vector<bool>,it is an auiliary class.
+                   provided by >
+                     array,vector,deque,list,forward list,set,multiset,map,multimap,unordered set,
+                     unordered multiset,unordered map,unordered multimap,sting
+
+      const_reference : read-only element references.
+                        const reference
+
+      iterator : type of iterators.
+                 provided by >
+                   array,vector,deque,list,forward list,set,multiset,map,multimap,unordered set,
+                   unordered multiset,unordered map,unordered multimap,string
+      
+      const_iterator : read-only iterators.
+                       const iterator
+
+      reverse_iterator : reverse iterators.
+                         provided by >
+                           array,vector,deque,list,set,multiset,map,multimap,string
+
+      const_reverse_iterator : read-only reverse iterators.
+                               const reverse_iterator
+
+      pointer : pointers to elements.
+                provided by >
+                  array,vector,deque,list,forward list,set,multiset,map,multimap,unordered set,
+                  unordered multiset,unordered map,unordered multimap,string
+
+      const_pointer : read-only pointers.
+                      const pointer
+
+      size_type : unsigned integral type of size values.
+                  provided by >
+                    array,vector,deque,list,forward list,set,multiset,map,multimap,unordered set,
+                    unordered multiset,unordered map,unordered multimap,string
+
+      difference_type : signed integral type for difference values
+                        provied by >
+                          array,vector,deque,list,forward list,multiset,map,multimap,unordered set,
+                          unordered multiset,unordered map,unordered multimap,string
+
+      key_type : type of the key of the elements for associative and unordered containers.
+                 for (unordered)sets and multisets,it is equivalent to value_type.
+                 provided by >
+                   set,multiset,map,multimap,unordered set,unordered multiset,unordered map,unordered multimap
+
+      mapped_type : type of value part of the elements of associative and unordered containers.
+                    provided by >
+                      map,multimap,unordered map,unordered multimap
+
+      key_compare : type of the comparison criterion of associative containers.
+                    provided by >
+                      set,multiset,map,multimap
+
+      value_compare : type of the comparison criterion for the whole element type.
+                      for sets and multisets,it is equivalent to key_compare.
+                      for maps and multimaps,it is an auxiliary class for a comparision
+                      criterion that compares only the key part of two elements.
+                      provided by >
+                        set,multiset,map,multimap
+
+      hasher : type of the hashing function of unordered containers.
+               provided by >
+                 unordered set,unordered multiset,unordered map,unordered multimap
+
+      key_equal : type of equality predicate of unordered containers.
+                  provided by >
+                    unordered set,unordered multiset,unordered map,unordered multimap
+
+      local_iterator : type of the bucket iterators of unordered containers.
+                       since C++11.
+                       provided by >
+                         unordered set,unordered multiset,unordered map,unordered multimap
+
+      const_local_iterator : read-only bucket iterators for unordered containers.
+                             since C++11.
+                             const local_iterator
+
+      allocator_type : type of allocator for allocate new elements.
+                       provided by >
+                         all containers except arrays
+           
           
 
 
