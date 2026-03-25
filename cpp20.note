@@ -10,26 +10,26 @@ C++20>
       used anywhere else.
 
       attribute-token list :
-          attribute-token       attribute            standard    value
+        attribute-token       attribute              standard     value
       
-        assume                 [[assume]]            C++23        202207L
-    carries_dependency [[carries_dependency]]    C++11        200809L
-    deprecated       [[deprecated]]        C++14        201309L
-    fallthrough       [[fallthrough]]        C++17        201603L
-    likely           [[likely]]            C++20        201803L
-    maybe_unused       [[maybe_unused]]        C++17        201603L
-    no_unique_address  [[no_unique_address]]    C++20        201803L
-    nodiscard       [[nodiscard]]        C++17        201603L || 201907L
-    noreturn       [[noreturn]]            C++11        200809L
-    unlikely       [[unlikely]]            C++20        201803L
+        assume                [[assume]]             C++23        202207L
+        carries_dependency    [[carries_dependency]] C++11        200809L
+        deprecated            [[deprecated]]         C++14        201309L
+        fallthrough           [[fallthrough]]        C++17        201603L
+        likely                [[likely]]             C++20        201803L
+        maybe_unused          [[maybe_unused]]       C++17        201603L
+        no_unique_address     [[no_unique_address]]  C++20        201803L
+        nodiscard             [[nodiscard]]          C++17        201603L || 201907L
+        noreturn              [[noreturn]]           C++11        200809L
+        unlikely              [[unlikely]]           C++20        201803L
 
       //  more language features and library features were predefined in standard,
       //  and cant not use __has_attribute to as checking for support,should use 
       //  #ifdef,#if defined,#ifndef,#if .etc
-            e.g.
-        #if __cpp_aligned_new >= 201606L
-        ...
-        #endif
+          e.g.
+            #if __cpp_aligned_new >= 201606L
+              ...
+            #endif
 
 
 > Three-way comparison
@@ -41,7 +41,7 @@ C++20>
       (a <=> b) == 0 if a and b are equal/equivalent
 
     //  if one of the operands is of type bool and the other is not,the program is ill-formed.
-    //    if a narrowing coversion is required,the program is ill-formed.
+    //  if a narrowing coversion is required,the program is ill-formed.
 
     if a and b have integral type,the operator yields a prvalue of type std::strong_ordering :
       std::strong_ordering::equal if both operands are arithmetically equal.
@@ -83,8 +83,8 @@ C++20>
       <return-type> <class-name>::operator<op>(this <class-name>, <class-name>) = default;
 
       return-type - return type  of the operator function,must be 
-                  auto or one of three comparison category types if op is <=>
-            otherwise,bool
+                    auto or one of three comparison category types if op is <=>
+                    otherwise,bool
 
     defaulted three-way comparison :
       the default operator<=> performs lexicographical comparison by successively comparing the base
@@ -142,21 +142,20 @@ C++20>
 
     syntax :
       <attr>(optional) for (<init-statement>(optional) <range-declaration> : <range-expression>)
-                       <loop-statement>
+                         <loop-statement>
 
-
-      init-statement : since C++20
-        an expression statement(which may be a null statement ";").
-    a simple declaration,typically a declaration of a variable with initializer,
-    but it may declare arbitrarily many variables or be a structured binding declaration.
-    an alias declaration.(since C++23)
-    (init-statement end with a semicolon ";")
+    init-statement : since C++20
+      an expression statement(which may be a null statement ";").
+      a simple declaration,typically a declaration of a variable with initializer,
+      but it may declare arbitrarily many variables or be a structured binding declaration.
+      an alias declaration.(since C++23)
+      (init-statement end with a semicolon ";")
       range-declaration : 
         a declaration of a named variable,whose type is the type of the element of the sequence
-    represented by range-expression,or a reference to that type.
-      range-expression :
-        any expression that represents a suitable sequence
-    (array,object which defined begin() and end() or free functions,braced-init-list)
+      represented by range-expression,or a reference to that type.
+        range-expression :
+          any expression that represents a suitable sequence
+      (array,object which defined begin() and end() or free functions,braced-init-list)
 
     if range-expression returns a temporary,its lifetime is extended until the end of the loop.(C++23)
 
@@ -185,10 +184,10 @@ C++20>
 
       e.g.
         struct A {};
-    struct B : public A {
-      int x;
-      [[no_unique_address]] char c;
-    };
+        struct B : public A {
+          int x;
+          [[no_unique_address]] char c;
+        };
 
     [[likely]], [[unlikely]]  since C++20
       allow the compiler to optimize for the case where paths of execution including that statement are more or 
@@ -196,20 +195,19 @@ C++20>
 
       e.g.
         if (i > 0) [[likely]] {
-      return i * 2;
-    } else {
-      return i * 10;
-    }
+          return i * 2;
+        } else {
+          return i * 10;
+        }
 
-    switch (i) {
-      [[likely]] case 7:
-        return i + 3;
-      case 2:
-        return ++i;
-      default:
-        return i;
-    }
-
+        switch (i) {
+        [[likely]] case 7:
+          return i + 3;
+        case 2:
+          return ++i;
+        default:
+          return i;
+        }
 
 > Pack-expansions in lambda init-captures
     template pack is could to extend on lambda init-captures (C++20)
@@ -219,12 +217,12 @@ C++20>
       void func(_Type &&arg, _TypePack... tp)
       {
         if (sizeof...(tp) != 0)
-      std::cout<<std::forward<_Type>(arg)<<std::endl;
+        std::cout<<std::forward<_Type>(arg)<<std::endl;
 
         auto local_func = [&, tp...] (void)
-    {
-      return func(tp...);
-    };
+        {
+          return func(tp...);
+        };
       }
 
       void func(void) {};
@@ -232,7 +230,7 @@ C++20>
     //  sizeof... operator is classified as a pack expansion as well.
     //  ellipsis appears on right side means do a pack expansion.
     //    e.g.  (tp + ...) => (tp0 + (tp1 + (tp2 + ...)))
-    //      e.g.  g(std::forward<_TypePack>(tp)...); => 
+    //    e.g.  g(std::forward<_TypePack>(tp)...); => 
     //          g(std::forward<_TypePackE1>(A1), std::forward<_TypePackE2>(A2), ...);
 
 
@@ -245,10 +243,9 @@ C++20>
       typename A::UserCustomType a;  //  a has type of int,
                                             //  but in C++20,does not need typename keywrod any more.
 
-
 > consteval specifier and constinit specifier
     consteval - specifies that a function is an immediate function,that is,every call to the
-    function must produce a compile-time constant.(contains function template)
+                function must produce a compile-time constant.(contains function template)
 
     every potentially-evaluated call to the function must produce a compile time constant expression.
     an immediate function is a constexpr function,same as constexpr,a consteval specifier implies inline,
@@ -261,7 +258,7 @@ C++20>
       //  function enclose a consteval function have to be a consteval function too.
 
     constinit - asserts that a variable has static initialization, i.e. zero initialization and 
-    constant initialization,otherwise the program is ill-formed.
+                constant initialization,otherwise the program is ill-formed.
 
     the constinit specifier declares a variable with static or thread storage duration.
     (have to use it with 'static' or 'thread_local' together)
@@ -289,9 +286,7 @@ C++20>
       constinit const char *c = f(true);  //  OK,f(true) returns const char *,and f() is constexpr
       //constinit const char *c = f(false);  //  ERROR,even g() returns const char *,but g() is not constexpr.
 
-
 > further relaxed constexpr
-
 
 > signed integers are 2's complement
     ones' complement : -2^(N-1) - 1 -- 2^(N-1) - 1
@@ -302,7 +297,6 @@ C++20>
       3 = 011 (signed)
       -3 = 101 (signed) (inverse all bits and plus 1)
 
-
 > bitwise shift operators unified behavior
     the value of a << b is the unique value congruent to a * 2^b modulo 2^N where N
     is the number of bits in the return type.
@@ -310,7 +304,6 @@ C++20>
     destination type are discarded.
     the value of a >> b is a / 2^b,rounded down.
     in other words,right shift on signed a is arithmetic right shift.
-
 
 > aggregate initialization using parentheses
     syntax :
@@ -392,16 +385,17 @@ C++20>
       it performs the following :
         calls promise.return_void() for
           co_return;
-      co_return <expr>; where expr has type void
+
+      "co_return <expr>;" where expr has type void
+
       falling off the end of the coroutine,the behavior is undefined if the promise type has no
       promise::return_void() member function in this case.
 
-        or calls promise.return_value(<expr>) for "co_return <expr>;" where expr has non-void type.
+      or calls promise.return_value(<expr>) for "co_return <expr>;" where expr has non-void type.
       
-        destroys all variables with automatic storage duration in reverse order they were created.
+      destroys all variables with automatic storage duration in reverse order they were created.
       
-        calls promise.final_suspend() and co_awaits the result.
-
+      calls promise.final_suspend() and co_awaits the result.
 
     if coroutine state object is destroyed,then destructor of promise object will be called,also
     calls function parameters' destructor,and free memory used by coroutine state,transfers 
@@ -411,8 +405,8 @@ C++20>
     operator new() for replacement,then calls this,otherwise calls ::new().
 
     //  the call to operator new() can be optimized out(even if custom allocator is used) if 
-           the lifetime of the coroutine state is strictly nested within the lifetime of the caller,and
-      the size of coroutine frame is known at the call site.
+        the lifetime of the coroutine state is strictly nested within the lifetime of the caller,and
+        the size of coroutine frame is known at the call site.
 
     coroutine handle :
       a coroutine handle behaves a lot like a C pointer.it can be easily copied,but it does not have 
@@ -423,62 +417,62 @@ C++20>
       there has three ways to do this :
       >
         defintion a struct which is inherited from std::coroutine_handle<PromiseType>,coroutine will returns
-    an object is type of this struct,caller could call handle.resume() or handle() to access coroutine.
-    e.g.
-      struct promise;
-      struct coroutine : std::coroutine_handle<promise> {
-        using promise_type = promise;
-        ...
-      };
+        an object is type of this struct,caller could call handle.resume() or handle() to access coroutine.
+        e.g.
+          struct promise;
+          struct coroutine : std::coroutine_handle<promise> {
+            using promise_type = promise;
+            ...
+          };
       >
         let the type CoroutineReturn contains promise_type,and represented a handle is type of 
-    std::coroutine_handle<PromiseType>.
-    define coversions covert CoroutineReturn to std::coroutine_handle<PromiseType> and std::coroutine_handle<>,
-    coroutine caller can easy to delcared a handle which is used to hold the coroutine_handle returned by 
-    coroutine.
-    e.g.
-      struct coroutine {
-        struct promise_type {
-          ...
-        };
-        std::coroutine_handle<promise_type> handle;
-        operator std::coroutine_handle<promise_type>() const { return handle; }
-        operator std::coroutine_handle<>() const { return handle; }
-      };
-      > define awaiter that hold a std::coroutine_handle pointer object,and assign it with the coroutine handle
+        std::coroutine_handle<PromiseType>.
+        define coversions covert CoroutineReturn to std::coroutine_handle<PromiseType> and std::coroutine_handle<>,
+        coroutine caller can easy to delcared a handle which is used to hold the coroutine_handle returned by 
+        coroutine.
+        e.g.
+          struct coroutine {
+            struct promise_type {
+              ...
+            };
+            std::coroutine_handle<promise_type> handle;
+            operator std::coroutine_handle<promise_type>() const { return handle; }
+            operator std::coroutine_handle<>() const { return handle; }
+          };
+      >
+        define awaiter that hold a std::coroutine_handle pointer object,and assign it with the coroutine handle
         in await_suspend().this is require coroutine receive a std::coroutine_handle pointer as the argument
-    of awaiter's constrouctor.
-    e.g.
-      struct coroutine;
-      struct promise;
-      struct awaiter {
-        std::coroutine_handle<> *_pPromise;
-        ...
-        void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
-        ...
-      };
+        of awaiter's constrouctor.
+        e.g.
+          struct coroutine;
+          struct promise;
+          struct awaiter {
+            std::coroutine_handle<> *_pPromise;
+            ...
+            void await_suspend(std::coroutine_handle<> h) { *_pPromise = h; }
+            ...
+          };
 
-      //  template<typename _PromiseType> struct coroutine_handle : coroutine_handel<>;
+          //  template<typename _PromiseType> struct coroutine_handle : coroutine_handel<>;
 
-      coroutine function(std::coroutine_handle<> *p)
-      {
-        /*  co_await promise::initial_suspend(); */
-        /*  awaiter::resume() executed,the return value as expression value  */
+          coroutine function(std::coroutine_handle<> *p)
+          {
+            /*  co_await promise::initial_suspend(); */
+            /*  awaiter::resume() executed,the return value as expression value  */
 
-        //  before encouter "co_await a;",coroutine should not return to caller,
-        //  this ensure that caller has a way to access coroutine.(awaiter sets promise object for handle)
-        //  so initial_suspend() have to returns std::suspend_never.
-        awaiter a{p};
-        co_await a;
-      }
+            //  before encouter "co_await a;",coroutine should not return to caller,
+            //  this ensure that caller has a way to access coroutine.(awaiter sets promise object for handle)
+            //  so initial_suspend() have to returns std::suspend_never.
+            awaiter a{p};
+            co_await a;
+          }
 
-      void caller(void)
-      {
-        std::coroutine_handle<> outer_handle;
-        function(&outer_handle);
-        outer_handle();
-      }
-
+          void caller(void)
+          {
+            std::coroutine_handle<> outer_handle;
+            function(&outer_handle);
+            outer_handle();
+          }
 
     promise :
       the promise type is determined by the compiler from the return type of the coroutine using
@@ -487,76 +481,73 @@ C++20>
       CoroutineType::promise_type.(CoroutineType have to be an object type and nested promise_type)
 
       a promise object at least must has these members :
-
         CoroutineType get_return_object();
-      get_return_object() have to returns coroutine object instance.its result will saved
-      in a local variable,and will be returned to coroutine caller when first suspend.
-      that is the time to co_await the result of inital_suspend().
-      this is why a coroutine definition has a return value is of type CoroutineType object.
-      generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
-      get the coroutine object instance.
+          get_return_object() have to returns coroutine object instance.its result will saved
+          in a local variable,and will be returned to coroutine caller when first suspend.
+          that is the time to co_await the result of inital_suspend().
+          this is why a coroutine definition has a return value is of type CoroutineType object.
+          generally,use "std::coroutine_handle<CoroutineType>::from_promise(*this)" is able to
+          get the coroutine object instance.
 
-    Awaiter initial_suspend();
-      initial_suspend() will be called once when the coroutine is start to executing.
+        Awaiter initial_suspend();
+          initial_suspend() will be called once when the coroutine is start to executing.
 
-    Awaiter final_suspend();
-      final_suspend() will be called when encouter "co_return" statement.
+        Awaiter final_suspend();
+          final_suspend() will be called when encouter "co_return" statement.
 
     //  Awaiter == std::suspend_never || std::suspend_always || others
 
-    void return_void();
-      for return void.
+        void return_void();
+          for return void.
 
-    void unhandled_exception();
-      for exception deal with.
+        void unhandled_exception();
+          for exception deal with.
 
     //  Awaiter will be used when "co_await" statement is process.
     //  promise object could has more data members.
 
-      if client wants to access promise_type,should use a handle "std::coroutine_handle<PromiseType>" 
-      instance,member method promise() will return a reference to promise_type object.
-
+    if client wants to access promise_type,should use a handle "std::coroutine_handle<PromiseType>" 
+    instance,member method promise() will return a reference to promise_type object.
       e.g.
         struct coroutine {
-      struct promise_type {
-        int i;
-        ...
-      };
-      std::coroutine_handle<promise_type> _ptch;
-      operator std::coroutine_handle<promise_type>() const { return _ptch; }
-    };
+          struct promise_type {
+            int i;
+            ...
+          };
+          std::coroutine_handle<promise_type> _ptch;
+          operator std::coroutine_handle<promise_type>() const { return _ptch; }
+        };
 
-    struct awaiter {
-      ...
-      coroutine::promise_type *_pp;
-      ...
-      void await_suspend(std::coroutine_handle<coroutine::promise_type> h)
-      {
-        _pp = &h.promise();
-      }
-      coroutine::promise_type *await_resume() { return _pp; }
-    };
+        struct awaiter {
+          ...
+          coroutine::promise_type *_pp;
+          ...
+          void await_suspend(std::coroutine_handle<coroutine::promise_type> h)
+          {
+            _pp = &h.promise();
+          }
+          coroutine::promise_type *await_resume() { return _pp; }
+        };
 
     //  this awaiter let coroutine is able to access its own promise object in coroutine state
     //  instance.
 
-    coroutine func()
-    {
-      awaiter a;
-      co_await a;  //  suspend coroutine,
+        coroutine func()
+        {
+          awaiter a;
+          co_await a;  //  suspend coroutine,
+                       //  when first suspend(co_await intial_suspend()),
+                       //  the coroutine object returned by get_return_object()
+                       //  will return to caller.
+        }
 
-                 //  when first suspend(co_await intial_suspend()),
-               //  the coroutine object returned by get_return_object()
-               //  will return to caller.
-    }
-
-    void main1(void)
-    {
-      std::coroutine_handle<coroutine::promise_type> chcp = func();  //  calls covert function
-      coroutine::promise_type &promise = chcp.promise();
-      promise.i;
-      promise.destroy();  //  destroy
-    }
+        void main1(void)
+        {
+          std::coroutine_handle<coroutine::promise_type> chcp = func();  //  calls covert function
+          coroutine::promise_type &promise = chcp.promise();
+          promise.i;
+          promise.destroy();  //  destroy
+        }
 
     //  generally,outer of promise_type struct does not hold any data members that will be 
     //  accessed in caller,except handle object.
@@ -573,27 +564,28 @@ C++20>
       a co_await expression can only apper in a potentially-evaluated expression within a regular
       function body,and cannot appear -
         in an exception handler,
-    in a declaration statement,unless it appears in an initializer of that declaration statement,
-    in the simple declaration of an init-statement,unless it appears in an initialize of that
-    init-statement,
-    in a default argument,or in the initializer of a block-scope variable with static or thread
-    storage duration.
+        in a declaration statement,unless it appears in an initializer of that declaration statement,
+        in the simple declaration of an init-statement,unless it appears in an initialize of that
+        init-statement,
+        in a default argument,or in the initializer of a block-scope variable with static or thread
+        storage duration.
 
       <first>
       expr is converted to an awaitable as follows :
         if expr is produced by an initial suspend point,a final suspend point,or a yield expression,
-    the awaitable is expr,as-is.
-    otherwise,if the current coroutine's promise type has the member function await_transform,
-    then the awaitable is promise.await_transform(expr).
-    otherwise,the awaitable is expr,as-is.
+        the awaitable is expr,as-is.
+        otherwise,if the current coroutine's promise type has the member function await_transform,
+        then the awaitable is promise.await_transform(expr).
+        otherwise,the awaitable is expr,as-is.
  
       awaiter object is obtained,as follows :
         if overload resolution for operator co_await gives a single best overload,the awaiter is the
-    result of that call :
-      awaitable.operator co_await() for member overload,
-      operator co_await(static_cast<Awaitable&&>(awaitable())) for non-member overload.
-    otherwise,if overload resolution finds no operator co_await,the awaiter is awaitable,as-is.
-    otherwise,if overload resolution is ambiguous,the program is ill-formed.
+        result of that call :
+          awaitable.operator co_await() for member overload,
+          operator co_await(static_cast<Awaitable&&>(awaitable())) for non-member overload.
+
+        otherwise,if overload resolution finds no operator co_await,the awaiter is awaitable,as-is.
+        otherwise,if overload resolution is ambiguous,the program is ill-formed.
 
       <second>
       awaiter.await_ready() is called,if its result,contextually-converted to bool is false,then,
@@ -637,9 +629,9 @@ C++20>
       to signal the end of a coroutine,C++ adds a new co_return operator.there are three ways for a 
       coroutine to signal that it is complete :
         the coroutine can use "co_return e;" to return a final value e.
-    the coroutine can use "co_return;" with no value(or with a void expression) to end the coroutine
-    without a final value.
-    the coroutine can let execution fall off the end of the function which is similar to previous case.
+        the coroutine can use "co_return;" with no value(or with a void expression) to end the coroutine
+        without a final value.
+        the coroutine can let execution fall off the end of the function which is similar to previous case.
 
       if co_return returns void,then function "promise::return_void" will be called.
       if co_return returns a value,then function "promise::return_value" will be called.
@@ -660,26 +652,26 @@ C++20>
 
       struct promise {
         coroutine get_return_object() { return {coroutine::from_promise(*this)}; }
-    std::suspend_always initial_suspend() noexcept { return {}; }
-    std::suspend_always final_suspend() noexcept { return {}; }
-    void return_void() {}
-    void unhandled_exception() {}
+        std::suspend_always initial_suspend() noexcept { return {}; }
+        std::suspend_always final_suspend() noexcept { return {}; }
+        void return_void() {}
+        void unhandled_exception() {}
       };
 
       coroutine func()
       {
         coroutine h = [](int i) -> coroutine
-    {
-      std::cout<<i;
-      co_return;
-    } (0);
+        {
+          std::cout<<i;
+          co_return;
+        } (0);
     //  there,lambda function is a coroutine,argument is 0.
     //  co_return; returns control to caller/resumer,this statement calls 
     //  promise::return_void
     
 
-    h.resume();
-    h.destroy();
+        h.resume();
+        h.destroy();
       }
 
     coroutine process figure :
@@ -812,18 +804,18 @@ C++20>
 
       e.g.
         export module A;    //  primary module interface unit
-    export int a = 3;    //  export definition
+        export int a = 3;    //  export definition
 
-    export module B;    //  primary module interface unit
-    export import A;    //  export-import A
+        export module B;    //  primary module interface unit
+        export import A;    //  export-import A
 
-    export module C;    //  primary module interface unit
-    import B;             //  import B
+        export module C;    //  primary module interface unit
+        import B;             //  import B
 
-    int b = a;        //  because B export-imports A.
+        int b = a;        //  because B export-imports A.
 
-    #include<iostream>
-      ...
+        #include<iostream>
+          ...
 
       #include should not be used in a module unit(outside the global module fragment),because all
       included declartions and definitions would be considered part of the module.
@@ -837,10 +829,10 @@ C++20>
 
       e.g.
         export module A;
-    import <vector>;
-    export import <iostream>;
+        import <vector>;
+        export import <iostream>;
 
-    #ifdef definitions or other processor macros in <vector> or <iostream> is not effect the header.
+      #ifdef definitions or other processor macros in <vector> or <iostream> is not effect the header.
 
     global module fragment :
       module units can be prefixed by a global module fragment,which can be used to include headers when

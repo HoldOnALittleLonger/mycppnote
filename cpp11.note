@@ -12,7 +12,7 @@ cpp11>
         C-style Unicode conversion functions
 
     c++11 features:
-          auto | decltype
+      auto | decltype
         for variables:
             specifies that the type of the variable that is beging
             declared will be automatically deduced from its initializer.
@@ -37,8 +37,6 @@ cpp11>
 
             decltype(expr) h, k;         //  type of h and k is same as type or expr.
             decltype(auto) func1(arg-list);  //  type of func1 is same as the expr it would be returned.
-
-
 
 
             decltype(auto) c = h;         //  type of c is same as h.
@@ -86,8 +84,10 @@ cpp11>
                  template<auto n>
                  auto f() -> std::pair<decltype(n), decltype(n)> { ... }
                                     //  cant use auto instead to decltype be there.                    
+            ! decltype(x) => typeof(x)
+              decltype((x)) => typeof(x)&
 
-           =default | =delete
+      = default | = delete
          special syntax for define member functions.
          Usage:
             struct a {
@@ -313,19 +313,19 @@ cpp11>
             syntax4>
                 opaque enum declaration for a scoped enumeration whose underlying type is <type>
 
-              each enumerator becomes a named constant of the enumeration's type(the <name>),which is contained
-              within the scope of the enumeration,and can be accessed using scope resolution operator.there are
-              no implicit conversions from the values of a scoped enumerator to integral types,although 
-              static_cast may be used to obtain the numberic value of the enumerator.
+            each enumerator becomes a named constant of the enumeration's type(the <name>),which is contained
+            within the scope of the enumeration,and can be accessed using scope resolution operator.there are
+            no implicit conversions from the values of a scoped enumerator to integral types,although 
+            static_cast may be used to obtain the numberic value of the enumerator.
 
-              Usage:
-            enum class Color { red, green, blue };    
-            Color c = Color::red;
-            switch (c) {
-            case Color::red   :  ...
-            case Color::green :  ...
-            case Color::blue  :  ...
-            }            
+            Usage:
+              enum class Color { red, green, blue };    
+              Color c = Color::red;
+              switch (c) {
+              case Color::red   :  ...
+              case Color::green :  ...
+              case Color::blue  :  ...
+              }            
 
               an enumeration can be initialized from an integer without a cast,using list initialization,if all of
               the following are true:
@@ -334,30 +334,30 @@ cpp11>
               the enumeration is either scoped or unscoped with underlying type fixed
               the conversion is non-narrowing
 
-              Usage:
-            enum class byte : unsigned char { };
-            byte a{4};           //  OK   
-            byte b{byte{4}};    //  OK
-            byte c = {42};        //  ERROR
+            Usage:
+              enum class byte : unsigned char { };
+              byte a{4};           //  OK   
+              byte b{byte{4}};    //  OK
+              byte c = {42};        //  ERROR
 
               #  unscoped enumerations
-                     legacy C enumeration:
+                   legacy C enumeration:
                      enum <name> { enumeration = constexpr, enumeration = constexpr, ... };
-                  enum <name> : <type> { enumeration = constexpr, enumeration = constexpr, ... };
-                  enum <name> : <type>;
+                     enum <name> : <type> { enumeration = constexpr, enumeration = constexpr, ... };
+                     enum <name> : <type>;
 
               #  difference between scoped and unscoped:
-                     values of unscoped enumeration type are implicitly-convertible to integral types.
-               but scoped cant be implicitly-converted.
-               scoped enumberation is used to make a class which has members of constants. (make a new type)
+                   values of unscoped enumeration type are implicitly-convertible to integral types.
+                   but scoped cant be implicitly-converted.
+                   scoped enumberation is used to make a class which has members of constants. (make a new type)
 
               #  using enum declaration
-                     using enum <nested-name-specifier>(optional) <name>;
+                   using enum <nested-name-specifier>(optional) <name>;
                
-               where <nested-name-specifier> <name> must not name a dependent type and must name an
-               enumeration type
+              where <nested-name-specifier> <name> must not name a dependent type and must name an
+              enumeration type
 
-               Usage:
+              Usage:
                 enum class E1 : int { a = 3, b };
                 enum class E2 : int { c = 9, a };
 
@@ -385,12 +385,12 @@ cpp11>
                 the full-expression of its initialization,including all implicit conversions,
                 constructors calls,etc,must be a constant expression
                 it must have constant destruction,
-                   either:
-                 it is not of class type nor array thereof,or
-                 it is of class type or array thereof,that class type has a constexpr destructor,and
-                 for a hypothetical expression whose only effect is to destroy the object,would be a
-                 core constant expression if the lifetime of the object and its non-mutable subobjects
-                 were considered to start within
+                either:
+                  it is not of class type nor array thereof,or
+                  it is of class type or array thereof,that class type has a constexpr destructor,and
+                  for a hypothetical expression whose only effect is to destroy the object,would be a
+                  core constant expression if the lifetime of the object and its non-mutable subobjects
+                  were considered to start within
 
               # if a constexpr variable is not translation-unit-local(c++20),it should not be
                 initialized to point to,or refer to,or have a (possibly recursive)subobject 
@@ -415,12 +415,12 @@ cpp11>
                 using directives
                 if the function is not a constructor,exactly one return statement
                 the function body must not contain:
-                    a goto statement
-                a statement with a label other than case and default
-                a try-block(for exception)
-                a definition of a variable for which no initialization is performed
-                a defintion of a variable of non-literal type
-                a definition of a variable of static or thread storage duration
+                  a goto statement
+                  a statement with a label other than case and default
+                  a try-block(for exception)
+                  a definition of a variable for which no initialization is performed
+                  a defintion of a variable of non-literal type
+                  a definition of a variable of static or thread storage duration
 
 
                 Usage:
@@ -474,14 +474,14 @@ cpp11>
               reference type;
               an array of literal type;
               possibly cv-qualified class type that has all of the following properties:
-                     has a trivial constexpr destructor
-                   is one of
-                      an aggregate type
-                      a type with at least one constexpr constructor that is not a copy or move
-                      constructor
-                      a closure type(c++17)
-                   for unions,at least one non-static data member is of non-volatile literal type
-                   for non-unions,all non-static data members and base classes are of non-volatile literal type
+                has a trivial constexpr destructor
+                is one of
+                  an aggregate type
+                  a type with at least one constexpr constructor that is not a copy or move
+                  constructor
+                  a closure type(c++17)
+                  for unions,at least one non-static data member is of non-volatile literal type
+                  for non-unions,all non-static data members and base classes are of non-volatile literal type
 
             Usage:
                 struct conststr {
@@ -512,13 +512,14 @@ cpp11>
            list-initialization
             initializes an object from braced-init-list.
             syntax:
-                direct-list-initialization>
-                    T object{arg1, arg2, arg3, ..., argN};
-                    T{arg1, arg2, arg3, ..., argN};
-                    new T{arg1, arg2, arg3, ..., argN};
-                    Class{T member{arg1, arg2, ...};};
-                    Class::Class() : member{arg1, arg2, ...} {...}
-            direct-list-initialization:
+              direct-list-initialization >
+                T object{arg1, arg2, arg3, ..., argN};
+                T{arg1, arg2, arg3, ..., argN};
+                new T{arg1, arg2, arg3, ..., argN};
+                Class{T member{arg1, arg2, ...};};
+                Class::Class() : member{arg1, arg2, ...} {...}
+
+              direct-list-initialization:
                 initialization of a named variable with a braced-init-list(empty or nested are allowed)
                 initialization of an unnamed temporary with a braced-init-list
                 initialization of an object with dynamic storage duration with a new-expression,where the
@@ -526,15 +527,16 @@ cpp11>
                 in a non-static data member initializer that doesnt use equals sign
                 in a member initializer list of a constructor if braced-init-list is used
 
-                copy-list-initialization>
-                    T object = {arg1, arg2, ...};
-                    function({arg1, arg2, ...});
-                    return {arg1, arg2, ...};
-                    object[{arg1, arg2, ...}]
-                    object = {arg1, arg2, ...}
-                    U({arg1, arg2, ...})        
-                    Class{T member = {arg1, arg2, ...};};
-            copy-list-initialization:
+              copy-list-initialization >
+                T object = {arg1, arg2, ...};
+                function({arg1, arg2, ...});
+                return {arg1, arg2, ...};
+                object[{arg1, arg2, ...}]
+                object = {arg1, arg2, ...}
+                U({arg1, arg2, ...})        
+                Class{T member = {arg1, arg2, ...};};
+
+              copy-list-initialization:
                 initialization of a named variable with a braced-init-list after an equals sign
                 in a function call expression,with braced-init-list used as an argument and 
                 list-initialization initializes the function parameter
@@ -551,59 +553,62 @@ cpp11>
                 in a non-static data member initializer that uses the equals sign
 
             #  if the braced-init-list has no elements,T is value-initialized
-                  value-initialized - syntax:
-                      T()
-                new T()
-                Class::Class(...) : member() {...}
-                T object{};
-                T{}
-                new T{}
-                Class::Class(...) : member{} {...}
+                 value-initialized - syntax:
+                   T()
+                   new T()
+                   Class::Class(...) : member() {...}
+                   T object{};
+                   T{}
+                   new T{}
+                   Class::Class(...) : member{} {...}
 
-                #  T object(); doesnt initialize an object,it declares a function that takes no arguments
-                   and returns T(T object = T(); before c++11)
-                #  if none of value in initialization list,zero would as the value by compiler implicitly,
-                #  although that isnt zero-initialization.
+               #  T object(); doesnt initialize an object,it declares a function that takes no arguments
+                  and returns T(T object = T(); before c++11)
+               #  if none of value in initialization list,zero would as the value by compiler implicitly,
+               #  although that isnt zero-initialization.
 
            delegating constructor
-                     if the name of the class itself appears as class-or-identifier in the member initializer list,then
-              the list must consist of that one member initializer only;such a constructor is known as the delegating
-              constructor,and the constructor selected by the only member of the initializer list is the target constructor.
-              in this case,the target constructor is selected by overload resolution and executed first,then the control
-              returns to the delegating constructor and its body is executed.
-              delegating constructors cannt be recursive.
+             if the name of the class itself appears as class-or-identifier in the member initializer list,then
+             the list must consist of that one member initializer only;such a constructor is known as the delegating
+             constructor,and the constructor selected by the only member of the initializer list is the target constructor.
+             in this case,the target constructor is selected by overload resolution and executed first,then the control
+             returns to the delegating constructor and its body is executed.
+             delegating constructors cannt be recursive.
 
-              Usage:
-                class A {
-                public:
-                    A() =delete;
-                    A(int x) =default : A('a', 'b') { ... }
-                    A(char a1, char a2) { ... }
+             Usage:
+               class A {
+               public:
+                 A() =delete;
+                 A(int x) =default : A('a', 'b') { ... }
+                 A(char a1, char a2) { ... }
                 };
                 //  A(int x) delegates to A(char a1, char a2)
                 //  A(int x) is the delegaing constructor,A(char a1, char a2) is the target constructor
 
 
            inheriting constructors
-                     using-declaration can make inheriting constructors.
+             using-declaration can make inheriting constructors.
 
-              syntax of using-declaration:
-                   using typename(optional) <nested-name-specifier> <unqualified-id>;
-                 using <declarator-list>;
+             syntax of using-declaration:
+               using typename(optional) <nested-name-specifier> <unqualified-id>;
+               using <declarator-list>;
 
-                 typename :
-                        keyword,may be used as necessary to resolve dependent names when the
-                        using-declaration introduces a member type from a base class template.
-                 nested-name-specifier : 
-                           a sequence of names and scope resolution operators :: ,ending with a
-                       scope resolution operator.A signle :: refers to the global namespace.
-                 unqualified-id:
-                       an id-expression.
-                 declarator-list:
-                       comma-separated list of one or more declarators of the
-                       typename(optional) nested-name-specifier unqualified-id
-                       Some or all of the declarators may be followed by an ellipsis ... to
-                       indicate pack expansion.
+             typename :
+               keyword,may be used as necessary to resolve dependent names when the
+               using-declaration introduces a member type from a base class template.
+
+             nested-name-specifier : 
+               a sequence of names and scope resolution operators :: ,ending with a
+               scope resolution operator.A signle :: refers to the global namespace.
+
+             unqualified-id:
+               an id-expression.
+
+             declarator-list:
+               comma-separated list of one or more declarators of the
+               typename(optional) nested-name-specifier unqualified-id
+               Some or all of the declarators may be followed by an ellipsis ... to
+               indicate pack expansion.
                  
 
               if the using-declaration refers to a constructor of a direct base of the class being defined(e.g. using base::base),
@@ -611,16 +616,16 @@ cpp11>
               derived class.
 
               overload resolution for construct derived class -
-                     an inherited constructor was selected for construct base :
-                      this inherited constructor would be accessible when used to construct an object
-                      of the corresponding base class,and the accessibility of the using-declaration
-                      that introduced it is ignored.
+                an inherited constructor was selected for construct base :
+                  this inherited constructor would be accessible when used to construct an object
+                  of the corresponding base class,and the accessibility of the using-declaration
+                  that introduced it is ignored.
                    
-                   an inherited constructor was selected for construct derived :
-                      the base subobject from which the constructor was inherited is initialized using
-                      the inherited constructor,and all other bases and member of derived class are
-                      initialized as if by the defaulted default constructor(default member initializers
-                      are used if provided,otherwise default initialization takes place).
+                an inherited constructor was selected for construct derived :
+                  the base subobject from which the constructor was inherited is initialized using
+                  the inherited constructor,and all other bases and member of derived class are
+                  initialized as if by the defaulted default constructor(default member initializers
+                  are used if provided,otherwise default initialization takes place).
 
               #  the entire initialization is treated as a single function call,
                  all bases and members of derived class would be initialized after
@@ -1656,6 +1661,12 @@ cpp11>
                there has reference cycles formed by objects managed by std::shared_ptr(no outside shared pointers into the cycle),
                the shared_ptr reference counts cant reach zero and the memory is leaked.to prevent this,one of the pointers in the
                cycle can be made weak.
+               e.g.
+                 // reference cycle
+                 class B;
+                 class A { std::shared_ptr<B> shared_b_; };
+                 class B { std::shared_ptr<A> shared_a_; }; => class B { std::weak_ptr<A> weak_a_; }
+                                                               // break reference cycle
 
            member types :
              element_type  -  T,std::remove_extent_t<T>
@@ -1743,6 +1754,34 @@ cpp11>
            is equivalent to invoking @f with some of its arguments bound to @args.
            // C++ placeholders such "_1" "_2" ... are able to be bound with the wrapper,and they are
               replaced later when @f is called with special arguments.
+
+         std::lock_guard :
+           template class lock_guard<> is used to acquire lock when entered a special scope,and release the
+           lock when exit the scope.
+
+           <bits/std_mutex.h>
+             /**
+              * lock_guard - template class for lock up in a specified scope and release when leave.
+              * @_Mutex:     template parameter,type of C++ lock
+              * @_M_device:  reference to the lock
+              * namespace:   std
+              */
+             template<typename _Mutex>
+             class lock_guard {
+             public:
+               typedef _Mutext mutex_type;
+        
+               [[__nodiscard__]]
+               explicit lock_guard(mutex_type& __m) : _M_device(__m)
+               { _M_device.lock(); }
+
+               ...
+
+               ~lock_guard() { _M_device.unlock(); }
+            
+             private:
+               mutex_type& _M_device;
+             };
 
 
 END

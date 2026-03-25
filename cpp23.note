@@ -1,0 +1,165 @@
+C++ 23
+
+  language features :
+    new language feature testing macros
+
+    explicit object parameter,explicit member functions :
+      keyword "this"
+
+      a explicit object parameter cannot be a function parameter pack,
+      and it can only appears as the first parameter of the
+      parameter list in the declarations :
+        1> a declaration of a member function or member function template
+        2> an explicit instantiation or explicit specialization of 
+           a templated member function
+        3> a lambda declaration
+      a member function with an explicit object parameter
+      has the restrictions >
+        1> the function is not static
+        2> the function is not virtual
+        3> the declarator of the function does not contain cv and ref
+
+      e.g.
+        // before C++ 23,we can not recursive call the lambda function,
+        // but now,we can do it
+        auto lambda_func = [](this auto& x) -> void { ... };
+
+        struct X {
+          void func(this void);
+          template<typename _Tp>
+          void foo(this X& x, _Tp v, _Tp r);
+        };
+
+        template<>
+        void X::foo<char>(this X& x, char v, char r) { ... }
+
+    multidimensional subscript operator :
+
+      struct ThreedArray {
+        int& operator[](size_t x, size_t y, size_t z)
+        {
+          assert(x < 5 && y < 5 && z < 5);        
+          return array_[z * 5 * 5 + y * 5 + x];
+        }
+
+        std::array<int, 5 * 5 * 5> array_;
+      };
+
+      ThreedArray a;
+      a[0, 3, 2] = 10;      // assignment
+      int x = a[0, 3, 2];   // @x is 10
+      int y = a[0, 1, 1];   // @y is 0
+
+    static operator[],static operator(),static lambdas :
+      template<typename _Tp>
+      struct X {
+        typedef _Tp value_type;
+        typedef value_type& reference;
+
+        static reference operator[](size_t x);
+        static X& operator()(void);
+      };
+
+      auto lambda_func = []() static { return 2; };
+                                      #^return type auto deduced
+      auto lambda_func1 = []() static -> int { return 4; };
+                                     #^explicit return type
+
+    auto(x) and auto{x}: decay-copy in the language :
+      decay-copy in C++ :
+        a conceptual operation that creates a value copy of
+        an expression with its type "decayed" to a non-reference,
+        non-const,non-volatile form.
+
+      void func(auto x, const auto& y);
+      int x{2};
+      float y{2.0};
+      func(auto(x), auto{y});
+           #^@x => int
+             @y => const float& refers to a copy of float @y
+
+    assumptions via new attribute [[assume(exp)]].
+
+    attributes on lambda-expressions :
+      [@captures] <@tparams> @t-requires @front-attr (@param) @specs @except @back-attr -> @type @contract-specs { ... };
+
+      // @back-attr can only applies when @specs or @except is present.
+      @specs : mutable | constexpr | consteval | staic
+      @except : noexcept | noexcept(false)
+
+      // since c++ 26
+      @constract-specs : pre @attr ( @predicate )
+                           => precondition predicate
+                         post @attr ( @predicate )
+                           => postcondition predicate,assertion does not bind to th result
+                         post @attr ( @identifier @result-attr : @predicate )
+                           => postcondition predicate,assertion bind to the result
+
+    optional extended floating-point types :
+      header : <stdfloat>
+
+      type :
+        std::float16_t
+        std::float32_t
+        std::float64_t
+        std::float128_t
+        std::bfloat16_t
+
+      literal suffix :
+        f16 | F16
+        f32 | F32
+        f64 | F64
+        f128 | F128
+        bf16 | BF16
+
+    new preprocessor directives :
+      #elifdef
+      #elifndef
+      #warning
+
+      #ifdef __KERNEL__
+      #warning "now is kernel code"
+        ...
+      #elifndef __KERNEL__
+      #warning "now is userspace code"
+        ...
+      #elifdef __DEBUG__
+      #warning "now is debug code"
+        ...
+      #else
+      #error "unknown code"
+        ...
+      #endif
+
+      we do not have to let keywords "warning" and "error" to following
+      the symbol '#' restrictly,so this is OK :
+        #  warning "message"
+        #  error "message"
+
+    literal suffix 'Z'/'z' for (signed)std::size_t literals
+    white-spaces trimming before line splicing
+    simpler implicit move
+    extending the lifetime of temporaries in range-based for loop initializer
+    CTAD from inherited constructors
+    labels at the end of compound statements
+    alias declarations (using) in init-statements
+    make () more optional for lambda expressions
+    narrowing contextual conversions to bool in static_assert
+    and if constexpr
+    make declaration order layout (of non-static class data members)
+    mandated
+    text encoding changes :
+      character sets and encodings
+      consistent character literal encoding
+      named universal character escapes
+      delimited escape sequences
+      support for UTF-8 as a portable source file encoding
+    if consteval / if not consteval
+    constexpr changes :
+      non-literal variables,labels,and gotos in constexpr functions
+      permitting static and thread_local variables in constant
+      expressions in constexpr functions
+      constexpr function does not need its return type and
+      parameter types to be literal type
+      constexpr function for which no invocation satisfies
+      the requirements of a core constatn expression
