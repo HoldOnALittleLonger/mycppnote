@@ -39,7 +39,30 @@ C++ 23
         int& operator[](size_t x, size_t y, size_t z)
         {
           assert(x < 5 && y < 5 && z < 5);        
-          return array_[z * 5 * 5 + y * 5 + x];
+          return array_[x * 5 * 5 + y * 5 + z];
+          /**          |<------------------->|
+           *             |  Y   Z       Y  
+           *             +--> compute memory unit number(offset) in sizeof(int) bytes
+           *   +--> sizeof(int) bytes
+           *   |
+           * |---|
+           * [ 0 | 1 | 2 | 3 | 4 ] [ 0 | 1 | 2 | 3 | 4 ] [ 0 | 1 | 2 | 3 | 4 ] ..............
+           * |<-------- z ------>| --+
+           *                         | (relative offset)
+           *                         V
+           * |<--------------------------------- y ------------------------------->| --+
+           *                                                                           |
+           *                                                                           V
+           * |<------------------------------------------------ x ------------------------->|
+           *
+           * suppose subscript is [1, 1, 1],and X = Y = Z = 2,offset is 1 * 2 * 2 + 1 * 2 + 1 = 7
+           *
+           *     0   1     2   3     4   5    6   7 
+           *   [ 0 | 1 ] [ 0 | 1 ] [ 0 | 1] [ 0 | 1 ] 
+           *     z0  z1
+           *   |<-y0-->| |<-y1-->|
+           *   |<---- x == 0 --->| |<--- x == 1 --->|
+           */
         }
 
         std::array<int, 5 * 5 * 5> array_;
@@ -87,7 +110,8 @@ C++ 23
       @specs : mutable | constexpr | consteval | staic
       @except : noexcept | noexcept(false)
 
-      // since c++ 26
+      // since C++ 26
+      // actually,function constract specifier is introduced in C++ 26
       @constract-specs : pre @attr ( @predicate )
                            => precondition predicate
                          post @attr ( @predicate )
@@ -136,25 +160,154 @@ C++ 23
         #  warning "message"
         #  error "message"
 
-    literal suffix 'Z'/'z' for (signed)std::size_t literals
-    white-spaces trimming before line splicing
-    simpler implicit move
-    extending the lifetime of temporaries in range-based for loop initializer
+    literal suffix 'Z'/'z' for (signed)std::size_t literals :
+      auto x = 8z    =>  std::ssize_t
+             = 8Z    =>  std::ssize_t
+             = 8uz   =>  std::size_t
+             = 8uZ   =>  std::size_t
+
+    white-spaces trimming before line splicing :
+      int x = 1 
+      // \      ----|   before : because backslash,"+ 42" is considered a part
+      + 42      <---+            of comment,so @i is 1
+      ;                 after  : white-spaces trimming is before line splicing,
+                                 so @i is "1 + 42" = 43
+      
+    simpler implicit move :
+      in C++20,return statements can implicityly move from local variables
+      of rvalue reference type,but a defect in the wording means that
+      implicit move fails to apply to functions that return references.
+      e.g.
+        int&& func(int&& x)
+        {
+          return x; // ERROR,in C++20
+        }
+
+        ConstructFromIntRR func(int&& x)
+        {
+          return x; // OK,in C++20
+        }
+
+      since C++23.we can let the function return the reference directly,
+      instead have to return an object.
+      
+    extending the lifetime of temporaries in range-based for loop initializer :
+      the lifetime of temporary objects in the for-range-initializer
+      is extended until the end of the loop.
+      this improve usability of the range-based for loop.
+      the effect on original feature is,destructors of some
+      temporary objects are invoked later.
+      e.g.
+        std::vector<int> v = {1, 2, 3};
+        std::mutex m;
+
+                     // comma operator will create a temporary object is type
+                     // of std::lock_guard,which will holds @m.in C++23,
+                     // the lifetime of this temporary object is extended to
+                     // the end of ranged for loop,thus @m is holding by the
+                     // temporary object until the loop ends.
+        for (int x : static_cast<void>(std::lock_guard<std::mutex>(m)), v) {
+          std::lock_guard<std::mutex> guard(m); // OK in C++20.Deadlock in C++23
+        }
+
     CTAD from inherited constructors
-    labels at the end of compound statements
-    alias declarations (using) in init-statements
-    make () more optional for lambda expressions
+    #^ CTAD : Class template argument deduction,since C++17
+
+    labels at the end of compound statements :
+      void f(int& x)
+      {
+        if (x)
+          goto END;
+        x = 42;
+
+      END:
+      }
+
+    alias declarations (using) in init-statements :
+      for (using T = int; T e : V) { ... }
+                         #^int
+
+    make () more optional for lambda expressions :
+      permit syntax :
+        auto x = [] { ... }; // OK.But before C++23,syntax ERROR
+        
     narrowing contextual conversions to bool in static_assert
-    and if constexpr
+    and if constexpr :
+      uint8_t x = 5;
+      static_assert(x, "@x is true");
+
+      if constexpr (x) { ... }
+
+      ! before C++23,we need use conversion "bool(x)" to convert
+        the integer manually.
+
     make declaration order layout (of non-static class data members)
-    mandated
+    mandated :
+      remove the implementation's license of member reording in case
+      access control is mixed.
+
     text encoding changes :
       character sets and encodings
       consistent character literal encoding
       named universal character escapes
       delimited escape sequences
       support for UTF-8 as a portable source file encoding
-    if consteval / if not consteval
+
+    if consteval / if not consteval :
+      if consteval {
+        ...
+      } else {
+        ...
+      }
+
+      if not consteval {
+        ...
+      } else {
+        ...
+      }
+
+      if ! consteval {
+        ...
+      } else {
+        ...
+      }
+
+      ! no condition checking,and substatement must be compound statement.
+
+      ! before C++23,we may need to use 
+          if (std::is_constant_evaluated()) {
+            ...
+          } 
+
+      ! for the consteval if statement,if this statement is evaluated
+        during constant evaluation,the first substatement is executed;
+        otherwise,the second substatement is executed.
+
+      ! consteval int f(int i) { return i; }
+
+        constexpr int g(int i)
+        {
+          if (std::is_constant_evaluated()) {
+            return f(i) + 1;
+          }
+          else
+            return 2;
+        }
+
+        consteval int h(int i) { return f(i) + 1; }
+
+        at constant evaluation time,g() and h() do the same works,but during
+        runtime,we cannot call h(),and g() has the extra path.
+        when we invoke g() during runtime,it always has to check std::is_constant_evaluated(),
+        this is the thing we do not want;except this,function g() is ill-formed.
+
+        invoke f() in g() is an immediate invocation and needs to be a constant expression,and
+        it is not.
+        invoke f() in h() is not considered an immediate invocation because it is in an 
+        immediate function context.
+
+        # invoking a "consteval" function from a "constexpr" function just "Does not Work".
+
     constexpr changes :
       non-literal variables,labels,and gotos in constexpr functions
       permitting static and thread_local variables in constant
@@ -163,3 +316,81 @@ C++ 23
       parameter types to be literal type
       constexpr function for which no invocation satisfies
       the requirements of a core constatn expression
+
+  library features :
+    // we would not list all library features in this note.
+
+    debug :
+      stacktrace library >
+        <stacktrace>
+
+        stacktrace_entry   => class,representation of an evaluation in a stacktrace.
+                              # overloaded operator<< for stream output the description.
+        basic_stacktrace<> => class template,approximate representation of an inocation
+                              sequence consists of stacktrace entries.
+                              # container type,stored stacktrace information.
+                                usually has 
+                                  using stacktrace_entry = std::basic_stacktrace<std::allocator<std::stacktrace_entry>>;
+
+    print :
+      formatted output functions std::print and std::println provided in header <print> :
+        std::print("{}", @x);   // no '\n'
+        std::println("{}", @x); // has '\n'
+
+        @fmt-placeholder : {}
+                           { @arg-id : @format-spec }
+                           where @arg-id is optional,the first argument is started from index 0.
+        @format-spec :
+          standard format specification >
+            @fill-and-align @sign # 0 @width@precision L @type
+
+            each element in the format is optional.
+            
+            @fill-and-align : < => left align
+                              > => right align
+                              ^ => centra align
+
+             ! fill-character is at the front of alignment
+
+            @sign : + => print '+' for positive value
+                    - => print '-' for negative value
+                    space => space for positive value,'-' for negative value
+
+            # : print prefix
+
+            0 : padding for width
+
+            @width : width of field
+            @precision : precision for floating-point,starts with a '.' symbol following @width
+
+            L : locale-specific formatting
+
+            @type : b B     =>  binary
+                    c       =>  character
+                    d       =>  decimal
+                    o       =>  octal
+                    x X     =>  hex
+                    ?       =>  copies the escaped string to the output,
+                                that is the formatted string
+                                  "[{:?}]", "\u0301"  =>  ["\u{301}"]
+                    s       =>  default format,represents string
+
+            escape symbol : '\'
+            # similar to C printf().
+
+  obsolete features :
+    removed >
+      garbage collection support and reachability-based leak detection.
+      mixed wide string literals concatenation support.
+      non-encodable wide character literals and multicharacter wide
+      character literals.
+
+    deprecated >
+      std::aligned_storage and std::aligned_union.
+      std::numberic_limits::has_denorm.
+
+    reverted deprecation >
+      the operator, in subscript expressions.
+          #^but the semantics has been changed to support overloadable
+            multidimensional subscript operator[].
+      some C headers.

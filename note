@@ -332,22 +332,50 @@
     #             // dont alloc new memory space.(but copy need)
 
 # value categories
-        
-        has     no
-        identify identify
-        ^^^^^^
-        lvalue            (cant be move)
+    glvalue : "generalized lvalue" is an expression whose evaluation determines
+              the identity of an object or function.
+    prvalue : "pure rvalue" is an expression whose evaluation 
+                computes the value of an operand or a built-in operator(such prvalue has no result object),
+                or initializes an object(such prvalue is said to have a result object).
 
-    rvalue    <xvalue prvalue>    (can be move)
-        vvvvvvv
-        gvalue
+              result object :
+                variable
+                an object created by new-expression
+                a temporary created by temporary materialization
+                  # temporary materialization :
+                      a prvalue of any complete type _Tp can be converted to an xvalue of the same type,
+                      this conversion initializes a temporary object of type _Tp from the prvalue
+                      by evaluating the prvalue with the temporary object as its result object,
+                      and produces an xvalue denoting the temporary object.
+                a member
 
-        gvalue = lvalue | xvalue
-        rvalue = xvalue | prvalue
+                ! non-void discarded expression has a result object
+                  # discarded expression :
+                      a discarded expression is an expression that is used for its side-effects only.
+                      the value calculated from such expression is discarded.
+                      includes :
+                        full-expression of any expression statement.
+                        # full-expression,a constituent expression is defined as follows :
+                            the constituent expression of an expression is that expression.
+                              int num = 0;
+                              num += 3;
+                            the constituent expressions of a brace-enclosed initializer list or of a 
+                            (possibly parenthesized) expression list are the constituent expressions of
+                            the elements of the respective it.
+                              int array[2] = {2, 3}; // expressions "2", "3" are the constituent expressions
+                                                        of expression "{2, 3}"
+                            the constituent expressions of an initializer that begins with '=' are the
+                            constituent expressions of the initializer-clause.
+                              int array[2] = {2, 3}; // expression "{2, 3}" is the constituent expression of
+                                                        expression "= {2, 3}"
+                        left-hand operand of the built-in comma',' operator.
+                        the operand of a cast-expression that casts to the type void.
 
-        gvalue identify object
-        xvalue identify an object whose resource can be resued
-        prvalue compute the value of an operand or initialize an object
+                ! every class and array prvalue has a result object,except
+                  when it is the operand of decltype
+    xvalue  : "eXpiring value" is a glvalue that denotes an object whose resources can be reused.
+    lvalue  : a glvalue that is not an xvalue.
+    rvalue  : an rvalue expression is either prvalue or xvalue.
 
     # std::move() is exactly equivalent to a static_cast to an rvalue referrence.
 
