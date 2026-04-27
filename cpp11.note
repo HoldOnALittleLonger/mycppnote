@@ -1783,5 +1783,177 @@ cpp11>
                mutex_type& _M_device;
              };
 
+         std::promise<> :
+           class template promise<> provides a facility to store a value or an
+           exception that is later acquired asynchronously via a std::future
+           object created by the std::promise object.
+           each promise associated with a "shared state",which contains some
+           state information and a "result" which may be not yet evaluated,
+           evaluated to a value(possibly void),or evaluated to an exception.
+           
+           the "shared state" would be changed by promise >
+             1> make ready
+                  stores the result or the exception in the shared state.
+             2> release
+                  gives up its reference to the shared state,last reference will
+                  cause destroying.
+             3> abandon
+                  stores the exception of type std::future_error with error code
+                  std::future_errc::broken_promise,makes it ready,and then
+                  releases it.
+
+           promise is the "push" end of promise-future communication channel
+             [ future  ]  ||
+             [   ...   ]  VV
+             [ future  ]
+             [   ...   ]
+             [ promise ]
+           operations that store a value into the shared state synchronize-with
+           the successful return from any function that is waiting on the shared
+           state.
+           concurrent access to the same shared state may conflict,thus,these
+           operations either all be read-only,or have external synchronization.
+
+           std::promise<> is defined in header <future>.
+           <future>
+             /**
+              * promise<> - class template for promise,used to represents the
+              *             shared state,can procudes a future.
+              * @_Res:      result type.
+              * namespace:  std
+              */
+             template<typename _Res>
+             class promise {
+               ...
+             };
+
+             public member methods :
+               promise(promise&& __rhs) noexcept;
+               operator=(promise&& __rhs) noexcept;
+               future<_Res> get_future();
+               void swap(promise& __rhs) noexcept;
+
+               // set methods have rvalue version.
+               void set_value(const _Res& __r);
+               void set_exception(exception_ptr __p);
+               void set_value_at_thread_exit(const _Res& __r);
+               void set_exception_at_thread_exit(exception_ptr __p);
+
+         std::future<> :
+           class template future<> provides a mechanism to access the result
+           of asynchronous operations.
+           
+           about asynchronous operation :
+             an asynchronous operation performed via std::async,
+             std::packaged_task,or std::promise,can provide a std::future
+             object to the creator of that asynchrnous operation.
+             the creator of the asynchronous operation can then use a variety
+             of methods to query,wait for,or extract a value from the
+             std::future.(methods may block)
+             the asynchronous operation is ready to send a result to the
+             creator,it can do so by modifying the shared state that linked
+             to the creator's std::future.
+
+           ! std::future is a unique reference to the result in a shared state,
+             any other asynchronous return objects will not share the result.
+             std::shared_future can be used for non-unique access to the result.
+
+           <future>
+             /**
+              * future<> - class template for future type used to get access to
+              *            the result in a shared state.
+              * @_Res:     result type.
+              * namespace: std
+              * # where __basic_future<> is inherited from __future_base.
+              *   __future_base is a structure,the structure _Result base is
+              *   nested in its definition to represents the result base.
+              *   _Result_base can not be copied(std::future is unique-access)
+              */
+             template<typename _Res>
+             class future : public __basic_future<_Res> {
+               ...
+             };
+
+             some public member methods :
+               future(future&& __uf) noexcept;
+               future& operator=(future&& __fut) noexcept;
+            
+               // get result,can only be called once,may block.
+               _Res get();
+               // convert this future to shared future.
+               shared_future<_Res> share() noexcept;
+        
+               // and we can invoke the public methods derived from
+               // __basic_future<_Res>.
+
+               // is the future valid?
+               bool __basic_future<_Res>::valid() const noexcept;
+
+               // wait forever until ready.
+               void __basic_future<_Res>::wait() const;
+
+               // wait a while.
+               template<typename _Rep, typename _Period>
+               future_status
+               __basic_future<_Res>::wait_for(
+                 const chrono::duration<_Rep, _Period>& __rel) const;
+
+               template<typename _Clock, typename _Duration>
+               future_status
+               __basic_future<_Res>::wait_until(
+                 const chrono::time_point<_Clock, _Duration>& __abs) const;
+
+         std::packaged_task<> :
+           class template is used to start an asynchronous task,its inner is a
+           callable object,and its template type describe the return type and
+           parameter type of that callable object.
+             std::packaged_task<int(int, int)> task(
+               [](int a, int b) -> int {
+                 return a + b;
+               }
+             );
+
+             auto task_future = task.get_future();
+             ...
+             auto result = task_future.get();
+           the callable object can be produced from lambda expression,the
+           std::bind(),or we a pre-defined function.
+           and we can let the task runs in another thread by move it into
+           another thread.
+             void f() { }
+
+             std::packaged_task<void(void)> task(f);
+             ...
+             std::thread new_thread(std::move(task));
+             ...
+
+         std::async<>() :
+           function template async<>() can be used as a shortcut for start an
+           asynchronous operation.
+           
+           <future>
+             template<typename _Fn, typename... _Args>
+             future<__async_result_of<_Fn, _Args...>>
+             async(launch __policy, _Fn&& __fn, _Args&&... __args);
+
+             template<typename _Fn, typename... Args>
+             future<__async_result_of<_Fn, _Args...>>
+             async(_Fn&& __fn, _Args&&... __args);
+
+           where @__policy is used to indicate how to handles the asynchrnous
+           operation.
+             std::launch::async       => as if executed in a new thread
+                                         before we get() on the future,
+                                         the asynchronous operation maybe
+                                         been finished.
+             std::launch::deferred    => as if a lazy evaluation is performed
+                                         before we get() on the future,the
+                                         asynchronous operation would not
+                                         be evaludated.
+
+             std::launch::async | std::launch::deferred
+             => fallback to deferred invocation or,to the implementation-defined
+                policy.
+           
 
 END
