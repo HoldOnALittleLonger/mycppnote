@@ -18,7 +18,7 @@ Deprecated :
   std::is_literal_type
   std::result_of
   all of <codecvt>
-
+  no more need <cstdbool>,C stdbool compatibility native into C++
 
 > u8 character literal
     u8 character literal is literal data
