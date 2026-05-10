@@ -396,6 +396,20 @@ cpp11>
                 initialized to point to,or refer to,or have a (possibly recursive)subobject 
                 that points to or refers to,a translation-unit-local entity that is usable in
                 const expression.
+                ! a translation unit(compilation unit) is the ultimate input to the compiler from
+                  which a single object file is generated.
+                  a translation-unit-local(TU-local) is an entity(variable or function) that is
+                  intended to be used only within the specific file(translation unit) where it is
+                  defined.
+
+              # we can return an address of a constexpr C-Style string from a function.because the
+                constexpr specifier,compiler will places the string into ".rodata" section.
+                this is also applied to "const char *" type,the string has type "const char *" also
+                is stored in ".rodata" section.
+                if we define a local array "char str[] = "xxx";" in the function,when we return the
+                address of this object,compiler will let the function return 0,the NULL pointer.
+                this is because language standard enforces local object must be invalid after the
+                function returned.
 
             constexpr function:
               a constexpr function must satisfy the following requirements:
@@ -688,78 +702,76 @@ cpp11>
 
 
            nullptr
-            the keyword nullptr denotes the pointer literal.it is a prvalue of type std::nullptr_t.
-            there exist implicit conversions from nullptr to null pointer value of any pointer type
-            and any pointer to member type.similar conversions exist for any null pointer constant,
-            which includes values of type std::nullptr_t as well as the macro NULL.
+             the keyword nullptr denotes the pointer literal.it is a prvalue of type std::nullptr_t.
+             there exist implicit conversions from nullptr to null pointer value of any pointer type
+             and any pointer to member type.similar conversions exist for any null pointer constant,
+             which includes values of type std::nullptr_t as well as the macro NULL.
 
            char16_t and char32_t
-                   char16_t -
-                    type for UTF-16 character representation,required to be large enough to
-                    represent any UTF-16 code unit(16 bits).it has the same size,signedness,
-                    and alignment as std::uint_least16_t,but is a distinct type.
+             char16_t -
+               type for UTF-16 character representation,required to be large enough to
+               represent any UTF-16 code unit(16 bits).it has the same size,signedness,
+               and alignment as std::uint_least16_t,but is a distinct type.
 
-            char32_t -
-                    type for UTF-32 character representation,required to be large enough to
-                    represent any UTF-32 code unit(32 bits).it has the same size,signedness,
-                    and alignment as std::uint_least32_t,but is a distinct type.
+             char32_t -
+               type for UTF-32 character representation,required to be large enough to
+               represent any UTF-32 code unit(32 bits).it has the same size,signedness,
+               and alignment as std::uint_least32_t,but is a distinct type.
 
            type alias
-            type alias is a name that refers to a previously defined type(similar to typedef).
-            alias template is a name that refers to a family to types.
+             type alias is a name that refers to a previously defined type(similar to typedef).
+             alias template is a name that refers to a family to types.
 
-            syntax:
-                using <identifier> <attr>(optional) = <type-id>;
-                template<template-parameters>
-                using <identifier> <attr>(optional) = <type-id>;
+             syntax:
+               using <identifier> <attr>(optional) = <type-id>;
+               template<template-parameters>
+               using <identifier> <attr>(optional) = <type-id>;
 
-            Usage:
-                using ipv4_address = struct sockaddr_in;
-                template<class T>
-                using key_value = std::pair<int, T>;
+             Usage:
+               using ipv4_address = struct sockaddr_in;
+               template<class T>
+               using key_value = std::pair<int, T>;
 
-                ipv4_address myaddr;            //  create an object of struct sockaddr_in 
-                key_value<std::string> v_s;        //  create an object of std::pair<int, std::string>
+               ipv4_address myaddr;            //  create an object of struct sockaddr_in 
+               key_value<std::string> v_s;        //  create an object of std::pair<int, std::string>
 
-            #  when the result of specializing an alias template is a dependent template-id,
-               subsequent substitutions apply to that template-id.
+             #  when the result of specializing an alias template is a dependent template-id,
+                subsequent substitutions apply to that template-id.
 
-            #  the type produced when specializing an alias template is not allowed to directly or 
-               indirectly make use of its own type.
-               E.g.
-                template<class T>
-                struct A;
-                template<class T>
-                using B = typename A<T>::U;
-                template<class T>
-                struct A { typedef B<T> U; };   //  B<T> = A<T>::U
-                B<int> b;            //  ERROR
+             #  the type produced when specializing an alias template is not allowed to directly or 
+                indirectly make use of its own type.
+                E.g.
+                  template<class T>
+                  struct A;
+                  template<class T>
+                  using B = typename A<T>::U;
+                  template<class T>
+                  struct A { typedef B<T> U; };   //  B<T> = A<T>::U
+                  B<int> b;            //  ERROR
                                        //  T = int with B<T> = A<int>::B<int> = A<int>::A<int>::U
-                                //  cycle to resolve typename
+                                       //  cycle to resolve typename
 
-            #  alias template are never deduced by template-argument-deduction when deducing a template 
-               template parameter.
-               it is not possible to partially or explicitly specialize an alias template.
+             #  alias template are never deduced by template-argument-deduction when deducing a template 
+                template parameter.
+                it is not possible to partially or explicitly specialize an alias template.
 
-            #  alias template can only be declared at class scope or namespace scope.
-
+             #  alias template can only be declared at class scope or namespace scope.
 
            attribute specifier sequence
-                    introduces implementation-defined attributes for types,objects,code, etc.
-             
+             introduces implementation-defined attributes for types,objects,code, etc.
              syntax:
-                [[attribute-list]]
-                [[using atrribute-namespace: attribute-list]]
+               [[attribute-list]]
+               [[using atrribute-namespace: attribute-list]]
 
-                attribute-list is a comma-separated sequence of zero or more attributes
-                  identifier -
-                              simple attribute,such as [[noreturn]]
-                  attribute-namespace::identifier -
-                          attribute with a namespace,such as [[gnu::unused]]
-                  identifier(argument-list) -
-                          attribute with arguments,such as [[deprecated("because")]]
-                  attribute-namespace::identifier(argument-list) -
-                          attribute with both a namespace and an argument list
+               attribute-list is a comma-separated sequence of zero or more attributes
+                 identifier -
+                   simple attribute,such as [[noreturn]]
+                 attribute-namespace::identifier -
+                   attribute with a namespace,such as [[gnu::unused]]
+                 identifier(argument-list) -
+                   attribute with arguments,such as [[deprecated("because")]]
+                 attribute-namespace::identifier(argument-list) -
+                   attribute with both a namespace and an argument list
 
              #  if using namespace: appears in the begining of an attribute list,no other attributes 
                 in the attribute list can specify a namespace: the namespace specified in a using
@@ -769,33 +781,33 @@ cpp11>
                 use these extension can demand compiler do something when construct program.
 
              standard attributes :
-                   [[noreturn]]  indicates that the function doesnt return
-                  [[carries_dependency]]  indicates that dependency chain in release-consume
-                                std::memory_order propagates in and out of the function
-                  [[deprecated]]  
-                  [[deprecated("reason")]]  indicates that the use of the name or entity declared 
-                                  with this attributes is allowed,but discouraged for
-                                some "reason"
-                  [[fallthrough]]  indicates that the fall through from the previous case label is
-                             intentional and should not be diagnosed by a compiler that warns
-                           on fall-through
-                  [[nodiscard]]
-                  [[nodiscard("reason")]]  encourages the compiler to issue a warning if the return value
-                                 is discarded
-                  [[maybe_unused]]  suppresses compiler warnings on unused entities,if any
-                  [[likely]]
-                  [[unlikely]]  indicates that the compiler should optimize for the case where a path
-                          of execution through a statement is more or less likely than any other
-                        path of execution
-                  [[no_unique_address]]  indicates that a non-static data member need not have an address
-                               distinct from all other non-static data members of its class
-                  [[assume]]  specifies that an expression will always evaluate to true at a given point
-                  [[optimize_for_synchronized]]  indicates that the function definition should be optimized
-                                   for invocation from a synchronized statement
-
+               [[noreturn]]               indicates that the function doesnt return
+               [[carries_dependency]]     indicates that dependency chain in release-consume
+                                          std::memory_order propagates in and out of the function
+               [[deprecated]]  
+               [[deprecated("reason")]]   indicates that the use of the name or entity declared 
+                                          with this attributes is allowed,but discouraged for
+                                          some "reason"
+               [[fallthrough]]            indicates that the fall through from the previous case label is
+                                          intentional and should not be diagnosed by a compiler that warns
+                                          on fall-through
+               [[nodiscard]]
+               [[nodiscard("reason")]]    encourages the compiler to issue a warning if the return value
+                                          is discarded
+               [[maybe_unused]]           suppresses compiler warnings on unused entities,if any
+               [[likely]]
+               [[unlikely]]               indicates that the compiler should optimize for the case where a
+                                          path of execution through a statement is more or less likely than
+                                          any other path of execution
+               [[no_unique_address]]      indicates that a non-static data member need not have an address
+                                          distinct from all other non-static data members of its class
+               [[assume]]                 specifies that an expression will always evaluate to true at a given
+                                          point
+               [[optimize_for_synchronized]]  indicates that the function definition should be optimized
+                                              for invocation from a synchronized statement
 
            parameter pack
-                    a template parameter pack is a template parameter that accepts zero or more template arguments(
+             a template parameter pack is a template parameter that accepts zero or more template arguments(
              non-types,types or templates)
              a function parameter pack is a function parameter that accepts zero or more function arguments
              a template with at least one parameter pack is called a variadic template
@@ -1467,12 +1479,12 @@ cpp11>
                     ...
 
            module linkage
-                     the name can be referred to only from the scopes in the same module unit or in the other translation
-              units of the same named module.
-              names declared at namespace scope have module linkage if  their declarations are attached to a named
-              module and are not exported,and dont have internal linkage.
+             the name can be referred to only from the scopes in the same module unit or in the other translation
+             units of the same named module.
+             names declared at namespace scope have module linkage if  their declarations are attached to a named
+             module and are not exported,and dont have internal linkage.
 
-              Usage:
+            Usage:
             file - xxx.c :
                  namespace _xxx {
                             int x(10);
