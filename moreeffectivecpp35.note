@@ -1,52 +1,53 @@
 Chapter Basics >
 
   Item 1 : Distinguish between pointers and references
-         Pointers use * or -> to indirectly access object
-     References use . to indirectly access object
+       Pointers use * or -> to indirectly access object
+       References use . to indirectly access object
 
-     Differences between reference and pointer :
-       1>  reference can not be a NULL reference
-       2>  pointer can be NULL pointer
-       3>  if design does not allow NULL object,then prefer reference,otherwise
-           use pointer.
-           ERROR e.g.
-             char *x = 0;  //  NULL pointer
-         char &y = *x;  //  refer to NULL object
-           4>  C++ requires reference must be initialized when declare.
-       5>  no need to test reference if valid before use it.         
-           mut test pointer if valid before use it.
-       6>  pointer is allowed to reassignment,but reference is not allowed.
+       Differences between reference and pointer :
+         1>  reference can not be a NULL reference
+         2>  pointer can be NULL pointer
+         3>  if design does not allow NULL object,then prefer reference,otherwise
+             use pointer.
+             ERROR e.g.
+               char *x = 0;  //  NULL pointer
+               char &y = *x;  //  refer to NULL object
+         4>  C++ requires reference must be initialized when declare.
+         5>  no need to test reference if valid before use it.         
+             mut test pointer if valid before use it.
+         6>  pointer is allowed to reassignment,but reference is not allowed.
 
-       !!  you should use a pointer whenever you need to take into account the possibility that
-       there is nothing to refer to or whenever you need to be able to refer to different
-       things at different times.  !!
-       !!  you should use a reference whenever you know there will always be an object to refer to
-       and you also know that once you are referring to that object,you will never want to 
-       refer to anything else.
-       you should use a reference when implementing operators whose syntactic requirements make
-       the use of pointers undesirable.in all other cases,stick with pointers.  !!
+       !!  we should use a pointer whenever we need to take into account the possibility that
+           there is nothing to refer to or whenever we need to be able to refer to different
+           things at different times.  !!
+
+       !!  we should use a reference whenever we know there will always be an object to refer to
+           and we also know that once we are referring to that object,you will never want to 
+           refer to anything else.
+           we should use a reference when implementing operators whose syntactic requirements make
+          the use of pointers undesirable.in all other cases,stick with pointers.  !!
 
 
   Item 2 : Prefer C++ style casts
-         the traditional C-style casts'problems :
-       1>  C-style is designed for C,not C++,so that,
-           cast a pointer-to-const-object into a pointer-to-non-const-object and
-           a cast that changes a pointer-to-base-class-object into a pointer-to-derived-class-object
-           is no difference for C-style cast.
-       2>  tranditional C-style cast syntactically consist of little more than a pair of parentheses
-           and an identifier.
-           it belike this :
-             int a = 0;
-         float b = (float)a;
-         float c = float(a);
-           but everywhere in C++ might be parentheses are existed.
-           so there is a question,"Are any casts used in this program?"
+       the traditional C-style casts'problems :
+         1>  C-style is designed for C,not C++,so that,
+             cast a pointer-to-const-object into a pointer-to-non-const-object and
+             a cast that changes a pointer-to-base-class-object into a pointer-to-derived-class-object
+             is no difference for C-style cast.
+         2>  tranditional C-style cast syntactically consist of little more than a pair of parentheses
+             and an identifier.
+             it belike this :
+               int a = 0;
+               float b = (float)a;
+               float c = float(a);
+             but everywhere in C++ might be parentheses are existed.
+             so there is a question,"Are any casts used in this program?"
 
-     Use C++-style casts to instead C-style casts :
-       static_cast<type>(expression)
-       dynamic_cast<type>(expression)
-       const_cast<type>(expression)
-       reinterpret_cast<type>(expression)
+       Use C++-style casts to instead C-style casts :
+         static_cast<type>(expression)
+         dynamic_cast<type>(expression)
+         const_cast<type>(expression)
+         reinterpret_cast<type>(expression)
 
 
        const_cast is used to remove constness of an object,but it is not realy remove it,just
@@ -64,20 +65,20 @@ Chapter Basics >
                        //  OK.
        cast for function pointers is not portable!
 
-     following C++-style casts but compiler is not support :
-       template<typename _Type, typename _EType>
-       _Type static_cast(_EType expression)
-       {
-         return (_Type)(expression);
-       }
+       following C++-style casts but compiler is not support :
+         template<typename _Type, typename _EType>
+         _Type static_cast(_EType expression)
+         {
+           return (_Type)(expression);
+         }
+  
+         #define static_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
+         #define dynamic_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
 
-       #define static_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
-       #define dynamic_cast(TYPE, EXPRESSION) ((TYPE)(EXPRESSION))
+         //  but these functions would not report cast fails.
 
-       //  but these functions would not report cast fails.
-
-     !!  prefer C++ style casts,even they are hard to type or ugly,because that style will improve
-         code readability,and designed for C++ programming.  !!
+       !!  prefer C++ style casts,even they are hard to type or ugly,because that style will improve
+           code readability,and designed for C++ programming.  !!
 
 
   Item 3 : Never treat arrays polymorphically
@@ -150,7 +151,7 @@ Chapter Basics >
 
 
   Item 4 : Avoid gratuitous default constructors
-         a default constructor is the C++ way of saying you can get something for nothing.
+         a default constructor is the C++ way of saying we can get something for nothing.
      a class lack a default constructor,its use may be problematic in three contexts :
        1>  creation of arrays.
            when create an array of type is such class which is lack default constructor,
@@ -374,10 +375,10 @@ Chapter Operators >
            a Array object.
 
 
-     !!  proxy objects can give you control over aspects of your software's behavior,at above,it is 
+     !!  proxy objects can give we control over aspects of your software's behavior,at above,it is 
          implicit type conversion.  !!
      !!  granting compilers license to perform implicit type conversions usually leads to more harm than godd,
-         so do not provide conversion functions unless you are sure you want them.  !!
+         so do not provide conversion functions unless we are sure we want them.  !!
 
 
   Item 6 : Distinguish between prefix and postfix forms of increment and decrement operators
@@ -484,9 +485,9 @@ Chapter Operators >
      as result,do not overload comma operator.
 
      !!  overload operator the purpose is to make programs easier to read,write,and understand.
-         if you do not have a good reason for overloading an operator,do not overload it.
+         if we do not have a good reason for overloading an operator,do not overload it.
          in the case of &&, ||, and , ,it is difficult to have a good reason,because no matter how hard
-         you try,you can not make them behave the way they are supposed to.  !!
+         we try,you can not make them behave the way they are supposed to.  !!
 
 
   Item 8 : Understand the different meanings of new and delete
@@ -509,7 +510,7 @@ Chapter Operators >
        are prohibited from doing.
        programmer can not directly call the constructor necessary to initialize the object.(for heap-based object)
 
-         if you holds some raw heap memory,and want to construct an object in the memory,could use palcement new :
+         if we holds some raw heap memory,and want to construct an object in the memory,could use palcement new :
        #include <new>
 
        void *tempP = operator new(sizeof(std::string));
@@ -521,9 +522,9 @@ Chapter Operators >
          return location;
        }
 
-     if you want to allocate memory and call constructor on it,use "new" statement.
-     if you just want to allocate memory only,use "operator new" statement.
-     if you want to construct an object in memory you have already got a pointer to,use "placement new" statement.
+     if we want to allocate memory and call constructor on it,use "new" statement.
+     if we just want to allocate memory only,use "operator new" statement.
+     if we want to construct an object in memory we have already got a pointer to,use "placement new" statement.
      operator new and placement new could be overloaded.
 
      deletion and memory deallocation :
@@ -537,7 +538,7 @@ Chapter Operators >
            operator delete(str);  //  call operator delete function at second.
          }
 
-       if you want to deal only with raw memory,you should bypass the new and delete operators entirely.
+       if we want to deal only with raw memory,you should bypass the new and delete operators entirely.
        e.g.
          void *buffer = operator new (sizeof(char) * 30);
          operator delete(buffer);
@@ -562,7 +563,7 @@ Chapter Operators >
 
        operator delete [] is also could be overloaded,just like operator new [].(has some restrictions)
 
-     !!  when you think about customizing the behavior of the new and delete operators,remember that,you can not really
+     !!  when we think about customizing the behavior of the new and delete operators,remember that,you can not really
          do it.you can modify how they do what they do,but what they do is fixed by the lanaguage.  !!  
      !!  must pair new and delete,new[] and delete[].do not mix them.  !!
 
@@ -762,7 +763,7 @@ Chapter Exceptions >
 
 
   Item 12 : Understand how throwing an exception differs from passing a parameter or calling a virtual function
-          you can pass both function parameters and exceptions by value,by reference,or by pointer,however,there is
+          we can pass both function parameters and exceptions by value,by reference,or by pointer,however,there is
       quite different.
       e.g.
         f(arg);
@@ -917,11 +918,11 @@ Chapter Exceptions >
            static_cast<A>(ba);     //  force cast
                                //  the object coverted has no data members defined in A
 
-      !!  if you catch by reference,you side-step questions about object deletion that leave you damned if you do
-          and damned if you dont;
-          you avoid slicing exception objects;
-          you retain the ability to catch standard exceptions;
-          you limit the number of times exception objects need to be copied.
+      !!  if we catch by reference,you side-step questions about object deletion that leave we damned if we do
+          and damned if we dont;
+          we avoid slicing exception objects;
+          we retain the ability to catch standard exceptions;
+          we limit the number of times exception objects need to be copied.
       !!
 
                     
@@ -1006,18 +1007,18 @@ Chapter Exceptions >
         //  in this case,unexpected will be called,even func1() is ready to cope any type of exception.
 
       !!  exception specifications are a tool to be applied judiciously.before adding them,consider whether the 
-          behavior they impart to your software is really the behavior you want.  !!
+          behavior they impart to your software is really the behavior we want.  !!
       !!  C++11 has been supported "noexcept" keyword,now,no longer need to specify what kind of exception will
           be thrown out by function.function is default "noexcept(false)".  !!
 
 
   Item 15 : Understand the costs of exception handling
-             exception handling has costs,and you pay at least some of then even if you never use the keywords 
+             exception handling has costs,and we pay at least some of then even if we never use the keywords 
       try,throw,or catch.
-        >  you pay for the space used by the data structures needed to keep track of which objects are
+        >  we pay for the space used by the data structures needed to keep track of which objects are
            fully constructed.
-        >  you pay for the time needed to keep theses data structures up to date.
-        >  whenever you use try block,you have to pay.different compilers implement try blocks in different
+        >  we pay for the time needed to keep theses data structures up to date.
+        >  whenever we use try block,you have to pay.different compilers implement try blocks in different
            ways,so the cost varies from compiler to compiler.
            (code size and runtime inc 5%-10% even no thrown)<from experience>
         >  compilers tend to generate code for exception specifications much as they do for try blocks.
@@ -1051,16 +1052,16 @@ Chapter Exceptions >
       the fundamental point is :
         the overall performance of your software is almost always determined by a small part of its constituent code.
 
-      if your software is not so efficient,then you have to locate the code that are causing the problem,and have to
+      if your software is not so efficient,then we have to locate the code that are causing the problem,and have to
       find ways to increase their performance dramatically.
       there are two fundamentally different ways to approach the matter :
         the way most people do it (empirical,intuitive)
         and
         the right way (program profiler)
 
-      a profiler can only tell you how a program behaved on a particular run,so if you profile a program using input
+      a profiler can only tell we how a program behaved on a particular run,so if we profile a program using input
       data that is unrepresentative,you are going to get back a profile that is equally unrepresentative.
-      that,in turn,is likely to lead to you to optimize your software's behavior for uncommon uses,and the overall
+      that,in turn,is likely to lead to we to optimize your software's behavior for uncommon uses,and the overall
       impact on common uses may even be negative.
 
       !!  performance efficiency problem can be found in two ways :
@@ -1070,7 +1071,7 @@ Chapter Exceptions >
 
         
   Item 17 : Consider using lazy evaluation
-             the best computations are those you never perform at all.
+             the best computations are those we never perform at all.
       lazy evaluation is applicable in an enormous variety of application areas : 
         Reference Counting :
           e.g.
@@ -1179,9 +1180,9 @@ Chapter Exceptions >
 
   Item 18 : Amortize the cost of expected computations
              over-eager evaluation :
-        doing things before you are asked to do them.
+        doing things before we are asked to do them.
 
-      the idea behind over-eager evaluation is that if you expect a computation to be requested frequently,you can lower the average
+      the idea behind over-eager evaluation is that if we expect a computation to be requested frequently,you can lower the average
       cost per request by designing your data structures to handle the requests especially efficiency.
 
       amortize the cost :
@@ -1243,7 +1244,7 @@ Chapter Exceptions >
 
         "prefetching" more memory from operating system,the next time call to operator[] maybe need not to allocating.
 
-      !!  Computer Science : you can often trade space for time.
+      !!  Computer Science : we can often trade space for time.
           however,using larget objects means fewer fit on a virtual memory or cache page.in rare cases,making objects
           bigger reduces the performance of software,because paging activity increases,cache hit rate decreases,or both.  !!
       !!  use over-eager-evaluation strategy judiciously.  !!
@@ -1292,9 +1293,9 @@ Chapter Exceptions >
         so the costs have to pay for construct @unnamed and destruct it.
         as above,after @x had been assigned to @unnamed,@unnamed will be destructed.
 
-      !!  Anytime you see a reference-to-const parameter,the possibility exists that a temporary will be created to
+      !!  Anytime we see a reference-to-const parameter,the possibility exists that a temporary will be created to
           bind to that parameter.  !!
-      !!  Anytime you see a function returning an object,a temporary will be created(and later destroyed).  !!
+      !!  Anytime we see a function returning an object,a temporary will be created(and later destroyed).  !!
 
 
   Item 20 : Faciliate the return value optimization
@@ -1440,7 +1441,7 @@ Chapter Exceptions >
       are highly implementation-dependent.
 
       !!  the main point is that different libraries offering similar functionality often feature different
-          performance trade-offs,so once you have identified the bottlenecks in your software,you should see
+          performance trade-offs,so once we have identified the bottlenecks in your software,you should see
           if it is possible to remove those bottlenecks by replacing one library with another.  !!
 
 
@@ -1456,7 +1457,7 @@ Chapter Exceptions >
             vptr will as hidden data member in the class it has been declared virtual functions.(compiler adds it)
 
         costs :
-          you have to set aside space for a virtual table for each class that contains virtual functions.
+          we have to set aside space for a virtual table for each class that contains virtual functions.
           one virtual table per class.
 
           compiler have to determines where the vtbls to be stored,there are two strategies.
@@ -1471,7 +1472,7 @@ Chapter Exceptions >
             the way to prevent such problem is that do not declare virtual functions inline.
             (compiler maybe ignore inline is because this)
 
-          you have to pay for an extra pointer inside each object that is of a class containing virtual functions.
+          we have to pay for an extra pointer inside each object that is of a class containing virtual functions.
 
           compiler have to generate code to invoke the corresponding virtual function.
           e.g.
@@ -1491,7 +1492,7 @@ Chapter Exceptions >
         a function pointer.
 
         the third cost of virtual functions :
-          you effectively give up inlining.(virtual means wait until runtime to see which function is called)
+          we effectively give up inlining.(virtual means wait until runtime to see which function is called)
 
             multiple-inheritance :
           offset calculations to find vptrs within objects become more complicated,there are multiple vptrs within a
@@ -1519,9 +1520,9 @@ Chapter Exceptions >
         maybe index 0 of vtbl contains the type_info object,so an additional entry in each class vtbl plus the cost
         of the storage for the type_info object for each class.
 
-          !!  it is equally important to understand that if you need the functionality these features offer,
-          you will pay for it,one way or another.  !!
-      !!  you are unlinkely to do better than the compiler-generated implementations by coding these
+          !!  it is equally important to understand that if we need the functionality these features offer,
+          we will pay for it,one way or another.  !!
+      !!  we are unlinkely to do better than the compiler-generated implementations by coding these
           features yourself.  !!
 
 
@@ -1645,7 +1646,7 @@ Chapter Techniques >
             static OnlyOne o;
         return o;
           }  //  static object in a function not in a class,
-               //  you should not pay for things you do not use.
+               //  we should not pay for things we do not use.
 
               why the functions are not inlining?
           : functions with internal linkage may be duplicated within a program!
@@ -1914,8 +1915,8 @@ Chapter Techniques >
            so,if the object @r is static,then its address must less than @address!
 
            !  this trick depends on system architecture,so it is not portable  !
-           !  if you absolutely,positively have to tell whether an address is on the heap,
-              you are going to have to turn to unportable,implementation-dependent system
+           !  if we absolutely,positively have to tell whether an address is on the heap,
+              we are going to have to turn to unportable,implementation-dependent system
               calls  !
 
           it is easier to determine whether it is safe to delete a pointer than to determine
@@ -2019,8 +2020,21 @@ Chapter Techniques >
         that would be fail.
 
           !!  for requiring heap-based objects,could place destructor in protected zone.  !!
+
       !!  for determine whether an object is heap-based,could use track pointer abstract class.  !!
+
       !!  there is difficult to has a good way for prohibiting heap-based objects.  !!
+
+      !!  the statement "delete @obj_pointer;" will be interpreted to "call destructor,then call the
+          operator delete".
+          the calling order is :
+            delete statement => destructor => overloaded delete operator => global delete operator(std)
+          based on this reality,we can use let member function executes "delete this;" to process
+          early freeing.
+          this method is widely used in gRPC,it is useful when we need a semantics to describe the
+          object free action.
+          after this free method is called,the object's memory will be deallocated.
+      !!
 
   Item 28 : Smart pointers
              smart pointers are objects that are designed to look,act,and feel like built-in pointers,but to
@@ -2250,8 +2264,8 @@ Chapter Techniques >
         conversions involving const are a one-way street :
           it is safe to go from non-const to const,but it is not safe to go from const to
           non-const.
-          furthermore,anything you can do with a const pointer you can do with a non-const
-          pointer,but with non-const pointers you can do other things,too.
+          furthermore,anything we can do with a const pointer we can do with a non-const
+          pointer,but with non-const pointers we can do other things,too.
 
         const with dumb pointer :
           const char *c;            //  c pointed-to-const-char-object
@@ -2418,7 +2432,7 @@ Chapter Techniques >
         sovling methods :
           1>  ignore.to pretend it does not exist.(bad idea)
           2>  define them out of existence.put somehing in the documentation that says,more or less,
-                "Don't do that.if you do,results are undefined."(not good)
+                "Don't do that.if we do,results are undefined."(not good)
           3>  use shareable flag.(best)
                 add a flag to each class object indicating whether that object is shareable.
           turn the flag on initially,but turn it off whenever the non-const operator[] is invoked
@@ -2943,7 +2957,7 @@ Chapter Techniques >
             Inheritance and Emulated Virtual Function Tables :
           if the design need to implement double-dispatching and need to support inheritance-based 
           parameter conversions,your only practical recourse is to fall back on the double-virtual-function-call
-          mechanism,that implies you will also have to put up with everybody recompiling when you add to your 
+          mechanism,that implies we will also have to put up with everybody recompiling when we add to your 
           inheritance hierarchy.
 
             Initializing Emulated Virtual Function Tables (Reprise) :
@@ -2987,7 +3001,7 @@ Chapter Miscellany >
   Item 32 : Program in the future tense
              things will change.
 
-      ! You need a virtual destructor whenever someone deletes a B* that actually points to a D.
+      ! we need a virtual destructor whenever someone deletes a B* that actually points to a D.
       ! If a public base class does not have a virtual destructor,no derived class nor members of a
         derived class should have a destructor.
       ! If a multiple inheritance hierarchy has any destructors,every base class should have a 
@@ -3004,10 +3018,10 @@ Chapter Miscellany >
         Prevent partial assignments.
 
         If there is no great penalty for generalizing your code,generalize it.
-        For example,if you are writing an algorithm for tree traversal,consider generalizing
+        For example,if we are writing an algorithm for tree traversal,consider generalizing
         it to handle any kind of directed acyclic graph.
 
-      !!  Future tense thinking increases the reusability of the code you write,enhances its
+      !!  Future tense thinking increases the reusability of the code we write,enhances its
           maintainability,makes it more robust,and facilitates graceful change in an environment
           where change is a certainty.it must be balanced against present-tense constraints.  !!
 
@@ -3134,8 +3148,8 @@ Chapter Miscellany >
            deprecate that abstract base class has data members,because them is used to represents
            interfaces.
 
-          if you have two concrete classes C1 and C2 and you would like C2 to publicly inherit from C1,
-      you should transform that two-class hierarchy into a three-class hierarchy by creating a new
+          if we have two concrete classes C1 and C2 and we would like C2 to publicly inherit from C1,
+      we should transform that two-class hierarchy into a three-class hierarchy by creating a new
       abstract class A and having both C1 and C2 publicly inherit from it.
       (it forces the introduction of a new abstract class only when an existing concrete class is
        about to be used as a base class,i.e.,when the class is about to be (re)used in a new
@@ -3144,14 +3158,14 @@ Chapter Miscellany >
       the need for an abstraction in more than one context is usually meaningful.useful abstractions,
       then,are those that are needed in more than one context.
 
-      at the situation that you can not modify the library you used it in your application,but you want
-      to insert a new abstract class to it,the choices you can pick but all are limited and unappealing :
+      at the situation that we can not modify the library we used it in your application,but we want
+      to insert a new abstract class to it,the choices we can pick but all are limited and unappealing :
         >  derive your concrete class from the existing concrete class.
-        >  try to find an abstract class higher in the library hierarchy that does most of what you need.
-        >  implement your new class in terms of the library class you would like to inherit from.
-        >  make do with what you have got.use the concrete class that is in the library and modify your
+        >  try to find an abstract class higher in the library hierarchy that does most of what we need.
+        >  implement your new class in terms of the library class we would like to inherit from.
+        >  make do with what we have got.use the concrete class that is in the library and modify your
            software so that the class suffices.write non-member functions to provide the functionality
-           you would like to add to the class,but can not.
+           we would like to add to the class,but can not.
 
       !!  non-leaf classes should be abstract.  !!
 
@@ -3180,8 +3194,8 @@ Chapter Miscellany >
         ...
           }  //  these functions have C linkage.
 
-        !  you can even declare C++ functions extern "C",this can be useful if you are writing a library
-           in C++ that you would like to provide to clients using other programming languages.
+        !  we can even declare C++ functions extern "C",this can be useful if we are writing a library
+           in C++ that we would like to provide to clients using other programming languages.
         !  __cplusplus preprocessor symbol is used to take a preprocessing branch.
            e.g.
              #ifdef __cplusplus
@@ -3220,7 +3234,7 @@ Chapter Miscellany >
         and built-in types can also freely cross the C++/C border.
 
         this rule govern the layout of a struct in C++ are consistent with those of C.
-        !  if you add nonvirtual functions to the C++ version of the struct,its memory layout should not change,
+        !  if we add nonvirtual functions to the C++ version of the struct,its memory layout should not change,
            so objects of a struct(or class) containing only non-virtual functions should be compatible with
            their C brethren whose structure definition lacks only the member function declaration.
            but virtual functions will change everythings,and having a struct inherit from another struct(or class)
@@ -3239,7 +3253,7 @@ Chapter Miscellany >
         Declare functions to be used by both languages extern "C".
         If at all possible,write main in C++.
         Always use delete with memory from new;always use free with memory from malloc.
-        Limit what you pass between the two languages to data structures that compile
+        Limit what we pass between the two languages to data structures that compile
         under C;the C++ version of structs may contain non-virtual member functions.
           !!
 
