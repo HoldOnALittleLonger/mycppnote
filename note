@@ -7,9 +7,9 @@
     (a <=> b) == 0 if a == b
     (a <=> b) > 0 if a > b
 
-# No void referrence.
-# lvalue referrence : type &declarator > int i = 30; int &j = i;
-# rvalue referrence : type &&declarator > int &&a = 30;
+# No void reference.
+# lvalue reference : type &declarator > int i = 30; int &j = i;
+# rvalue reference : type &&declarator > int &&a = 30;
 
 # C-style array should be avoided whenever possible.
     C++ array:
@@ -72,7 +72,7 @@
     range-expression can be an expression that represents a sequence.
         (an array or an object for which begin and end functions are defined,such as 'vector')
 
-    range-declaration can be a variable or referrence which consistent for the element of range-expression'type.
+    range-declaration can be a variable or reference which consistent for the element of range-expression'type.
 
     for (unsigned short &a : std::vector<type> x)
         a == x[0], a == x[1], ...    # every time for cycle
@@ -320,7 +320,7 @@
         3> the class has a base class with a deleted or inaccessible destructor
 
         4> this rule is addition of move-assignment:
-            the class has non-static data members of referrence type
+            the class has non-static data members of reference type
 
     # after stole an argument,must leave the argument in a valid state,
     # that like pointer point to nullptr,data member reset to zero or other.
@@ -377,7 +377,7 @@
     lvalue  : a glvalue that is not an xvalue.
     rvalue  : an rvalue expression is either prvalue or xvalue.
 
-    # std::move() is exactly equivalent to a static_cast to an rvalue referrence.
+    # std::move() is exactly equivalent to a static_cast to an rvalue reference.
 
     >>  an lvalue designates a function or an object.
     >>  an xvalue(eXpiring value) also refers to an object,usually near the end of its lifetime.
@@ -485,13 +485,13 @@
 
     covariant return type:
         the overriding and base class functions can have covariant return types>
-            Both types must be single-level pointers or referrences to classes;
+            Both types must be single-level pointers or references to classes;
             The refferrenced/pointed-to class in the base class function must be
-            a direct or indirect base class of referrenced/pointed-to class in
+            a direct or indirect base class of referenced/pointed-to class in
             the derived class function;
             The return type in the derived class function must be at most as
             cv-qualified as the return type in the base class function;
-            Most of time,the referrenced/pointed-to class in the derived class
+            Most of time,the referenced/pointed-to class in the derived class
             function is the derived class itself.
 
         because the virtual functions should has same prototype between base class and derived class.
@@ -542,10 +542,10 @@
     # if a class has a pure vritual member function =0,
     # it will be a abstract class.
     # destructor may be marked with =0 as pure virtual function.
-    # Abstract class have to refer through pointers or referrences.
+    # Abstract class have to refer through pointers or references.
     
     dynamic_cast<new_type>(expression);    // RTTI
-    # Converts pointers and referrences to classes in an inheritance hierarchy.
+    # Converts pointers and references to classes in an inheritance hierarchy.
     # safe downcasts in an inheritance hierarchy.
 
 # Exception
@@ -994,6 +994,16 @@
         # thread object.
         # paremeter pack @args will be unpack and let the elements
         # as arguments of @f.
+        ! to prevent twice move construction,the thread function should
+          receives rvalue references to the arguments instead to receives
+          arguments by copy.
+          when a new thread is created,standard library will use construct
+          new objects their types of the arguments,then move the arguments
+          within current context into the objects allocated on heap,then
+          pass the heap objects to thread functions.
+          if we pass by rvalue reference,then there will no move construction.
+          only once move construction happens against move into heap object.
+            void thread_function(ArgType&& arg);
         ! as it shown the parameters must are rvalues,in practice,argument
           of the @Function pass by-pointer is more conventional.
           std::forward() is called for make up C++ function object,in some
@@ -1135,14 +1145,14 @@
     
         std::atomic_ref
             it allows to apply atomic operations to non-atomic objects
-                < the constructors takes a referrence to an arbitrary
+                < the constructors takes a reference to an arbitrary
                   object of type _Tp.
-                < the referrenced object is treated as an atomic object
+                < the referenced object is treated as an atomic object
                   during the lefttime of the std::atomic_ref.
                 < std::atomic_ref defines similar member functions to 
                   std::atomic.
-        # this means can use a referrence object to access atomical operation.
-        # the lvalue was be referrenced could be a non-atomic object.
+        # this means can use a reference object to access atomical operation.
+        # the lvalue was be referenced could be a non-atomic object.
 
     # !! std::thread could be moved but cant be copied.
     # std::thread can be used in standard library containers.(like @vector)
@@ -1276,7 +1286,7 @@
       
           // can either be empty,holding no value,or non-empty,holding an arbitrary
           // value of its value type.
-          // <typename T>,T cant be referrence or array.
+          // <typename T>,T cant be reference or array.
   
           constructor :
               std::optional::optional(T value);
@@ -1339,7 +1349,7 @@
               
               
           # tuple like to pair,define all relational comparion operators.
-          # tuple can also contain values of referrence type.they can 
+          # tuple can also contain values of reference type.they can 
           # be constructed with std::tie();
           
           # auto t = std::make_tuple(123,4.56); // [0] 123,[1] 4.56
@@ -1385,7 +1395,7 @@
       class std::span;
       
       # abstraction for pass user-define object.
-      # prefer using it over referrence to std::array,std::vector ...
+      # prefer using it over reference to std::array,std::vector ...
       # use const T if possible
       # pass std::span by copy in function arguments.
       #
@@ -1563,8 +1573,8 @@
           equality comparison
           dereferrencable
           incrementable
-          a dereferrenced std::input_iterator can only by read
-          a dereferrenced std::output_iterator can only be written to
+          a dereferenced std::input_iterator can only by read
+          a dereferenced std::output_iterator can only be written to
   
       limitations :
           single-pass only : cant decremented
@@ -1608,7 +1618,7 @@
           lambda expression
           stateful function objects in form of classes
   
-          #! function or function referrence are not FunctionObject.
+          #! function or function reference are not FunctionObject.
     
       lambda expression :
 
@@ -1623,12 +1633,12 @@
         catch-list :
             the objects can be accessed in <body> from local environment.
             can refer to the this pointer in the surrounding scope.
-                # [this] <referrence> or [*this] <copied object>
+                # [this] <reference> or [*this] <copied object>
 
             '=' specifier means access object by-copy
                 [identifier or identifier initializer]
 
-            '&' specifier means access object by-referrence
+            '&' specifier means access object by-reference
                 [&identifier or &identifier initializer]
 
             e.g.
@@ -1636,7 +1646,7 @@
                 auto lambda = [&,i]()->void {<body>};
                 // i would can be accessed by-copy.
                 // another object from local would can be
-                // accessed by-referrence.
+                // accessed by-reference.
 
             #! first in capture-list will be capture-default.
             # for the example,i is special access by-copy.
