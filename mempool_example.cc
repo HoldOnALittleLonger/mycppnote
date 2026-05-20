@@ -195,7 +195,7 @@ namespace mempool_ns {
     void dump_pool(void)
     {
       std::println("dump memory pool : ");
-      std::println("  Memory Pool : {:#x}", (unsigned long)this);
+      std::println("  Memory Pool : {:#x}", reinterpret_cast<std::uintptr_t>(this));
       std::println("  Size : {}", buffer_size_);
       std::println("  Buffer Alignment : {}", static_cast<size_t>(alignment_));
       std::println("  Entity Size(aligned) : {}", aligned_entity_size_);
@@ -247,8 +247,32 @@ namespace mempool_ns {
 
     std::size_t aligned_size(std::size_t size)
     {
-      return (size + static_cast<std::size_t>(alignment_) - 1)
+      /**
+       * lf_compute_aligned_size - lambda function to compute aligned size
+       * @capture:                 @this pointer by reference
+       * @size:                    the size need align
+       * return:                   aligned size
+       */
+      auto lf_compute_aligned_size = [this](std::size_t size) -> std::size_t {
+        return (size + static_cast<std::size_t>(alignment_) - 1)
         & ~(static_cast<std::size_t>(alignment_) - 1);
+      };
+
+      /**
+       * sometimes,the aligned size may less than the original size,
+       * in this case,we need improve @alignment_ and compute again,
+       * until the aligned size is greater than or equal to original size.
+       * and the size must be power of 2.
+       * ! compiler usually pads structure to aligns its total size,
+       *   thus this case is rarely happens.
+       */
+      std::size_t aligned = lf_compute_aligned_size(size);
+      while (aligned < size) {
+        alignment_ = std::align_val_t{static_cast<std::size_t>(alignment_) * 2};
+        aligned = lf_compute_aligned_size(size);
+      }
+
+      return aligned;
     }
 
     /**
@@ -359,7 +383,7 @@ public:
 
   void print_this(void)
   {
-    std::println("this object at position {:#x}", (unsigned long)this);
+    std::println("this object at position {:#x}", reinterpret_cast<std::uintptr_t>(this));
   }
 
   void destroy(void)

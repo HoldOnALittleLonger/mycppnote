@@ -378,6 +378,115 @@ C++ 23
             escape symbol : '\'
             # similar to C printf().
 
+      normally,we can only apply std::print onto some pre-defined types,such built-in types,
+      or std::string,etc.
+      the template function std::print(),receives a FILE pointer to the stream,a format_string
+      object,and variable parameters.
+      for unicode locale,it invoke std::vprint_unicode(),otherwise,invoke std::vprint_nonunicode().
+      the formatting executed in vprint_unicode() is completed through std::vformat_to() function.
+      vformat_to() is defined in <format> header,it is a wrapper calls to __format::__do_vformat_to().
+      of course,it has several overloading version,but we do not need to care about this.
+      the return value of __do_vformat_to() is a _Sink_iter<> object,such iterator will points to
+      a sequence,and the sequence is created either by _Formatting_scanner<>::_M_scan(),or
+      by _Iter_sink<> object,this local object is initialized with @__out parameter,that is the
+      _Str_sink<> object.
+      _M_scan() of __formatting::_Scanner<> will try to finds '{}' sequence in fmt string,it will
+      handles escape case,and if matched,replace the sequence with the argument whose id is corresponds
+      to the position where current '{}' is found.
+      the replacement will did by _M_on_replacement_field() member method,and in which,_M_format_arg()
+      is called with the argument id.
+      this member method is defined in _Scanner<> type as a pure virtual function,
+      type _Formatting_scanner<> public inherited that base class.
+      thus,the member method _M_format_arg() will be called in in _Formatting_scanner<>.
+      _Formatting_scanner<>::_M_format_arg() invoke __format::__visit_format_arg() to visit format
+      arguments,pass it a lambda function,and the return value of "_M_fc.arg(@__id)".
+      @_M_fc is a private data member of _Formatting_scanner<>,it is type of basic_format_context<>&,
+      call to the member method arg() of this type will returns an object is type of basic_format_arg<>.
+      __visit_format_arg() will invoke _M_visit() of the basic_format_arg<> object,pass it the visitor,
+      lambda function passed to __visit_format_arg(),and private data member @_M_type of the
+      basic_format_arg<> object(__visit_format_arg() is a friend for that type).
+      in that lambda function,for user-defined type,usually need to create an object is type of
+      _Formatter,such type is defined in _M_format_arg(),it is a type alias to the type
+        basic_format_context<_Out = _Str_sink<>, _Chart>::template formatter_type<>
+      formatter_type<> is a type alias to formatter<>,the template parameter passed to
+      the template is the type of current argument that removed reference through
+      remove_reference_t<>.
+      member method parse() and member method format() of the _Formatter will be called
+      on current argument.parse() receives the @_M_fc object,format() receives current
+      argument pass by reference and @_M_fc.
+      overview on the work flow,we can easily to know that,if we want to print user-defined type,
+      we must provide specialization of std::formatter<> type responses to our type.
+      a private data member named @_M_f is defined in specialization of std::formatter,this
+      is a common constrain,parse() method of std::formatter will invoke parse() member
+      method of this data member,the format() method of std::formatter is the same.
+      we can left parse() call to the @_M_f's member method,so we need to use the fmt
+      string has the style
+        "{}<something>{}<something>..."
+      the first template parameter @_Tp of std::formatter<> represents the type need to be
+      formatted,the second template parameter is the fixed type _CharT,this is because
+      the contents in a fmt string is char type.
+      so we only need to specializes the first template parameter to our defined type
+      is OK.
+        template<>
+        struct formatter<MyType> {
+          /*
+           * we can use 'auto' to let compiler automatically deduces return type
+           * for us.
+           * the type alias format_parse_context in std is type
+           *   basic_format_parse_context<_CharT>
+           * thus we can use the shortcut.
+           */
+          constexpr typename basic_format_parse_context<_CharT>::iterator
+          parse(basic_format_parse_context<_CharT>& __pc)
+          {
+            /**
+             * @__pc is usually created from the fmt string,whose type is
+             * std::string_view.
+             * begin() return the iterator points to the begin of fmt string.
+             */
+            return __pc.begin();
+          }
+
+          typename basic_format_context<_Out, _CharT>::iterator
+          format(MyType *__u, basic_format_context<_Out, _CharT>& __fc) const
+          {
+            ...
+          }
+
+          /* even we have known template argument _Out is a _Sink_iter<> created
+           * from _Seq_sink<>,but we can use keyword "auto" to let compiler
+           * automatically deduced type for us.
+           * the type alias format_context defined in std namespace,it come from
+           * __format_context,which is basic_format_context<_Sink_iter<_CharT>, _CharT>.
+           * we can use the type alias as the type of parameter @__fc.
+           */
+          auto format(MyType *__u, std::format_context& __fc) const {
+            /*
+             * std::format_to() function help us to format fmt string with
+             * arguments,returns _Out type.
+             * we invoke out() method on @__fc can implicitly specify
+             * the type of return value,that is the iterator type of
+             * this basic format context,we initialize this context from
+             * _Sink_iter<>,since it will be the same type.
+             */
+            return std::format_to(__fd.out(), @fmt-string, @args...);
+          }
+          /* if we want pass by reference,we can let the type of @__u to
+           * MyType&
+           * pass by value is OK,but not necessary in most cases.
+           */
+          /**
+           * !! THE REASON THAT REQUIRE format() MEMBER METHOD IS "const this"
+           *    RESTRICTED IS THE CONCEPT "__formattable_with<>" REQUIRES
+           *    "const _Formatter __cf" AND EVEN "formatter" IS "const this",
+           *    CALL TO format() METHOD MUST RETURNS THE SAME TYPE AS THE
+           *    FORMAT CONTEXT'S ITERATOR TYPE.
+           *    IF WE FORGET "const" QUALIFIER,THE CONSTRUCTION OF 
+           *    std::basic_format_arg TYPE MAY FAILED,WHICH IS NECESSARY
+           *    ON std::println() CALLING CHAIN.
+           */
+        };
+
   obsolete features :
     removed >
       garbage collection support and reachability-based leak detection.
