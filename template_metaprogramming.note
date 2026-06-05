@@ -1,0 +1,108 @@
+Metaprogram
+  a program about program.
+  a metaprogram is a program that manipulates code.
+  # such a compiler or a parser.
+    "meta" => about
+              one level of description higher
+  domain language,the input language of metaprogram.
+  host language.the output language of metaprogram.
+  # C code => Compiler => Assembly code
+    domain                host
+  # scheme also supports metaprogramming.for example,the (define-syntax) keyword
+    allows us to modify the syntax of scheme,we can change the behavior of
+    original program.
+    but all the metaprogram is defined via the scheme itself,and the output also
+    is the scheme statement.
+    such metaprogramming is implemented through domain language,and output domain
+    language.
+    C++ is same as scheme,but only compile-time subset of full language is
+    available for metaprogramming.(domain language is a subset of the language
+    used in the rest program)
+
+  e.g.
+    // to smaller binary<N>
+    template<unsigned int N>
+    struct binary {
+      static const unsigned int value =
+        binary<N / 10>::value << 1 | N % 10;
+    };
+
+    // termination condition
+    // template specialization as termination condition
+    /  is a common method in template metaprogramming.
+    template<0>
+    struct {
+      static const unsigned int value = 0;
+    };
+
+    // N / 10 = 0 => binary<0>
+    const auto one = binary<1>::value;
+
+    // N / 10 = 1 => binary<1>
+    const auto two = binary<10>::value;
+
+    // N / 10 = 1 => binary<1>
+    // N % 10 = 1
+    // => binary<1>::value << 1 | 1
+    const auto three = binary<11>::value;
+
+    ! compiler at there functions like a interpreter.
+    ! this metaprogram has no error checking,any decimal number would be
+      considered as a binary number and cause undefined behavior.
+
+    // runtime version,used recursion
+    unsigned int binary(unsigned long N)
+    {
+      return !N ? 0 : N % 10 + 2 * binary(N / 10);
+    }
+
+  In C++,such template metaprogram(compile-time part) often referred to as a
+  "pure functional language".
+  meta data is immutable,meta function has no side effects.
+  so,the data manipulated by a metaprogram must be known at compile-time and
+  it must be immutable,so we can not apply a loop with mutable state examing
+  in metaprogram,so recursion is idiomatic for C++ metaprograms.
+
+  Metaprogramming benefits:
+    1> get faster program,because we moved some computation from runtime to
+       compile-time.
+       the result of the computation can interact more deeply with the target
+       language.
+    2> it enables its user to write more expressive code,metaprogram only needs
+       to be written once,the resulting program is more likely to be correct and
+       maintainable.(generic)
+
+  Reasons for why C++ metaprogramming:
+    1> user can enter the domain language directly,without learning a foregin
+       syntax or interrupting the flow of code.
+    2> interfacing metaprograms with other code,especially other metaprograms,
+       becomes much smoother.
+    3> no additional build step is required.
+    4> can move the computation required for expressivity,correctness,from
+       runtime to compile-time.
+
+  Scenario when metaprogramming:
+    1> the code need to be expressed in terms of the abstractions of the problem
+       domain.
+    2> need to write a great deal of boilerplate implementation code.
+    3> need to choose component implementations based on the properties of their
+       type parameters.(type based dispatcher)
+    4> want to take advantage of valuable properites of generic programming in C++
+       such as static type checking and behavioral customization,without loss of
+       efficiency.
+    5> want to do it all within the C++ language,without an external tool or
+       custom source code generator.
+
+  Why a metaprogramming library: // the library full represents by a header
+    1> Quality.library author need to considering flexibility and optimization of
+       metaprogram,the general programmer who use template metaprogramming
+       components see them as implementation details to be applied toward some
+       greater purpose.
+    2> Reuse.all libraries encapsulate code in reusable components.a well-designed
+       generic library establishes a framework of concepts and idioms that provides
+       a reusable mental model for problems.
+    3> Protability.a good library can smooth over the ugly realities of platform
+       differences.
+    4> Fun.repeating the same boilerplate code over and over is tedious.
+
+    

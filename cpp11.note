@@ -402,6 +402,9 @@ cpp11>
                   intended to be used only within the specific file(translation unit) where it is
                   defined.
 
+              # if we want to specify a class data member is constexpr variable,we must ensure it
+                is static linkage.
+
               # we can return an address of a constexpr C-Style string from a function.because the
                 constexpr specifier,compiler will places the string into ".rodata" section.
                 this is also applied to "const char *" type,the string has type "const char *" also
