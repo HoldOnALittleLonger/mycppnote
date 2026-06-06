@@ -167,6 +167,11 @@ Traits and Type Manipulation
            all type computations will be executed,even we do not access to them.
 
   Metafunctions:
+    a metafunction is either
+      > a class template,all of whose parameters are types
+      > a class
+    with a publicly accessible nested result type called "type".
+    
     metafunctions in C++ also relies on template.
       template<typename _UnaryOP1, typename _UnaryOP2, typename _Tp>
       _Tp fg(_UnaryOP1 f, _UnaryOP2 g, _Tp v)
@@ -176,12 +181,49 @@ Traits and Type Manipulation
 
     another way to implement this is wrap @f and @g into a blob,and access
     the data members in blob to reache @f and @g.
-      return blob.f(blob.g(v));
-            
+      template<typename _Blob, typename _Tp>
+      _Tp fg(_Blob& blob, _Tp v)
+      {
+        return blob.f(blob.g(v));
+      }
+
+    ! "blob" a class with lots of members(including member functions) is known in
+      the object-oriented programming literature as a "blob".the members of
+      a class are all "coupled" to one another,because they must be declared
+      together.
     ! "blob" is an 'anti-pattern'(an idiom to be avoided),it will decreases a
       program's overall interoperability,or the ability of its components to work
       smoothly together.
-      so the first method is more flexibility,and we should prefer to it.
+      so we should not do this
+        template<typename _Tp>
+        struct TypeTraits {
+          typedef false_type has_trivial_default_constructor;
+          typedef false_type has_trivial_copy_constructor;
+          ...
+        };
+      we should do
+        template<typename _Tp>
+        struct has_trivial_default_constructor { }
+
+        template<typename _Tp>
+        struct has_trivial_copy_constructor { }
+
+        class Test {
+        public:
+          Test() { }
+        };
+
+        template<>
+        struct has_trivial_default_constructor<Test> {
+          // static const bool value = std::true_type::value;
+          using std::true_type::value;
+        };
+
+        template<>
+        struct has_trivial_copy_constructor<Test> {
+          // static const bool value = std::true_type::value;
+          using std::true_type::value;
+        };
 
     we also can use a template struct as a metafunction,and use it to execute
     type computation,rather than define template function.
@@ -227,13 +269,15 @@ Traits and Type Manipulation
       // but this is not convenient to metaprogramming,and we should only
       // use this form when we needs generic interface and that will be
       // necessary at runtime.(instantiate function)
+      // !! because keywords "constexpr" and "consteval" been introduced
+      //    into C++,function can brings the same effect as structure without
+      //    function instantiation.
       template<typename _Numerical>
       typename _Numerical::value_type get_number(_Numerical n)
       {
         return n.value;
       };
     
-
       auto x = get_number<five>::type::value; // access the static value 5.
 
       // we also can provide a nested "value" in metafunction to improve
@@ -361,6 +405,11 @@ Traits and Type Manipulation
       add_volatile<T>
       add_cv<T>
 
-
+  Nullary Metafunctions:
+    a "nullary metafunction" is any type,that can provides a nested "::type".
+      struct nullary_int {
+        typedef int type;
+      };
+    
             
     
