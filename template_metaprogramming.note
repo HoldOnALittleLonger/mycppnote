@@ -1,4 +1,6 @@
 Metaprogram
+===========
+    
   a program about program.
   a metaprogram is a program that manipulates code.
   # such a compiler or a parser.
@@ -105,4 +107,260 @@ Metaprogram
        differences.
     4> Fun.repeating the same boilerplate code over and over is tedious.
 
+Traits and Type Manipulation
+============================        
+
+  Type Associations:
+    metadata => the entity can be manipulated at compile-time.
+                types / non-types
+    non-types >
+      a category that also includes values of nearly everything else that can be known
+      at compile time -- the other integral types,enums,pointers and references ot functions,
+      global objects,and pointers to members.
+
+    direct approach >
+      in STL,containers and iterators usually defined some special type-definitions,such
+      "value_type" that means the type of object it is taking charge in.
+      this is also convention to STL containers and iterators.
+        typename _Tp::value_type x = ... ;
+        // if @_Tp is built-in type,then there will no "value_type" is defined.
+        // some other types may have no "value_type" defined.
+
+    indirect approach >
+      use type traits(type's properties).
+        typename iterator_traits<_Tp>::value_type x = ... ;
+
+      // possible implementation.
+      template<typename _Iterator>
+      struct iterator_traits {
+        typedef typename _Iterator::value_type value_type;
+        typedef typename _Iterator::reference reference;
+        typedef typename _Iterator::pointer pointer;
+        typedef typename _Iterator::difference_type difference_type;
+        typedef iterator_category category;
+      };
+
+      then we can provides specialization to support the types do not support nested type.
+      # non-intrusively.
+        template<>
+        struct iterator_traits<int> {
+          typedef int value_type;
+          typedef int& reference;
+          typedef int* pointer;
+          typedef int difference_type;
+          typedef iterator_category category;
+        };
+
+        typename iterator_traits<int>::value_type x = ... ; // @x's type is int .   
+
+        // support pointer type.
+        template<typename _Tp>
+        struct iterator_traits<_Tp *> {
+          ...
+        };
+
+    two significant features of trait template >
+      1> specialization -- non-intrusively alter the result of a traits template
+         for particular types.
+      2> multiple "return values" -- traits often have more than one result.
+         # refers to blob,when compiler need to instantiates such trait template,
+           all type computations will be executed,even we do not access to them.
+
+  Metafunctions:
+    metafunctions in C++ also relies on template.
+      template<typename _UnaryOP1, typename _UnaryOP2, typename _Tp>
+      _Tp fg(_UnaryOP1 f, _UnaryOP2 g, _Tp v)
+      {
+        return f(g(v));
+      }
+
+    another way to implement this is wrap @f and @g into a blob,and access
+    the data members in blob to reache @f and @g.
+      return blob.f(blob.g(v));
+            
+    ! "blob" is an 'anti-pattern'(an idiom to be avoided),it will decreases a
+      program's overall interoperability,or the ability of its components to work
+      smoothly together.
+      so the first method is more flexibility,and we should prefer to it.
+
+    we also can use a template struct as a metafunction,and use it to execute
+    type computation,rather than define template function.
+
+  Polymorphism:
+    the property that allows different argument types to be used interchangeably
+    is called "polymorphism" -- the ability to take multiple forms.
+
+    Dynamic polymorphism >
+      allows base class reference or pointer to derived class object.
+      # runtime.late-binding,runtime dispatch.
+
+    Static polymorphism >
+      allows objects of different types to be manipulated in the same way merely by
+      virtue of their support for a common syntax.
+      # compile-time.parametric polymorphism,for generic programming.
+
+    metafunction polymorphism
+      metafunction-name<type-arguments...>::type
+      # metafunction <= template can be "invoked" with this syntax
+
+  Numerical Metafunctions:
+    the result::type of a metafunction with a numerical result really is a type,
+    a type known as an integral constant wrapper,whose nested "::type" is an
+    integral constant.
+      struct five {
+        static const int value = 5;
+        typedef const int value_type;
+        ...
+      };
+
+      // then we can get it via metafunction follow an uniform syntax.
+      metafunction-name<type-argument...>::type::value
+      ||
+      VV
+      template<typename _Number>
+      struct get_number {
+        typedef _Number type;
+        // static const int value = type::value;
+      };
+
+      // function version.
+      // but this is not convenient to metaprogramming,and we should only
+      // use this form when we needs generic interface and that will be
+      // necessary at runtime.(instantiate function)
+      template<typename _Numerical>
+      typename _Numerical::value_type get_number(_Numerical n)
+      {
+        return n.value;
+      };
+    
+
+      auto x = get_number<five>::type::value; // access the static value 5.
+
+      // we also can provide a nested "value" in metafunction to improve
+      // convenience,but this is not general.
+
+  When we define metafunctions,we need to consider the type informations of
+  arguments.for example,if we want to swap two elements pointed by two
+  iterators,we need to check whether the types of those two iterators are the
+  same type,and whether the "value_type" of those two iterators are the same,
+  and whether the iterator is a proxy iterator.
+    // initial version,slow path
+    template<typename _Iter1, typename _Iter2>
+    void iter_swap(_Iter1& it1, _Iter2& it2)
+    {
+      typename _Iter1::value_type tmp = *it1;
+      *it1 = *it2;
+      *it2 = tmp;
+    }
+
+    // if @_Iter1 is a proxy reference,then we need fallback to slow path.
+    template<typename _Iter1>
+    void iter_swap(_Iter1& it1, _Iter1& it2)
+    {
+      std::swap(it1, it2); // standard library provides faster version.
+    }
+
+    // Boost library provides some useful helper metafunctions can determine
+    // whether @it1 and @it2 has the same type,and whether their "value_type"
+    // is same,and whether @_Iter1 or @_Iter2 is proxy reference.
+
+    <boost/type_traits/is_reference.hpp>
+    <boost/type_traits/is_same.hpp>
+
+    template<bool std_version>
+    struct iter_swap_impl { };
+
+    template<>
+    struct iter_swap_impl<true> {
+      template<typename _Iter1>
+      void do_it(_Iter1& it1, _Iter1& it2)
+      {
+        std::swap(it1, it2);
+      }
+    };
+
+    template<>
+    struct iter_swap_impl<false> {
+      template<typename _Iter1, typename _Iter2>
+      void do_it(_Iter1& it1, _Iter2& it2)
+      {
+        typename _Iter1::value_type tmp = *it1;
+        *it1 = *it2;
+        *it2 = tmp;
+      }
+    };
+
+    template<typename _Iter1, typename _Iter2>
+    void iter_swap(_Iter1& it1 _Iter2& it2)
+    {
+      // if it is reference type
+      const bool both_references =
+        boost::is_reference<_Iter1>::value &&
+        boost::is_reference<_Iter2>::value;
+      // if there are same value type
+      const bool both_same_value_type = boost::is_same<_Iter1, _Iter2>::value;
+    
+      const bool fast_version = both_references && both_same_value_type;
+      iter_swap_impl<fast_version>::do_it(it1, it2);
+    }
+
+  Boost type traits library:
+    // metafunctions.
+    
+    primary type categorization > ::type::value, ::value
+      is_void<T>
+      is_pointer<T>
+      is_array<T>
+      // #^ => template<typename T, size_t N> struct is_array<T[N]> { ... };
+      //                                                     <T const[N]>
+      //                                                      ...
+      is_reference<T>
+      is_enum<T>
+      is_integral<T>
+      is_float<T>
+      is_union<T>
+      is_class<T>
+      is_member_pointer<T>
+      is_function<T>
+    secondary type categorization > ::type::value, ::value
+      is_arithmetic<T>
+      is_compound<T>
+      is_fundamental<T>
+      is_member_function_pointer<T>
+      is_object<T>
+      is_scalar<T>
+
+    type properties > ::type::value, ::value
+      alignment_of<T>
+      is_empty<T>
+      is_polymorphic<T>
+      has_nothrow_assign<T>
+      has_nothrow_constructor<T>
+      has_nothrow_copy<T>
+      has_trivial_assign<T>
+      has_trivial_constructor<T>
+      has_trivial_copy<T>
+      is_pod<T>
+      is_stateless<T>
+
+    type relationships > ::value
+      is_same<T, U>
+      is_convertible<T, U>
+      is_base_and_derived<B, D>
+
+    type transformations > ::type
+      remove_const<T>
+      remove_volatile<T>
+      remove_cv<T>
+      remove_reference<T>
+      remove_bounds<T>
+      remove_pointer<T>
+      add_reference<T>
+      add_pointer<T>
+      add_const<T>
+      add_volatile<T>
+      add_cv<T>
+
+
+            
     
