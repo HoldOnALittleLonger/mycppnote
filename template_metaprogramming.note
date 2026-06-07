@@ -411,5 +411,202 @@ Traits and Type Manipulation
         typedef int type;
       };
     
-            
+A Deeper Look at Metafunctions
+==============================                
+
+  Dimensional Analysis:
+    usually,calcuation happens on some quantites come with attached dimensions.
+      2m + 3m
+      |  |  |
+      |  |  +--> dimension <-- meter
+      |  +--> adding operator
+      +--> quantity
+    but we need to keep track the type of quantity,because we can not add 1m into
+    1kg.
+    to preventing quantities with different dimensions from interoperating,we can
+    simply represent dimensions as classes that only work with dimensions of the
+    same type.
+
+    composite dimension,such "m/s" means "xxx meters per second",this is velocity
+    dimension.we can make composite dimension from fundamental dimensions,by
+    multiply or divide operations.
+      m * m => m^2 <= area dimension
+      m / s => m/s <= velocity dimension
+
+    such dismantling to composite dimension,or combination to fundamental dimensions
+    is called "dimensinal analysis",we can know how the dimension is constructred.
+
+  Representing Dimensions:
+    we can use number sequences to represents dimensions,each element represents
+    an exponent to a given dimension.
+    // uniform to dimension representation.
+      seq 1, 0, 0, 0, 0, 0, 0 => mass
+      seq 0, 1, 0, 0, 0, 0, 0 => length
+      seq 0, 0, 1, 0, 0, 0, 0 => time
+      seq 0, 0, 0, 1, 0, 0, 0 => charge
+      seq 0, 0, 0, 0, 1, 0, 0 => temerature
+      seq 0, 0, 0, 0, 0, 1, 0 => intensity
+      seq 0, 0, 0, 0, 0, 0, 1 => angle
+    we can represent velocity through
+      seq 0, 1, -1, 0, 0, 0, 0 <= length / time
+      // L = V * T => V = L / T
+      // -1 means time^(-1)
+      // L * T^(-1) => L / T
+    similarly,we can represent acceleration through
+      seq 0, 1, -2, 0, 0, 0, 0 <= length * time^(-2)
+
+    but there is a problem,all dimensions have the same type -- integer sequence,we can not
+    combine them with type system.
+    Boost MPL provides a collection of "type sequences",we can use the type sequence
+    to instead integer sequence,this will give specified dimension a type.
+      <boost/mpl/vector.hpp>
+      typedef boost::mpl::vector<unsigned int, unsigned int, signed int, unsigned int,
+                                 unsigned int, unsigned int, unsigned int> dimension_acceleration;
+    Boost MPL also provides "int_<N>" class template that represents its integral argument
+    as a nested "::value",then we can use the type sequences to represent numbers.
+      <boost/mpl/int.hpp>
+      using namespace boost;
+      typedef mpl::vector<mpl::int_<1>, mpl::int_<0>, mpl::int_<0>, mpl::int_<0>,
+                          mpl::int_<0>, mpl::int_<0>, mpl::int_<0>> dimension_mass;
+    A more simple method to represent this is use vector_c<> in <Boost/mpl/vector_c.hpp>.
+      typedef boost::mpl::vector_c<int, 1, 0, 0, 0, 0, 0, 0> dimension_mass;
+      typedef boost::mpl::vector_c<int, 0, 1, -2, 0, 0, 0, 0> dimension_acceleration;
+
+  Representing Quantities:
+    the type sequences are still pure metadata,to type check real computations,we need
+    a way to bind them to runtime data.
+    we can use a numeric wrapper,it has a "value" data member,we have to pass to its
+    template parameter a numeric type and a dimension type.
+      template<typename _Tp, typename _DimensionT>
+      struct quantity {
+      public:
+        explicit length(_Tp v)
+          : m_value(v)
+        { }
+
+        _Tp value(void)
+        {
+          return m_value;
+        }
+      private:
+        _Tp m_value;
+      };
+
+      quantity<float, dimension_length> length(20.0);
+      quantity<float, dimension_time> time(5.4);
+      quantity<float, dimension_velocity> velocity(length.value() / time.value());
+
+      // length = time; compile-time ERROR,different type
     
+    through this method,we can associate a quantity with a dimension.
+    next,we can provides operator overloadding to fill the operations that should
+    be supported by the given dimensions.
+      quantity<_Tp, _Dimension>& operator+(const quantity<_Tp, _Dimension>& rhs)
+      {
+        this->m_value += rhs.value();
+        return *this;
+      }
+
+      // substraction has the same type are without loss of generability.
+    multipication and division is more complex,because they will products a new quantity
+    with a different dimension from either operands.
+    Boost MPL provides a metafunction named "transform<>",it receives two sequences,
+    take one elements from each sequence,and pass them to a binary metafunction,the
+    result will be used to construct the new sequence.
+      <boost/mpl/transform.hpp>
+      template<typename Seq1, typename Seq2, typename Operation, typename Inserter>
+      struct transform {
+        typedef ...::type type;
+      };
+    for multiplication,we need to increase the corresponding exponent for that dimension
+    in type sequence,and for division,we need to decrease it.
+    because Boost provides "plus<>" metafunction and "minus<>" metafunction,we can just
+    use them without implement operations by ourselves.
+      <boost/mpl/transform.hpp>
+      <boost/mpl/plus.hpp>
+      <boost/mpl/minus.hpp>
+
+      // metafunction class.
+      // A metafunction class is a class with a publicly accessible nested metafunction
+      // called "apply".
+      // we wrap the metafunction in an ordinary non-template structure,which is a type.
+      struct plus_f {
+        template<typename D1, typename D2>
+        struct apply {
+          typedef typename boost::mpl::plus<D1, D2>::type type;
+        };
+      };
+
+      ! template<_Tp,
+                 typename boost::mpl::transform<_Dimension, _Dimension,
+                                                 boost::mpl::plus>::type>
+                >
+        is bad usage,because boost::mpl::plus is not a type,it is a class template,we
+        can not pass it to boost::mpl::transform<> directly.
+    
+      typedef quantity<_Tp,
+                       typename boost::mpl::transform<_Dimension, _Dimension,
+                                                      plus_f>::type
+                      > product_type;
+
+      // return by value.
+      product_type
+      operator*(const quantity<_Tp, _Dimension>& rhs)
+      {
+        return product_type{this->m_value * rhs.value()};
+      }  
+
+      # boost::mpl::equal<> metafunction can help us to check whether two sequences
+        has the same elements.
+
+  Metafunction forward:
+    usually,when we need to wrap a metafunction,the apply<> metafunction must has a
+    type definition which define the result type of the wrapped metafunction to
+    "type".
+      template<typename D1, typename D2>
+      struct apply {
+        typedef typename boost::mpl::plus<D1, D2>::type type;
+      };
+    but we can publicly inherited from the wrapped metafunction,then we do not need
+    to use a type definition,because compiler will expose the public things in base
+    class into the public zone of derived class.
+      template<typename D1, typename D2>
+      struct apply : public boost::mpl::plus<D1, D2> { };
+      // apply::type <= OK
+
+      // we also can remove the wrapper just apply @D1 and @D2 in transform<>
+      //   typename boost::mpl::transform<D1, D2, boost::mpl::plus<_1, _2>>::type>
+      // where @_1 and @_2 are placeholders,they will be replaced by @D1 and @D2
+      // respectively.
+      // "boost::mpl::plus<_1, _2>" is known as "placeholder expression".
+      // to do this,we need to include header <boost/mpl/placeholders.hpp> .
+
+  Higher-Order Metafunctions:
+    functions to manipulate other functions,the functions are the
+    higher-order metafunctions.such boost transform<>.
+      // normal apply twice.
+      template<typename _F, typename x>
+      struct twice {
+        //                   v-- the template instantiation
+        typedef typename _F::template apply<x>::type once;
+        typedef typename _F::template apply<once>::type type;
+      };
+
+      // metafunction forward.
+      template<typename _F, typename x>
+      struct twice : _F::template apply<
+                       typename _F::template apply<x>::type>
+      { };
+
+      // C++ standard requires the "template" keyword when we use a
+      // dependent name that refers to a member template.
+
+      // metafunction class.
+      struct add_pointer_f {
+        template<typename _Tp>
+        struct apply : boost::add_pointer { };
+      };
+
+      // pass add_pointer_f<> to @twice<>
+      // @ppint is type of int ** -- pointer to int pointer.
+      struct twice<add_pointer_f, int>::type ppint;
