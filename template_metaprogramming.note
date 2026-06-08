@@ -536,6 +536,8 @@ A Deeper Look at Metafunctions
           typedef typename boost::mpl::plus<D1, D2>::type type;
         };
       };
+      ! invoking a metafunction class is the same as invoking its nested "apply"
+        metafunction.
 
       ! template<_Tp,
                  typename boost::mpl::transform<_Dimension, _Dimension,
@@ -604,9 +606,145 @@ A Deeper Look at Metafunctions
       // metafunction class.
       struct add_pointer_f {
         template<typename _Tp>
-        struct apply : boost::add_pointer { };
+        struct apply : boost::add_pointer<_Tp> { };
       };
 
       // pass add_pointer_f<> to @twice<>
       // @ppint is type of int ** -- pointer to int pointer.
       struct twice<add_pointer_f, int>::type ppint;
+
+  Handling Placeholders:
+    a placeholder expression is either
+      > a placeholder
+      > a template specialization with at least one argument that is
+        a placeholder expression
+    
+    the symbol "_1", "_2", etc,represents placeholders for template arguments.
+    from left to right,the first template argument usually is corresponding to
+    placeholder "_1".
+    the preceding example "twice",we can use placeholder in it,but we must modify
+    some definitions at first.
+      // <boost/mpl/placeholders.hpp>
+      twice<boost::add_pointer<_1>, int> 
+
+      // unfortunately,this would not works,because boost::add_pointer<_1> is not
+      // defined.
+      // template<_Tp>
+      // struct add_pointer {
+      //   typedef _Tp* type;
+      // };
+      // if we want placeholder is supported by boost::add_pointer<>,we need the
+      // lambda expression.
+
+      // <boost/mpl/lambda.hpp>
+      twice<boost::mpl::lambda<boost::add_pointer<_1>::type, int>
+
+      // boost::add_pointer<> is metafunction,but not a metafunction class.
+      // the mpl::lambda<> will creates a metafunction class for
+      // boost::add_pointer<_1>.
+
+      ! boost::mpl::lambda<> will let the boost::add_pointer<_1> becomse a callable
+        entity to twice<>,that is,a metafunction class with a "apply" metafunction
+        is defined,we can access to the metafunction class producted by lambda<> through
+        "::type".
+          typedef typename lambda<...>::type:: template apply<...>::type type;
+
+      ! so
+          twice<boost::add_pointer<_1>, int>
+          ||
+          VV
+          template
+          struct twice : apply1<
+                           typename boost::mpl::lambda<boost::add_pointer<_1>>::type,
+                           typename apply1<
+                                      typename boost::mpl::lambda<boost::add_pointer<_1>>::type,
+                                      int
+                                    >::type
+                         >
+          { };
+
+    ! placeholders can only be used when we need to instantiate a template,and
+      the number of template argument to placeholder will be counted from the
+      first non-placeholder-related argument.
+        typename twice<boost::add_pointer<_1>, int>::type ppint = NULL;
+                                              #^"int" will replaces "_1"
+      # boost placeholder is a metafunction of form boost::mpl::arg<X>.
+        "_1", "_2", ... are type definitions for specializations to boost::mpl::arg<>.
+      # the unnamed placeholder "_" is type definition to "arg<-1>".when a lambda
+        expression is being transformed into a metafunction class by boost::mpl::lambda<>,
+        the Nth appearance of the unnamed placeholder in a given template specialization
+        is replaced with "_N".
+          boost::mpl::plust<_, _> => boost::mpl::plust<_1, _2>
+
+    "apply" metafunction >
+      boost provides "apply" metafunction in namespace boost::mpl,the header is
+      <boost/mpl/apply.hpp>.
+      it receives several parameters,and call to the first parameter by pass the
+      rest parameters to the callee.
+        // possible implementation.
+        template<typename _Lambda, typename... _Args>
+        struct apply {
+          typedef typename _Lambda<_Args...>::type type;
+          ...
+        };
+
+      which can at most receives five parameters plus the first lambda expression,
+      total six arguments.
+
+  Mode Lambda Capabilities:
+    We can not use lambda expression like the scheme
+      // ((lambda (x y) (+ x y)) 0 1)
+      boost::mpl::lambda<boost::mpl::plus<_1, _2>, _Arg1, _Arg2> // ERROR
+    We can only use it at the instantiation time
+      ret_type<boost::mpl::lambda<boost::mpl::add_pointer<_1>>::type, int>::type
+    
+    Partial Metafunction >
+      if we want to build a metafunction that recevies arbitrary types and which
+      will be represents by placeholders before we instantiate the template,we
+      can provide a fixed value to the computation let it becomes partial
+      metafunction.
+        <boost::mpl::plus<_1, _1>, _Value>               // _Value += _Value
+        => <boost::mpl::plus<_1, mpl::int_<20>>, _Value> // _Value += 20
+      the process of binding argument values to a subset of a function's
+      parameters is known as "partial function application".
+
+    Metafunction Composition >
+      we can combines several metafunctions,to let them become a composition.
+        boost::mpl::multiplies<boost::mpl::plus<_1, _2>,
+                               boost::mpl::mins<_1, _2>
+                              >
+        // (@_1 + @_2) * (@_1 - @_2)
+        //      |      |      |
+        //      |      |      |
+        //      V      V      V
+        //     OP1    OP3    OP2
+
+      when evaluating a lambda expression,MPL checks to see if any of its arguments
+      are themselves lambda expressions,and evaluates each one that it finds.
+      use the results to replaces the values of outer lambda expression,finnaly
+      evaluates the outer lambda expression with these values to get result.
+      ! when placeholder of lambda expression is evaluated,it is invoked on
+        the expression's actual arguments,returning just one of them,the result
+        will replaces the original placeholder in the lambda expression,and continue
+        to next placeholder evaluating.
+      ! after all of the placeholders have been replaced with actual arguments,if the
+        resulting template specialization X does not have a nested "::type",the result
+        of lambda expression is just "X" itself.
+          boost::mpl::apply<std::vector<_>, _Tp> => std::vector<_Tp>
+
+  !! METAFUNCTIONS CAN BE INVOKED LAZILY,COMPILER WOULD NOT INSTANTIATES IT BEFORE WE
+     REALLY ACCESS TO ITS INNER.FOR EXAMPLE,"typedef" WOULD NOT LET COMPILER TO
+     INSTANTIATES A TEMPLATE.
+       typedef
+         typename boost::mpl::apply<boost::impl::lambda<boost::add_pointer<_1>>, _Tp>
+         add_pointer_func;
+     THIS TYPE DEFINITION WOULD NOT CAUSE INSTANTIATION,EXCEPT WE DID
+       add_pointer_func::type X = NULL;
+     # BECAUSE THE TYPE DEFINITION,@add_pointer_func BECOME A NULLARY METAFUNCTION.
+    
+     WE CAN USE LAZY EVALUATION TO IMPROVE COMPILATION TIME WHEN A METAFUNCTION RESULT IS
+     ONLY GOING TO BE USED CONDITIONALLY.
+     WE CAN AVOID CONTORTING PROGRAM STRUCTURE BY NAMING AN INVALID COMPUTATION WITHOUT
+     ACTUALLY PERFORMING IT.
+
+      
