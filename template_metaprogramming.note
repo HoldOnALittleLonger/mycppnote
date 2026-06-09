@@ -747,4 +747,147 @@ A Deeper Look at Metafunctions
      WE CAN AVOID CONTORTING PROGRAM STRUCTURE BY NAMING AN INVALID COMPUTATION WITHOUT
      ACTUALLY PERFORMING IT.
 
+Integral Type Wrappers and Operations
+=====================================
+  Boolean Wrappers and Operations:
+    the usually type wrapper for boolean value is
+      template<bool _value>
+      struct bool_{
+        static constexpr bool value = _value;
+
+        // every integral constant wrapper is a nullary metafunction
+        // that returns itself.
+        typedef bool_ type;
+        typedef bool value_type;
+        operator bool() const
+        {
+          return value;
+        }
+      };
+
+      // in boost,two convenient type definitions are exist
+      //   typedef bool_ false_;
+      //   typedef bool_ true_;
+
+    Type Selection >
+      to terminating template recursion,we provide a final specialization.
+      through this method,we can also do type selection to pick up one of
+      several specializations.
+        template<typename _Tp, bool which>
+        ...
+
+        template<typename _Tp>
+        ... <_Tp, true> { ... };
+
+        template<typename _Tp>
+        ... <_Tp, false> { ... };
+
+      boost library provides if_<> type selector
+        // boost::mpl::if_<>::type is _Tp1,if C::value is true,otherwise,_Tp2
+        boost::mpl::if_<C, _Tp1, _Tp2>
+
+      for the example @iter_swap,we can make two metafunction classes,the
+      @slow_swap and @fast_swap,then we can invoke @do_it<> through
+        boost::mpl::if_<
+          boost::mpl::bool_<@slow_path>, @slow_swap, @fast_swap>::do_it(...);
+
+      ! we can not place reference type directly in the branches of @if_<>
+          boost::mpl::if_<C, _Tp1, _Tp1&> // ERROR happens when _Tp1 is
+                                          // reference type,we can not create
+                                          // a reference type that refers to
+                                          // another reference type
+        but we can use boost::add_reference<> to do this
+          boost::mpl::if_<C, _Tp1, boost::add_reference<_Tp1>::type>
+        # this way has a disadvantage that add_reference<> always be instantiated.
+
+        we can let add_reference<> does lazy evaluated,to do this,we need pass to
+        if_<> nullary metafunctions.
+          boost::mpl::if_<C, boost::mpl::identify<_Tp1>, boost::add_reference<_Tp1>>
+        then we can use "::type" access to the inner type definition of actual type.
+        /**
+         * this idiom is so common in metaprograms that MPL supplies a metafunction
+         * called "eval_if".
+         *   template<class C, typename TrueMetafunc, typename FalseMetafunc>
+         *   struct eval_if : mpl::if_<C, TrueMetafunc, FalseMetafunc>::type { };
+         * if_<> returns one metafunction
+         * eval_if<> returns result of that nullary metafunction
+         * # mpl::eval_if<C, T, F> is OK.
+         * ! @C must has "::value" or has a nested type "::type" which has nested
+         *   "::value",for the later case,we need to explicitly access to the nested
+         *   "::type".
+         */
+
+    Logical Operators >
+      we can apply logical operations on @C in if_<> or in eval_if<>.actually,all
+      non-type template parameters are supports this.
+        boost::mpl::if_<is_pointer<T>::value || is_reference<T>::value, ...>
+      compiler will process logical operation on operands in @C before replace
+      @C with the exact result.
+      but when we access to the inner,template would be instantiated fully.
+      the method described above sometimes might not work properly.
+        mpl::transform<_Tp, mpl::if_<is_pointer<_1>::value || is_reference<_1>::value, ...>>
+      access to "::value" will cause the template instantiated immediately,so
+      the checker on @_1 will always returns false.
+      to prevent this problem,we can not access to inner at this time,but we need
+      do logical operations on them.boost provides logical operation metafunctions
+      such or_<>, and_<>,they do not access to the inner of condition expression.
+        if_<or_<is_pointer<...>, is_reference<...>>, ...>
+      or_<> derived from its "result::type" -- a specialization of bool_<>,and is
+      thus itself a valid MPL boolean constant wrapper,so we can prevent explicitly
+      access to inner.
+      the template parameters to or_<>, and_<> also can be conditions,that means we
+      can nested or_<> and_<>,or mix them together.
+        or_<is_pointer<...>, and_<is_reference<...>, or_<is_same<...>, is_same<...>>>>
+      ! the logical operation metafunction receives at most five parameters.
+      ! not_<...> receives one parameter.
+      ! "short circuit" -- instantiate them only when necessary.
+    
+  Integer Wrappers and Operations:
+    except int_<>,boost also provides long_<> and size_t<>,etc.
+    the int_<> has two special type definitions
+      typedef int_<N + 1> next;
+      typedef int_<N - 1> prior;
+    we can know there is a way get into next integer or back to previous integer,
+    from current position.
+    boost provides a generic integer wrapper,integral_c<>,it is a integral sequence
+    wrapper.
+    when we wrapped an integer,into long_<> and int_<>.is_same<> on them will returns
+    false,because structure long_ is different from structure int_ .
+    but if we want to checks the inner values' equality,we must use the metafunction
+    equal_to<>.this metafunction will derived from "bool_<N1::value == N2::value>".
+    # equal<> compares each elements in two sequence,but equal_to<> operates on only
+      one element.
+
+    Integral operations >
+      plus<>
+      minus<>
+      multiplies<>
+      divides<>
+      modulus<>
+      next<>
+      prior<>
       
+      shift_left<>
+      shift_right<>
+      bitand_<>
+      bitor_<>
+      bitxor_<>
+    
+      or_<>
+      and_<>
+      not_<>
+      equal_to<>
+      not_equal_to<>
+      greater<>
+      greater_equal<>
+      less<>
+      less_equal<>
+      # no assignment
+
+    ! the "_c" suffixed template,"_c" adorns templates that take raw
+      integral constants,instead of wrappers,as parameters.
+      "_c" => constant / integral constant
+      integral_c<> => template<typename T, long N> struct integral_c;
+      
+
+    
