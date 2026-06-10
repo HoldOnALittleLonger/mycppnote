@@ -888,6 +888,186 @@ Integral Type Wrappers and Operations
       integral constants,instead of wrappers,as parameters.
       "_c" => constant / integral constant
       integral_c<> => template<typename T, long N> struct integral_c;
-      
 
+Sequences and Iterators
+=======================
+  different from STL,MPL focus on compile-time algorithms,metafunctions,sequences,
+  and iterators;but STL is like a framework that focus on such things at runtime.
+
+  Concepts:
+    a concept is a 'description of the requirements' placed by a generic component
+    on one or more of its _arguments_.
+    a type or group of types that satisfies a concept's _requirements_ is said
+    to _model_ the concept,or 'to be a model of' the concept.
+    a concept is said to _refine_ another concept when its requirements are a
+    superset of those of the other concept.
+
+    Concept requirements categories >
+      valid expressions
+        expressions that must compile successfully for the objects involved in
+        the expression to be considered models of the concept.
+        # must be supported operations.
+
+      associated types
+        types that participate in one or more of the valid expressions and that
+        can be computed from the type(s) modeling the concept.
+        # such 'value_type' 'reference' type definitions nested into a class
+          definition for the modeling type.
+          we can also access to those type through type traits.
+
+      invariants
+        runtime characteristics of a model's instances that must always be true,
+        that is all operations on an instance must preserve these characteristics.
+        # often take the form of _pre-conditions_ and _post-conditions_ .
+
+      comlexity guarantees
+        maximum limits on how long the execution of one of the valid expressions
+        will take,or how much of various resources its computation will use.
+
+  Sequences and Algorithms:
+    most of the algorithms in MPL operate on sequences.
+    in STL,we usually use containers std::set, std::list, or std::array to represents
+    a sequence.        
+    a sequence can be considered as an array,and at the different view position,an
+    array can be considered as a list.
+    now in MPL,sequence will no longer saves objects,but rather to saves types.
+      mpl::vector<int, short, char, float, ...>
+    of course,there must be some algorithms can be applied on such sequence,for
+    example,FIND primitive should return an iterator(position) to the type we
+    want to find in the vector,if no such type,it should returns pas-the-end
+    iterator.(mpl::end::type, mpl::begin::type, like the STL container)
+
+  Iterators:
+    iterator is generic pointer in the simply sense.in STL,it usually represents
+    by a nested structure into a container,the type definition "::iterator" is
+    used to represents the iterator type for the given container.
+    similar to STL,MPL iterator also need to provides such functionalities.
+    because runtime operator overloading is not available at compile-time,so
+    we can not just prefix '*' to an iterator to derefer it in MPL.
+    so,MPL provides an atply metafunction,which receives an iterator and return
+    the type this iterator refers to.
+      <boost/mpl/derefer.hpp>
+
+        // default implementation.
+        // user can provides specializations for the user-defined
+        // MPL iterators.
     
+        template<typename BOOST_MPL_AUX_NA_PARAM(Iterator)>
+        struct deref {
+          ...
+          typedef typename Iterator::type type;
+          ...
+        };
+    of course,there also some metafunctions to process update to iterators.
+      <boost/mpl/next.hpp>
+      <boost/mpl/prior.hpp>
+
+        // default implementations.
+        // user can provides specializations for the user-defined
+        // MPL iterators.
+    
+        template<typename _Tp>
+        struct next {
+          typedef typename _Tp::next type;
+          ...
+        };
+    
+        template<typename _Tp>
+        struct prior {
+          typedef typename _Tp::prior type;
+          ...
+        };
+    to implement these metafunctions,the iterator type must has nested types
+    "::next" and "::prior".
+
+  Iterator Concepts:
+    Forward Iterators >
+      advance to next only,can not go back to last position.
+      it supports three operations
+        forward traversal        // "::next"
+        element access           // "::type"
+        category detection       // "::category"
+
+      ! an MPL iterator can either be both _incrementable_ and _dereferenceable_,
+        or it can be _past-the-end_ of its sequence.
+        these two states are mutually exclusive.
+
+      to determine equality between two MPL iterators,we can use boost's is_same<>
+      metafunction,it works on any types.
+      an iterator @j is said to be _reachable_ from an iterator @i if they are
+      equivalent,or if there exists some sequence
+        typedef mpl::next<i>::type i1;
+        typedef mpl::next<i_2>::type i2;
+        typedef mpl::next<i_3>::type i3;
+        ...
+        typedef mpl::next<i_N>::type iN;
+      where @iN is equivalent to @j.
+
+    Bidirectional Iterators >
+      a bidirectional iterator is a forward iterator with the additional ability to
+      traverse a sequence in reverse.
+      a bidirectional iterator is either _decrementable_ or it refers to the
+      _beginning_ of its sequence.
+        # supports "::next", "::prior", "::type", "::category"
+
+    Random Access Iterators >
+      a random access iterator is a bidirectional iterator that also provides
+      movement by an arbitrary number of positions forward or backward,and
+      distance measurement between iterators in the same sequence,all in
+      constant time.
+        <boost/mpl/advance.hpp>
+          // default implementation
+          // where @N is integral offset to current position.
+    
+          template<typename BOOST_MPL_AUX_NA_PARAM(Iterator),
+                   typename BOOST_MPL_AUX_NAD_PARAM(N)
+                  >
+          struct advance
+            : advance_impl<typename tag<Iterator>::type>::template apply<Iterator, N>
+          { };
+
+          // for the _impl,four nested type definitions are exist.
+          //   @backward_ <= less<N, long_<0>>::type
+          //   #^ backward or forward
+          //
+          //   @offset_   <= if_<backward_, negate<N>, N>::type
+          //   #^ distance
+          //
+          //   @f_        <= if_<backward_,
+          //                     aux::advance_backward<...>,
+          //                     aux::advance_forward<...>>::type
+          //   #^ do advance helper
+          //
+          //   @type      <= apply_wrap1<f_, Iterator>::type
+          //   #^ do advance
+
+          // compute distance between two random access iterator,
+          // nested "::value" is an integral constant represents
+          // the distance.
+          // a nested "::type" represents the distance type,that 
+          // can be used in mpl::advance<> as second template
+          // parameter
+          //   advance<i, distance<i, j>::type>::type
+          //   #^ distance type is the offset from @i to @j,
+          //      after advance,@i can be comes @j
+          template<typename BOOST_MPL_AUX_NA_PARAM(First),
+                   typename BOOST_MPL_AUX_NA_PARAM(Last)>
+          struct distance
+            : distance_impl<typename tag<First>::type>::template apply<First, Last>
+          { };
+
+      the default implementations to metafunctions advance<> and distance<> are
+      available for forward iterator and bidirectional iterator,because advance<>
+      just invokes "::next"(or "::prior") at many times to get to the expected
+      position,same as the distance<>. // linear complexity
+      so,when we need to define a random iterator for specified sequence,we should
+      give specializations together to ensure constant complexity.
+      # if we do not provide constant complexity advance<> and distance<>,that will
+        violate random access iterator concept.
+
+      operations the random access iterator must supports
+        to next                // ::next
+        to prior               // ::prior
+        advance                // advance<>
+        distance               // distance<>
+        category detection     // ::category
