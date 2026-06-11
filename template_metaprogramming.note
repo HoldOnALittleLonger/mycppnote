@@ -984,13 +984,17 @@ Sequences and Iterators
     Forward Iterators >
       advance to next only,can not go back to last position.
       it supports three operations
-        forward traversal        // "::next"
-        element access           // "::type"
+        forward traversal        // "next<>"
+        element access           // "deref<>"
         category detection       // "::category"
 
       ! an MPL iterator can either be both _incrementable_ and _dereferenceable_,
         or it can be _past-the-end_ of its sequence.
         these two states are mutually exclusive.
+      ! we do not define "::next", "::type" in the iterator definition,instead,
+        we provide specializations to boost MPL next<> and boost MPL deref<>,
+        if we want the user defined iterator can works together with the
+        MPL components.
 
       to determine equality between two MPL iterators,we can use boost's is_same<>
       metafunction,it works on any types.
@@ -1008,7 +1012,7 @@ Sequences and Iterators
       traverse a sequence in reverse.
       a bidirectional iterator is either _decrementable_ or it refers to the
       _beginning_ of its sequence.
-        # supports "::next", "::prior", "::type", "::category"
+        # supports "next<>", "prior<>", "deref<>", "::category"
 
     Random Access Iterators >
       a random access iterator is a bidirectional iterator that also provides
@@ -1058,7 +1062,7 @@ Sequences and Iterators
 
       the default implementations to metafunctions advance<> and distance<> are
       available for forward iterator and bidirectional iterator,because advance<>
-      just invokes "::next"(or "::prior") at many times to get to the expected
+      just invokes "next<>"(or "prior<>") at many times to get to the expected
       position,same as the distance<>. // linear complexity
       so,when we need to define a random iterator for specified sequence,we should
       give specializations together to ensure constant complexity.
@@ -1066,8 +1070,8 @@ Sequences and Iterators
         violate random access iterator concept.
 
       operations the random access iterator must supports
-        to next                // ::next
-        to prior               // ::prior
+        to next                // next<>
+        to prior               // prior<>
         advance                // advance<>
         distance               // distance<>
         category detection     // ::category
