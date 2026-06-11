@@ -1071,3 +1071,264 @@ Sequences and Iterators
         advance                // advance<>
         distance               // distance<>
         category detection     // ::category
+
+  Sequence Concepts:
+    Sequence Traversal Concepts >
+      a sequence whose iterators are forward iterators is called a
+      "Forward Sequence",and so forth.
+      usually,most of what is needed to make a sequence work is provided by its
+      iterators.
+
+      Forward Sequence Requirements
+        begin<> => forward iterator
+        end<>   => forward iterator  // reachable from mpl::begin<S>::type
+        front<> => first element     // if sequence is not empty
+
+      Bidirectional Sequence Requirements
+        begin<> => bidirectional iterator
+        end<>   => bidirectional iterator
+        front<> => first element // if sequence is not empty
+        back<>  => last element  // if sequence is not empty
+
+      Random Access Sequence Requirements
+        begin<> => random access iterator
+        end<>   => random access iterator
+        at<>    => element at given position
+
+    Extensible Sequence >
+      an extensible sequence is one that supports INSERT, ERASE, and CLEAR
+      operations.since metadata is immutable,none one of these operations
+      can modify the original sequence,instead,they should return a modified
+      copy of the original sequence.
+
+      Extensible Sequence Requirements
+        insert<> => insert E into S at position @pos
+        erase<>  => erase E at position @pos into S,or range erasure [@pos, @finish)
+        clear<>  => empty sequence
+
+      Common Metafunctions From MPL
+        push_front<>
+        pop_front<>
+        push_back<>
+        pop_back<>
+
+        # these operations can only be available for sequences that can support the
+          operation with O(1) complexity.
+          for example,if we want to push_front<> on a sequence,it must support
+          begin<> with O(1) complexity.
+
+    Associative Sequences >
+      an associative sequence is a mapping whose set of unique key types is mapped
+      to one or more of its value types.each element types those accessible through
+      its iterators is associated with a single (key, value) pair.
+
+      Associative Sequence Requirements
+        has_key<S, key>   => ::value,check whether @key is inclued in @S
+        at<S, key>        => ::type,retrieve value type in @S has @key
+        order<S, key>     => ::type,an unsigned integral constant wrapper
+        key_type<S, t>    => ::type,key type @S would use for an element @t
+        value_type<S, t>  => ::type,value type @S would use for an element @t
+        insert<S, pos, t> => ::type,insert @t into @S at @pos
+        insert<S, t>      => ::type,insert @t into @S
+        erase<S, pos>     => ::type,erase element at @pos into @S
+        erase_key<S, k>   => ::type,erase key @k from @S,include the values
+        clear<S>          => ::type,empty @S
+
+        # the order that elements will be traversed during iteration is entirely
+          up to the sequence implementation.
+          in particular,order<> values are not required to have any relationship
+          to iterator traversal order.
+
+    Extensible Associative Sequences >
+      an extensible associative sequence supports INSERT, ERASE, and CLEAR
+      operations,each of which produces a new sequence as a result.
+      the iterator passed to INSERT will be ignored altogether,and in fact,
+      inseration is always O(1).
+      when an element is erased from an Associative Sequence,the library adds
+      a special marker element that causes the erased element to be skipped
+      during iteration. // so erasure is O(1) complexity
+      push_front<> and pop_back<> are available,but pop_front<> and pop_back<>
+      are not available.
+
+  Sequence Equality:
+    the correct way to check for sequence equality is always to use the equal<>
+    algorithm.
+      boost::mpl::equal<boost::mpl::pop_back<boost::mpl::vector<int, shor>>::type,
+                        boost::mpl::vector<int>
+                       >
+    we can not use is_same<> to do this.because,the result of using pop_back<> on
+    a specialization of mpl::vector<> will not be another specialization of
+    mpl::vector<>
+
+  Intrinsic Sequence Operations:
+    empty<S>                => ::type,bool constant wrapper,true if @S is empty
+    insert_range<S, pos, R> => ::type,insert elements of @R into @S start from @pos
+    size<S>                 => ::type,an integral constant wrapper,whose "::value
+                                      is size of @S
+
+    usually,we need to implement these metafunctions corresponding to the exact
+    meta sequence,and they are not implemented as nested metafunctions,because
+      1> syntactic overhead
+         # prevent S::template erase<pos>::type
+      2> efficiency
+         # because,when we access to member of template,all rest will be instantiated
+           together
+      3> convenience
+         # not all meta sequences need to support all sequence operation,different
+           meta sequence has different properties.
+
+  Sequence Classes:
+    Boost MPL sequence classes usually have both an unnumbered and a numbered form.
+    the numbered forms include the sequence's length as part of its template name.
+    # numbered maximum length usually is "0", "10", "20", "30", "40", "50".
+      to use numbered version,need to contains header <@seq-name@N.hpp> under the
+      corresponding directory.
+    # named for the sequence whose length is N rouned up to the nearest multiple
+      of ten.
+        <boost/mpl/vector/vector10.hpp>
+        typedef boost::mpl::vector9<int[1], ...> S9;
+        typedef boost::mpl::push_back<S9, int[10]>::type S10; // OK
+        typedef boost::mpl::push_back<S10, int[11]>::type S11; // ERROR
+                                                               // need <vector20.hpp>
+    
+    boost::mpl::list<>
+    boost::mpl::vector<>
+    boost::mpl::vector_c<>
+    boost::mpl::deque<>
+    boost::mpl::range_c<> // lazy random access sequence,contains consecutive
+                          // integral constants
+    boost::mpl::map<>
+    boost::mpl::set<>
+    boost::mpl::iterator_range<> // iterator_range<> similar to range_c<>,but it
+                                 // represents its elements explicitly
+    
+    ! prefer to vector<> than list<>,if sequence is not arbitrary length.
+
+  Integral Sequence Wrappers:
+    integral constants version for sequences also provided by boost MPL.
+    they have the naming format
+      @[seq-name]_c { ... };
+      // '_c' is suffix
+      // and they usually defined by
+      //   vector<integral_c<T, N1>, ...> => vector_c
+    
+    boost::mpl::list_c<>
+    boost::mpl::vector_c<>
+    ...
+
+  Sequence Derivation:
+    typically,the unnumbered form of any sequence is derived from the corresponding
+    numbered form,or else shares with it a common base class that provides the
+    sequence's implementation. // @seq-name_impl
+
+    struct signed_integers
+      : boost::mpl::vector<signed char, short, int, long> { };
+
+    # derivation can be used to provides a new interface,or a new name to
+      an existing family of sequences.
+
+  ! when we define custom type sequence,we usually provide type definitions for
+    the types passed via template parameters start from "t0", "t1", ... and so on.
+      template<typename T0, typename T1, ...>
+      struct type_seq {
+        typedef type_seq_tag tag;
+        typedef T0 t0;
+        typedef T1 t1;
+        ...
+      };
+    
+    when we need to represent @pos in iterator,often use an integral constant wrapper
+    to represent it.
+      template<typename TSeq, class TSeqPos>
+      struct type_seq_iterator {
+        ...
+        typedef ... category;
+      };
+
+      ...
+      next {
+        typedef type_seq_iterator<TSeq, typename TSeqPos::next::type> type;
+      };
+
+    when we need to define at<> metafunction for the sequence,we can provides
+    some impl specializations,then let the common implementation specialization
+    derives from the impl specializations.
+      ...
+      type_seq_at<TSeq, 0> { ... t0; };
+    
+      ...
+      type_seq_at<TSeq, 0> { ... t1; };
+    
+      ...
+      type_seq_at<TSeq, 0> { ... t2; };
+
+      template<typename T0, typename T1, typename T2, ..., class Pos>
+      struct at<type_seq<T0, T1, T2, ...>, Pos>
+        : type_seq_at<type_seq<T0, T1, T2, ...>, Pos::value>
+      { };
+
+      // we can also provide specialization to at_impl<>
+      template<>
+      struct at_impl<type_seq_tag> {
+        template<typename TSeq, class N>
+        struct apply : type_seq_at<TSeq, N::value>
+        { };
+      };
+
+      ! to implement intrinsic sequence operation,always provide a sequence
+        tag and a specialization of the operation's "_impl" template.
+
+    about begin<> and end<>,both of them relies on iterator.for end<> there is
+    more dirty work to do.we need to check each element in the sequence to
+    determine whether current element is "void".if it is the case,the iteration
+    should stop at there,and end<>::type should be an iterator points to this
+    past-next-end;otherwise,we need traversal to the end.
+      template<>
+      struct type_seq_end_impl<type_seg_tag> {
+        template<typename TSeq>
+        struct apply
+          : eval_if<is_same<void_type, typename TSeq::t0>,
+                    type_seq_pos<0>,
+                    eval_if<is_same<void_type, typename TSeq::t1>,
+                            type_seq_pos<1>,
+                            ...>>
+        { };
+      }; // O(N)
+
+      // we can simplify this process by use "size" implementation to define
+      // type_seq_end_impl<>.
+      // then we can get O(1) version type_seq_end<>.
+      template<typename T0, typename T1, typename T2, ..., typename TN>
+      struct type_seq_size : mpl::int_<N> { };
+
+      template<typename T0, typename T1, ..., typename TN-1>
+      struct type_seq_size<T0, T1, ..., void_type>
+        : mpl::int_<N - 1>
+      { };
+      ...
+      // if all template parameters are "void_type",the size is 0.
+
+    we can provide clear<> impl,whose apply<> should derived from the type
+    type_seq<>.but to do this,we need to set default value to each template
+    parameters in the prototype of @type_seq.
+      template<typename T0 = void_type, typename T1 = void_type, ...>
+      struct type_seq { ... };
+
+    ! the boost MPL specializations should be provided for convenient
+        next<>
+        prior<>
+        at_impl<>
+        deref<>
+        begin_impl<>
+        end_impl<>
+        size_impl<>
+        ...
+        
+      
+
+
+ 
+    
+    
+
+          
