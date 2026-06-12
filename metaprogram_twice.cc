@@ -24,7 +24,7 @@ struct add_pointer_f {
 
 int main(void)
 {
-  BOOST_STATIC_ASSERT((boost::is_same<twice<add_pointer_f, int>::type, int **>::value));
+  BOOST_STATIC_ASSERT(boost::is_same<twice<add_pointer_f, int>::type, int **>::value);
   typename twice<add_pointer_f, int>::type ppint = (int **)0x12345678;
   return 0;
 }

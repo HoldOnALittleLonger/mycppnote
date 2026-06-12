@@ -522,6 +522,9 @@ A Deeper Look at Metafunctions
     in type sequence,and for division,we need to decrease it.
     because Boost provides "plus<>" metafunction and "minus<>" metafunction,we can just
     use them without implement operations by ourselves.
+    ! when plus<> and minus<> operates on int_<> types,the result type would be
+      integral_c<>.
+    
       <boost/mpl/transform.hpp>
       <boost/mpl/plus.hpp>
       <boost/mpl/minus.hpp>
@@ -1327,12 +1330,90 @@ Sequences and Iterators
         end_impl<>
         size_impl<>
         ...
-        
-      
 
+Algorithms
+==========
 
- 
-    
-    
+  Algorithms,Idioms,Reuse,and Abstraction:
+    abstraction can be defined as generalization away from specific instances
+    or implementations,and toward the _essence_ of an object or process.
+    sometimes,the general STL algorithms are seem like fewer clarity.
+      std::transform(vec.begin(), vec.end(),
+                     vec.begin(), std::bind(std::plus, _1, 1));
+      // for each element in range [vec.begin(), vec.end())
+      // do @e + 1
+      // write the result to sequence start from vec.begin()
+      ||
+      VV
+      for (auto e : vec)
+        e += 1;
+    but,the abstraction provided by algorithm interface,can abstract away
+      1> creation of temporary iterators
+      2> correct declaration of the iterator type,even in generic code
+      3> avoiding known inefficiencies(suffix increment)
+      4> taking advantage of known optimizations
+      5> correct generic loop termination
+    when project get larger,the chance of errors grow rapidly,the correct
+    generic algorithm can masks these details to keep the program works
+    correctly,if we have not violate the requirements of the algorithm,
+    it provides to us a common pattern.
 
-          
+  Algorithms in the MPL:
+    MPL algorithms must return new sequences rather than changing them in
+    place,because metadata is immutable.and MPL algorithms operate directly
+    on sequences rather than on iterator ranges.
+    because a new sequence would be returned by MPL algorithm,so we can pass
+    the result of one algorithm to another MPL algorithm.
+      mpl::max_element<typename mpl::replace<Seq, float, double>::type, ...>
+                       // replace float type to double type
+
+  Inserters:
+    an inserter is nothing more than a type with two type members
+      1> ::state
+         a representation of information being carried through the
+         algorithm
+      2> ::operation    
+         a binary operation used to build a new "::state" from an
+         output sequence element and the existing "::state"
+    the name "inserter" is inspiried from STL iterator adaptor.
+    in MPL,inserter usually is used together with sequence building algorithms.
+      mpl::copy<@input_seq, mpl::back_inserter<mpl::vector<>>>
+    in the example,MPL algorithm copy<> receives a sequence,traversal to each
+    element in the sequence,pass current element to back_inserter<>.
+    the back_inserter<> for mpl::vector<>,is implemented through push_back<>
+    operation of the vector<> as usual.
+      back_inserter<mpl::vector<>>
+        ::state => mpl::vector<> // default,empty now
+        ::operation => push_back<_, _>
+                                 |  |
+                                 |  +--> new element need to be inserted
+                                 +--> previous state
+    ! ::operation is invoked with the result from the previous step(or,in the
+      first step,the inserter's initial type) as its first argument,and the
+      element that would normally be written into the output iterator as its
+      second argument.
+      MPL algorithm returns the result of the final step.
+        mpl::copy<mpl::list<int, float, char>,
+                  mpl::back_inserter<mpl::vector<>>>::type
+        ||
+        VV
+        push_back<push_back<push_back<vector<>,
+                                      int>,
+                            float>,
+                  char>::type
+    in MPL,"inserter" is not necessary to does the works that seem like to an
+    insertion operation,because,how the result is producted relies on the
+    "::operation".
+      typedef mpl::vector<mpl::vector_c<0, 1, 2>,
+                          mpl::vector_c<3, 4, 5>,
+                          mpl::vector_c<6, 7, 8>>::type numbers;
+      mpl::transform<numbers, mpl::front<_>,
+                     mpl::inserter<int_<0>, mpl::plus<_, _>>>::type sum;
+      // front<_>   => extract the first element in vector_c<>
+      // int_<0>    => initial state is int_<0>
+      // plus<_, _> => plus previous state and current element from sequence
+      //
+      // @sum <= 0 + 3 + 6
+
+    !! USUALLY,THE TYPE OF OUTPUT RESULT OF INSERTER IS RELIED ON THE TYPE
+       THAT WILL BE PRODUCED BY THE BINARY OPERATION "::operation".

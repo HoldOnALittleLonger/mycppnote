@@ -20,20 +20,20 @@ struct cond_add_refp
 
 int main(void)
 {
-  BOOST_STATIC_ASSERT((boost::is_same<cond_add_refp<int>::type, int *>::value,
-                       "should be integer pointer"));
-  BOOST_STATIC_ASSERT((boost::is_same<cond_add_refp<float>::type, float&>::value,
-                       "should be floating reference"));
+  BOOST_STATIC_ASSERT(boost::is_same<cond_add_refp<int>::type::type, int *>::value);
 
-  BOOST_STATIC_ASSERT((boost::mpl::int_<15>::next::value == 16, "should be 16"));
-  BOOST_STATIC_ASSERT((boost::is_same<boost::mpl::plus<boost::mpl::int_<4>, boost::mpl::int_<4>>,
-                       boost::mpl::int_<8>>::value, "should be 8"));
+  BOOST_STATIC_ASSERT(boost::is_same<cond_add_refp<float>::type::type, float&>::value);
+
+  BOOST_STATIC_ASSERT(boost::mpl::int_<15>::next::value == 16);
+  BOOST_STATIC_ASSERT(boost::is_same<
+                      boost::mpl::plus<boost::mpl::int_<4>, boost::mpl::int_<4>>::type,
+                      boost::mpl::integral_c<int, 8>
+                      >::value);
 
   typedef boost::mpl::int_<4> value4;
   typedef boost::mpl::int_<8> value8;
   typedef typename boost::mpl::multiplies<value4, value8>::type value32;
-  BOOST_STATIC_ASSERT((boost::mpl::equal_to<value32, boost::mpl::int_<32>>::value,
-                       "should equal to 32"));
+  BOOST_STATIC_ASSERT(boost::mpl::equal_to<value32, boost::mpl::int_<32>>::value);
 
   static_assert(value32::value != 32, "<= @value32");
 

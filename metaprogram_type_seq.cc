@@ -133,18 +133,18 @@ int main(void)
 {
   typedef type_seq<int, char, float, long> type_seq_icfl;
   typedef type_seq_iterator<type_seq_icfl, boost::mpl::int_<0>> iter0_icfl;
-  BOOST_STATIC_ASSERT((boost::mpl::equal_to<boost::mpl::size<type_seq_icfl>, boost::mpl::int_<4>>::value,
-                       "should size 4"));
-  BOOST_STATIC_ASSERT((boost::is_same<int, boost::mpl::deref<iter0_icfl>::type>::value,
-                       "should be int type"));
-  BOOST_STATIC_ASSERT((boost::is_same<
-                       char,
-                       boost::mpl::deref<boost::mpl::next<iter0_icfl>::type>::type>::value,
-                       "should be char type"));
-  BOOST_STATIC_ASSERT((boost::is_same<
-                       long,
-                       boost::mpl::at<type_seq_icfl, boost::mpl::int_<3>>::type>::value,
-                       "should be long type"));
+  
+  BOOST_STATIC_ASSERT(boost::mpl::equal_to<boost::mpl::size<type_seq_icfl>, boost::mpl::int_<4>>::value);
+  BOOST_STATIC_ASSERT(boost::is_same<int, boost::mpl::deref<iter0_icfl>::type>::value);
+  BOOST_STATIC_ASSERT(boost::is_same<
+                      char,
+                      boost::mpl::deref<boost::mpl::next<iter0_icfl>::type>::type>::value
+                      );
+
+  BOOST_STATIC_ASSERT(boost::is_same<
+                      long,
+                      boost::mpl::at<type_seq_icfl, boost::mpl::int_<3>>::type>::value
+                      );
   return 0;
 }
   
