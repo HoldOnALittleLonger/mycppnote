@@ -1417,3 +1417,188 @@ Algorithms
 
     !! USUALLY,THE TYPE OF OUTPUT RESULT OF INSERTER IS RELIED ON THE TYPE
        THAT WILL BE PRODUCED BY THE BINARY OPERATION "::operation".
+
+  Fundamental Sequence Algorithms:
+    fold >
+      fold expression were introduced in C++17 to simplify operations on variadic
+      templates.
+      we can use fold expression to apply a binary operator to a parameter pack,
+      reducing it to a single value.
+        template<typename... Args>
+        int sum(Args... args)
+        {
+          // this template parameter pack would be expanded to
+          //   arg0 + arg1 + arg2 + ...
+          //   |<-------------------->|
+          //    #^total sizeof...(@args) arguments,and
+          //      they will be connected by operator+
+          return (args + ...);
+        }
+    MPL fold is similar to the fold expression,it is a pattern used for folding
+    sequence elements into _a_ result.
+      template<typename _Seq>
+      struct reverse
+        : mpl::fold<_Seq, typename mpl::clear<_Seq>::type, mpl::push_front<_, _>>
+      { };
+
+      /* processes elements in original order */
+      procedure fold(Seq: sequence, Prev: result of previous step,
+                     BinaryOp: operation)
+          if Seq is empty
+          then
+              return Prev
+          else
+            /**
+             * we handle current node at first,then and get into next.
+             */
+            fold(tail(Seq), BinaryOp(Prev, head(Seq)), BinaryOp)
+
+      /* processes elements in reverse order */
+      procedure reverse_fold(Seq: sequence, Prev: result of previous step,
+                             BinaryOp: operation)
+          if Seq is empty
+          then
+              return Prev
+          else
+              /**
+               * defer the handling to current node,get into the next at first.
+               */
+              BinaryOp(reverse_fold(tail(Seq), Prev, BinaryOp), head(Seq))
+
+    the metafunction reverse<>,recevies a sequence,and reverse elements in the
+    sequence.
+    /* because we handle current node at first,so,the first element in sequence
+     * will be placed at the end,the second element is placed front of
+     * the first element via push_front<>
+     */
+
+    the MPL reverse_fold<> supports "going in" operation and "coming back out"
+    operation.
+      /**
+       * reverse_fold - fold in reverse order
+       * @Seq:          sequence
+       * @Prev:         result of previous step
+       * @OutOp:        operation called when recursion returning
+       * @InOp:         operation called before enter next recursion
+       * # OutOp(reverse_fold(tail(Seq), InOp(Prev, head(Seq)), OutOp, InOp)
+       */
+      mpl::reverse_fold<Seq, Prev, OutOp, InOp>
+    the operation called at "going in",usually recevies two parameters,@Prev and
+    current element.if we do not pass a @InOp,then the default behaviour of @InOp
+    is returns its first argument as usual.
+
+    MPL sequence fold algorithms also supports range folding,that is iterators
+    can be used to define the subrange of a sequence.such folding algorithm usually
+    is named "iter_fold".
+      procedure iter_fold(Seq: sequence,
+                          Prev: previous state
+                          InOp: "going in" operation)
+          if Seq is empty
+          then
+              return Prev
+          else
+              iter_fold(tail(Seq), InOp(Prev, begin(Seq)), InOp)
+    in the "iter_fold",the second parameter of the binary operation requires an
+    iterator rather than current element in sequence.
+    // reverse_iter_fold<> is similar to reverse_fold<>.
+    // "iter_fold",iterate over positions rather than iterator over elements.
+
+    !! "REVERSE" IS NOT MEANS THE RESULT SEQUENCE MUST IS THE REVERSE ORDER OF
+       INPUT SEQUENCE."REVERSE" JUST SAY THE SEQUENCE TRAVERSAL IS START IN
+       REVERSE ORDER(RIGHT TO LEFT,ORIGINAL ORDER IS LEFT TO RIGHT).
+ 
+  Querying Algorithms:    
+    the MPL querying algorithms >
+      find<Seq, T>                        return an iterator to the first occurrence
+                                          of T in Seq,or end<Seq>
+      find_if<Seq, T, Predicate>          return an iterator to the first occurrence
+                                          of T where Predicate is TRUE in Seq,or end<Seq>
+      contains<Seq, T>                    TRUE if Seq contains T
+      count<Seq, T>                       return number of occurrence of T in Seq
+      count_if<Seq, T, Predicate>         similar to count<>,but it only be counted if
+                                          Predicate is TRUE
+      equal<Seq1, Seq2>                   TRUE if Seq1 equal to Seq2,that means each
+                                          element in Seq1 is equal to the corresponding
+                                          element in Seq2(in same order)
+      lower_bound<Seq, T, Compare>        the earliest order-preserving position at
+                                          which T could be inserted in Seq sorted
+                                          according to comparison Compare
+      upper_bound<Seq, T, Compare>        the latest order-preserving position at which
+                                          T could be inserted in Seq sorted according
+                                          to comparison Compare
+      max_element<Seq, Compare>           the first position @i in Seq such that for all
+                                          position @j
+                                            mpl::apply<
+                                                       Compare,
+                                                       mpl::deref<@i>::type,
+                                                       mpl::deref<@j>::type
+                                                      >::type::value == false
+      min_element<Seq, Compare>           the first position @i in Seq such that for all
+                                          position @j
+                                            mpl::apply<
+                                                       Compare,
+                                                       mpl::deref<@j>::type,
+                                                       mpl::deref<@i>::type
+                                                      >::type::value == false
+
+  Sequence Building Algorithms:
+    all of MPL's sequence building algorithms follow the same pattern
+      > there is a corresponding algorithm, "reverse_XXX<>",which accepts
+        the same arguments but operates on input sequence elements in
+        reverse order.
+        the algorithms "XXX<>" and "reverse_XXX<>" are called
+        counterpart algorithms.
+      > the algorithm's last argument is an optional inserter.
+        if no inserter is specified
+          back_inserter,if the sequence is back-extensible,
+          otherwise,front_inserter
+    the inserter used in building a new sequence should always be determined
+    by the front extensibility or back extensibility of the result sequence,
+    when we did not supply any user-defined inserter for the input sequence.
+
+    the MPL sequence building algorithms >
+      copy<Seq>                                make a copy of Seq
+      copy_if<Seq, Predicate>                  make a copy of elements if Predicate
+                                               is TRUE
+      remove<Seq, T>                           remove T from Seq
+      remove_if<Seq, T, Predicate>             remove T from Seq if Predicate is TRUE
+      replace<Seq, Old, New>                   replace Old with New in Seq
+      replace_if<Seq, Predicate, New>          replace element in Seq with New if
+                                               Predicate is TRUE
+      reverse<Seq>                             reverse order of Seq
+      transform<Seq, UnaryOp>                  do UnaryOp for each element in Seq
+      transform<Seq1, Seq2, BinaryOp>          do BinaryOp for each elements pair in
+                                               composed from Seq1 and Seq2
+    
+      unique<Seq>                              the new sequence composed of the initial
+      unique<Seq, Equivalence>                 (head) element of every subrange of Seq
+                                               whose elements are all the same.if the
+                                               Equivalence is supplied,it is used to
+                                               determine sameness.
+                                               # [0, 1, 2, 3, 4, 5]
+                                                 => [0]            --+
+                                                 => [0, 1]           |
+                                                 => [0, 1, ...]      |
+                                                 => [1]              +--> subranges
+                                                 => [1, 2]           |
+                                                 => [1, 2, ...]      |
+                                                 => [2]              |
+                                                 => ...            --+
+    
+
+      ! no reverse_copy<> and reverse_reverse<>.
+      ! inserter is optional.
+      ! all have linear complexity,and all return a sequence of the same type
+        as the first input sequence by default,but inserter can change the type.
+      ! almost all XXX<> and reverse_XXX<>,have the same result.but there is an
+        exception that result of unique<> and result of reverse_unique<> may differs.
+          Compare = mpl::equal_to<mpl::shift_right<_1, mpl::int_<1>>,
+                                  mpl::shift_right<_2, mpl::int_<1>>
+                                 >
+          unique<[0, 1, 2, 3, 4, 5], Compare>          => [0, 2, 4]
+          reverse_unique<[0, 1, 2, 3, 4, 5], Compare>  => [1, 3, 5]
+
+
+    
+
+
